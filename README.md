@@ -1,0 +1,91 @@
+# ClassScreenLock
+
+面向 Windows 11/Windows 10 的跨平台课堂屏幕锁定与课堂纪律辅助系统。使用 Avalonia + .NET 9 开发，遵循 Win11 Fluent UI 风格，支持“仅防护”“仅锁屏”“完全锁定”等模式，提供网络拦截、应用拦截、时间表管理、日志与安全中心等功能。
+
+## 功能概览
+- 屏幕锁定与防护
+  - 模式：仅防护、仅锁屏、完全锁定
+- 课间浮动锁定按钮（“下课按钮”）
+  - 在课间显示，支持二次确认，减少误触
+- 网络拦截与“防火墙式”阻断
+  - Hosts 层阻断 + 防火墙 IP 规则组合；支持自定义域名规则
+- 应用拦截与保护设置
+  - 课间/上课策略、基础防护开关、计划任务驱动
+- 时间表与计划
+  - 课表时间点、状态判定与自动提前解锁
+- 安全中心与账户
+  - 管理员登录、权限控制、可选二次验证
+- 日志与事件记录
+  - 安全日志、拦截记录
+
+
+## 安装与发布
+提供两种分发方案：
+
+1) 自包含单文件（免安装运行时、双击即用）
+- 生成命令：
+  ```bash
+  dotnet publish .\ClassScreenLock\ClassScreenLock.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:DebugType=none /p:DebugSymbols=false
+  ```
+
+- 说明：包含 .NET 运行时，体积约 109 MB；适合“点开就用”。
+
+
+## 使用指南
+- 启动：双击发布目录中的 ClassScreenLock.exe
+- 管理员运行：网络拦截（修改 Hosts/防火墙规则）需要管理员权限，建议以管理员身份运行
+- 锁定：主界面“开始锁定”，可选择 LockMode（仅防护/仅锁屏/完全锁定）
+- 课间按钮：课间自动显示，可点击进行二次确认锁定；上课自动隐藏
+- 网络拦截：在“网络拦截”页面添加域名规则，可选择拦截方式（App/Hosts/Both）
+- 日志查看：在“安全日志”页面查看拦截与系统事件
+- 安全中心：管理员登录后可进行设置、解锁、账户管理
+
+## Fluent UI 与体验
+- 使用 Avalonia.Themes.Fluent，整体视觉遵循 Win11 Fluent 风格
+- 交互反馈保留轻量涟漪效果；
+- 统一字体与配色
+
+## 构建与质量
+- 开发环境：Windows 11，.NET SDK 9
+- 构建：
+  ```bash
+  dotnet build .\ClassScreenLock\ClassScreenLock.csproj -c Release -warnaserror
+  ```
+- 说明：所有编译警告按错误处理并需修复；Release 构建禁用 PDB/调试符号
+
+## 权限与系统要求
+- Windows 11 推荐；Windows 10 可运行但体验以 Win11 为基准
+- 至少要有300MB运行内存
+- 至少要有500GB硬盘空间
+- 管理员权限：应用 Hosts 与防火墙规则时需要；非管理员运行会跳过相应操作
+
+## 目录结构（关键）
+- 主项目：ClassScreenLock/
+  - Views：界面定义（axaml）
+  - ViewModels：视图模型与命令
+  - Services：系统核心服务与平台集成
+  - Models：数据模型与枚举
+  - Converters：UI 转换器
+  - Styles：主题与样式
+- 子项目（已内联功能）：BreakButtonProcess、MonitorProcess（架构优化后不再依赖，可移除）
+
+## 安全与隐私
+- 不收集个人隐私数据；日志仅包括拦截与系统事件
+- 管理员密码本地加密存储（BCrypt）；可选 TOTP 二次验证
+
+## 常见问题
+- 体积为何较大？
+  - 自包含单文件打包会包含 .NET 运行时与平台库，保证免安装、即插即用
+- 无管理员权限运行时网络拦截无效？
+  - 是的；应用会跳过需要管理员权限的规则应用与清理
+
+## 开发与贡献
+- 开发流程：Fork → 创建分支 → 提交改动 → 发起 Pull Request
+- 代码规范：
+  - 遵循 MVVM，统一命名与样式
+  - 不在代码中添加无关注释与日志
+  - 构建无警告（warnaserror）
+- 问题报告：请附复现步骤、系统信息与日志片段
+
+## 许可证
+- GNU General Public License v3.0
