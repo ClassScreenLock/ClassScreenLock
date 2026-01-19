@@ -1,0 +1,86 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="BreakButtonProcess.Views.BreakButtonWindow"
+        Title="Quick Lock"
+        Width="80" Height="80"
+        WindowStartupLocation="Manual"
+        SystemDecorations="None"
+        Topmost="False"
+        ShowInTaskbar="False"
+        CanResize="False"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
+    
+    <Window.Styles>
+        <Style Selector="Button.lock-btn">
+            <Setter Property="Background" Value="#CC0078D4"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="40"/>
+            <Setter Property="ClipToBounds" Value="False"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.lock-btn:pointerover">
+            <Setter Property="Background" Value="#FF0078D4"/>
+            <Setter Property="RenderTransform" Value="scale(1.05)"/>
+        </Style>
+        <Style Selector="Button.lock-btn:pressed">
+            <Setter Property="Background" Value="#FF005A9E"/>
+            <Setter Property="RenderTransform" Value="scale(0.95)"/>
+        </Style>
+        <Style Selector="Button.confirming">
+            <Setter Property="Background" Value="#FFE81123"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid Background="Transparent">
+        <Button Name="LockButton"
+                               Classes="lock-btn"
+                Width="60" Height="60"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center">
+            <Grid>
+                <StackPanel Name="NormalContent"
+                            Spacing="2"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Path Data="M12,17A2,2 0 0,0 14,15C14,13.89 13.11,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="18" Height="18"
+                          HorizontalAlignment="Center"/>
+                    <TextBlock Text="锁屏"
+                               FontSize="11"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Name="ConfirmContent"
+                            IsVisible="False"
+                            Spacing="2"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Path Data="M12,2C11.31,2 10.61,2.13 9.96,2.39L4.59,4.54C3.61,4.93 3,5.88 3,6.94V13C3,17.5 6,21.5 10.45,23.32L12,24L13.55,23.32C18,21.5 21,17.5 21,13V6.94C21,5.88 20.39,4.93 19.41,4.54L14.04,2.39C13.39,2.13 12.69,2 12,2M12,4C12.47,4 12.93,4.09 13.36,4.27L18.72,6.41C18.9,6.49 19,6.67 19,6.87V13C19,16.5 16.75,19.6 13.35,21.07L12,21.65L10.65,21.07C7.25,19.6 5,16.5 5,13V6.87C5,6.67 5.1,6.49 5.28,6.41L10.64,4.27C11.07,4.09 11.53,4 12,4M12,7L7,12H10V17H14V12H17L12,7Z"
+                          Fill="White"
+                          Stretch="Uniform"
+                          Width="18" Height="18"
+                          HorizontalAlignment="Center"/>
+                    <TextBlock Text="确认"
+                               FontSize="11"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Button>
+    </Grid>
+</Window>
