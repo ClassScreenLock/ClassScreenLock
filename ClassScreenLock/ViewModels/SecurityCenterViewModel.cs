@@ -142,6 +142,8 @@ public partial class SecurityCenterViewModel : ViewModelBase
     [ObservableProperty]
     private string _sidebarLockSettingsLevel = "无";
     [ObservableProperty]
+    private string _breakTimeLockSettingsLevel = "无";
+    [ObservableProperty]
     private string _sidebarScheduleLevel = "无";
     [ObservableProperty]
     private string _sidebarAppManagementLevel = "无";
@@ -197,6 +199,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
         SidebarHomeLevel = ToLevelText(lockSettings.SidebarHomeMinAccountType);
         SidebarLockSettingsLevel = ToLevelText(lockSettings.SidebarLockSettingsMinAccountType);
+        BreakTimeLockSettingsLevel = ToLevelText(lockSettings.BreakTimeLockSettingsMinAccountType);
         SidebarScheduleLevel = ToLevelText(lockSettings.SidebarScheduleMinAccountType);
         SidebarAppManagementLevel = ToLevelText(lockSettings.SidebarAppManagementMinAccountType);
         SidebarNetworkInterceptionLevel = ToLevelText(lockSettings.SidebarNetworkInterceptionMinAccountType);
@@ -525,6 +528,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
         var sbHome = FromLevelText(SidebarHomeLevel);
         var sbLock = FromLevelText(SidebarLockSettingsLevel);
+        var brLock = FromLevelText(BreakTimeLockSettingsLevel);
         var sbSchedule = FromLevelText(SidebarScheduleLevel);
         var sbApp = FromLevelText(SidebarAppManagementLevel);
         var sbNet = FromLevelText(SidebarNetworkInterceptionLevel);
@@ -540,6 +544,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
             s.SidebarHomeMinAccountType = sbHome;
             s.SidebarLockSettingsMinAccountType = sbLock;
+            s.BreakTimeLockSettingsMinAccountType = brLock;
             s.SidebarScheduleMinAccountType = sbSchedule;
             s.SidebarAppManagementMinAccountType = sbApp;
             s.SidebarNetworkInterceptionMinAccountType = sbNet;
@@ -551,6 +556,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
         LogPermissionChange("SidebarHome", before.SidebarHomeMinAccountType, sbHome);
         LogPermissionChange("SidebarLockSettings", before.SidebarLockSettingsMinAccountType, sbLock);
+        LogPermissionChange("BreakTimeLockSettings", before.BreakTimeLockSettingsMinAccountType, brLock);
         LogPermissionChange("SidebarSchedule", before.SidebarScheduleMinAccountType, sbSchedule);
         LogPermissionChange("SidebarAppManagement", before.SidebarAppManagementMinAccountType, sbApp);
         LogPermissionChange("SidebarNetworkInterception", before.SidebarNetworkInterceptionMinAccountType, sbNet);
@@ -581,6 +587,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
             ExitAppLevel = ToLevelText(lockSettings.ExitAppMinAccountType);
             SidebarHomeLevel = ToLevelText(lockSettings.SidebarHomeMinAccountType);
             SidebarLockSettingsLevel = ToLevelText(lockSettings.SidebarLockSettingsMinAccountType);
+            BreakTimeLockSettingsLevel = ToLevelText(lockSettings.BreakTimeLockSettingsMinAccountType);
             SidebarScheduleLevel = ToLevelText(lockSettings.SidebarScheduleMinAccountType);
             SidebarAppManagementLevel = ToLevelText(lockSettings.SidebarAppManagementMinAccountType);
             SidebarNetworkInterceptionLevel = ToLevelText(lockSettings.SidebarNetworkInterceptionMinAccountType);
@@ -594,6 +601,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         var before = SettingsService.Lock;
         var sbHome = FromLevelText(SidebarHomeLevel);
         var sbLock = FromLevelText(SidebarLockSettingsLevel);
+        var brLock = FromLevelText(BreakTimeLockSettingsLevel);
         var sbSchedule = FromLevelText(SidebarScheduleLevel);
         var sbApp = FromLevelText(SidebarAppManagementLevel);
         var sbNet = FromLevelText(SidebarNetworkInterceptionLevel);
@@ -606,6 +614,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         {
             s.SidebarHomeMinAccountType = sbHome;
             s.SidebarLockSettingsMinAccountType = sbLock;
+            s.BreakTimeLockSettingsMinAccountType = brLock;
             s.SidebarScheduleMinAccountType = sbSchedule;
             s.SidebarAppManagementMinAccountType = sbApp;
             s.SidebarNetworkInterceptionMinAccountType = sbNet;
@@ -617,6 +626,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
         LogPermissionChange("SidebarHome", before.SidebarHomeMinAccountType, sbHome);
         LogPermissionChange("SidebarLockSettings", before.SidebarLockSettingsMinAccountType, sbLock);
+        LogPermissionChange("BreakTimeLockSettings", before.BreakTimeLockSettingsMinAccountType, brLock);
         LogPermissionChange("SidebarSchedule", before.SidebarScheduleMinAccountType, sbSchedule);
         LogPermissionChange("SidebarAppManagement", before.SidebarAppManagementMinAccountType, sbApp);
         LogPermissionChange("SidebarNetworkInterception", before.SidebarNetworkInterceptionMinAccountType, sbNet);
@@ -628,6 +638,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
     partial void OnSidebarHomeLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
     partial void OnSidebarLockSettingsLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
+    partial void OnBreakTimeLockSettingsLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
     partial void OnSidebarScheduleLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
     partial void OnSidebarAppManagementLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
     partial void OnSidebarNetworkInterceptionLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();

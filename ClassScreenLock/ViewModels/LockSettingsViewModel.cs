@@ -10,6 +10,8 @@ namespace ClassScreenLock.ViewModels;
 public partial class LockSettingsViewModel : ViewModelBase
 {
     [ObservableProperty]
+    private bool _canEditBreakTimeLock;
+    [ObservableProperty]
     private bool _enableBreakTimeLock;
 
     [ObservableProperty]
@@ -87,6 +89,10 @@ public partial class LockSettingsViewModel : ViewModelBase
         {
             ForcedTopmostApps.Add(app);
         }
+
+        CanEditBreakTimeLock = settings.BreakTimeLockSettingsMinAccountType == null
+                                || SecurityService.Instance.IsAuthenticated
+                                || AccountService.Instance.HasPermission(settings.BreakTimeLockSettingsMinAccountType.Value);
     }
 
     [RelayCommand]

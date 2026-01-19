@@ -648,10 +648,13 @@ public partial class InitializationViewModel : ViewModelBase
     {
         try
         {
-            LocalizationService.Instance.CurrentLanguage = language;
             var cultureInfo = new System.Globalization.CultureInfo(language);
             System.Globalization.CultureInfo.CurrentCulture = cultureInfo;
             System.Globalization.CultureInfo.CurrentUICulture = cultureInfo;
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                LocalizationService.Instance.CurrentLanguage = language;
+            });
         }
         catch
         {

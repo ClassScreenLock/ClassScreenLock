@@ -15,11 +15,11 @@
         <Grid RowDefinitions="Auto,* ,Auto" ColumnDefinitions="*">
             <Grid ColumnDefinitions="* , Auto">
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="首次启动引导" FontSize="26" FontWeight="SemiBold"/>
-                    <TextBlock Text="完成基本配置后即可开始使用" FontSize="14" Opacity="0.7"/>
+                    <TextBlock Text="{DynamicResource Initialization_Title}" FontSize="26" FontWeight="SemiBold"/>
+                    <TextBlock Text="{DynamicResource Initialization_Subtitle}" FontSize="14" Opacity="0.7"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                    <TextBlock Text="步骤"/>
+                    <TextBlock Text="{DynamicResource Initialization_Steps}"/>
                     <TextBlock Text="{Binding StepDisplay}"/>
                     <TextBlock Text="/"/>
                     <TextBlock Text="{Binding StepTotal}"/>
@@ -38,24 +38,24 @@
                     <Carousel.Items>
                         <ScrollViewer>
                             <StackPanel Spacing="16" MaxWidth="900" HorizontalAlignment="Stretch">
-                                <TextBlock Text="系统配置" Classes="h3"/>
-                                <TextBlock Text="可在设置界面继续配置" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Init_SystemConfig_Title}" Classes="h3"/>
+                                <TextBlock Text="{DynamicResource Init_AvailableInSettings}" Classes="caption" Opacity="0.7"/>
                                 <Border Classes="card" Padding="16" Margin="0,0,0,8">
                                     <StackPanel Orientation="Horizontal" Spacing="24">
-                                        <ToggleSwitch Content="开机自启动" IsChecked="{Binding AutoStart}"/>
-                                        <ToggleSwitch Content="深色模式" IsChecked="{Binding DarkMode}"/>
-                                        <ToggleSwitch Content="使用系统强调色" IsChecked="{Binding UseSystemAccentColor}"/>
+                                        <ToggleSwitch Content="{DynamicResource Settings_Startup}" IsChecked="{Binding AutoStart}"/>
+                                        <ToggleSwitch Content="{DynamicResource Settings_DarkMode}" IsChecked="{Binding DarkMode}"/>
+                                        <ToggleSwitch Content="{DynamicResource Settings_UseSystemAccentColor}" IsChecked="{Binding UseSystemAccentColor}"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Classes="card" Padding="16">
                                     <StackPanel Orientation="Horizontal" Spacing="24">
                                         <StackPanel Width="280">
-                                            <TextBlock Text="界面语言"/>
+                                            <TextBlock Text="{DynamicResource Settings_InterfaceLanguage}"/>
                                             <ComboBox ItemsSource="{Binding LanguageOptions}"
                                                       SelectedItem="{Binding Language}"/>
                                         </StackPanel>
                                         <StackPanel Width="280" Spacing="8">
-                                            <TextBlock Text="强调色"/>
+                                            <TextBlock Text="{DynamicResource Settings_AccentColor}"/>
                                             <ComboBox ItemsSource="{Binding AccentColorOptions}"
                                                       SelectedItem="{Binding AccentColor}"/>
                                             <Border Width="40" Height="24" CornerRadius="6"
@@ -70,40 +70,40 @@
 
                         <ScrollViewer>
                             <StackPanel Spacing="16" MaxWidth="900">
-                                <TextBlock Text="用户偏好" Classes="h3"/>
-                                <TextBlock Text="可在设置界面继续配置" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Init_UserPreferences_Title}" Classes="h3"/>
+                                <TextBlock Text="{DynamicResource Init_AvailableInSettings}" Classes="caption" Opacity="0.7"/>
                                 <Border Classes="card" Padding="16">
                                     <StackPanel Orientation="Horizontal" Spacing="24">
                                         <StackPanel Width="280">
-                                            <TextBlock Text="字体大小"/>
+                                            <TextBlock Text="{DynamicResource Settings_FontSize}"/>
                                             <NumericUpDown Minimum="10" Maximum="32" Value="{Binding FontSize}"/>
                                         </StackPanel>
                                         <StackPanel Width="280">
-                                            <TextBlock Text="字体"/>
-                                            <TextBox Text="{Binding FontFamily}" Watermark="示例：Microsoft YaHei UI"/>
+                                            <TextBlock Text="{DynamicResource Settings_FontFamily}"/>
+                                            <TextBox Text="{Binding FontFamily}" Watermark="{DynamicResource Init_FontFamily_Watermark}"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
                                 <Border Classes="card" Padding="16">
-                                    <ToggleSwitch Content="显示通知" IsChecked="{Binding ShowNotifications}"/>
+                                    <ToggleSwitch Content="{DynamicResource Settings_ShowNotifications}" IsChecked="{Binding ShowNotifications}"/>
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>
 
                         <ScrollViewer>
                             <StackPanel Spacing="16" MaxWidth="900">
-                                <TextBlock Text="权限设置" Classes="h3"/>
-                                <TextBlock Text="可在安全中心继续配置" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Init_PermissionSetup_Title}" Classes="h3"/>
+                                <TextBlock Text="{DynamicResource Init_AvailableInSecurityCenter}" Classes="caption" Opacity="0.7"/>
                                 <Border Classes="card" Padding="16">
                                     <StackPanel Spacing="8">
-                                        <TextBlock Text="管理员登录验证模式"/>
+                                        <TextBlock Text="{DynamicResource Init_AdminLoginVerificationMode}"/>
                                         <ComboBox SelectedIndex="{Binding LoginVerificationModeIndex, Mode=TwoWay}">
-                                            <ComboBoxItem Content="密码+双重验证"/>
-                                            <ComboBoxItem Content="仅密码"/>
-                                            <ComboBoxItem Content="仅双重验证"/>
-                                            <ComboBoxItem Content="密码或双重验证"/>
+                                            <ComboBoxItem Content="{DynamicResource AdminLoginVerification_PasswordPlusTwoFactor}"/>
+                                            <ComboBoxItem Content="{DynamicResource AdminLoginVerification_PasswordOnly}"/>
+                                            <ComboBoxItem Content="{DynamicResource AdminLoginVerification_TwoFactorOnly}"/>
+                                            <ComboBoxItem Content="{DynamicResource AdminLoginVerification_PasswordOrTwoFactor}"/>
                                         </ComboBox>
-                                        <TextBlock Text="选择非“仅密码”模式会在初始化中进行双重验证绑定" FontSize="12" Opacity="0.7"/>
+                                        <TextBlock Text="{DynamicResource Init_2FA_BindingTip}" FontSize="12" Opacity="0.7"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
@@ -111,39 +111,39 @@
 
                         <ScrollViewer>
                             <StackPanel Spacing="16" MaxWidth="700">
-                                <TextBlock Text="管理员账户" Classes="h3"/>
-                                <TextBlock Text="完成后才能继续其他配置" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Init_AdminAccount_Title}" Classes="h3"/>
+                                <TextBlock Text="{DynamicResource Init_AdminAccount_Subtitle}" Classes="caption" Opacity="0.7"/>
                                 <Border Classes="card" Padding="16" IsVisible="{Binding !HasSuperAdminAccount}">
                                     <StackPanel Spacing="12">
                                         <StackPanel Spacing="8">
-                                            <TextBlock Text="用户名"/>
-                                            <TextBox Text="{Binding Username}" Watermark="设置超级管理员用户名"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_Username}"/>
+                                            <TextBox Text="{Binding Username}" Watermark="{DynamicResource Init_Username_Watermark}"/>
                                         </StackPanel>
                                         <StackPanel Spacing="8">
-                                            <TextBlock Text="密码"/>
-                                            <TextBox Text="{Binding Password}" PasswordChar="●" Watermark="请输入超级管理员密码"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_Password}"/>
+                                            <TextBox Text="{Binding Password}" PasswordChar="●" Watermark="{DynamicResource Init_Password_Watermark}"/>
                                             <ProgressBar Value="{Binding PasswordStrength}" Height="4" MinHeight="4" Margin="0,4,0,0"/>
                                         </StackPanel>
                                         <StackPanel Spacing="8">
-                                            <TextBlock Text="确认密码"/>
-                                            <TextBox Text="{Binding ConfirmPassword}" PasswordChar="●" Watermark="请再次输入密码"/>
+                                            <TextBlock Text="{DynamicResource Account_ConfirmPassword}"/>
+                                            <TextBox Text="{Binding ConfirmPassword}" PasswordChar="●" Watermark="{DynamicResource Init_ConfirmPassword_Watermark}"/>
                                         </StackPanel>
                                         <TextBlock Text="{Binding ValidationMessage}" FontSize="12" Foreground="Red" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Classes="card" Padding="16" IsVisible="{Binding CanResetAdminPassword}">
                                     <StackPanel Spacing="12">
-                                        <TextBlock Text="重置管理员密码（仅引导未完成）" Classes="h3"/>
+                                        <TextBlock Text="{DynamicResource Init_ResetAdminPassword_Title}" Classes="h3"/>
                                         <StackPanel Spacing="8">
-                                            <TextBlock Text="新密码"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_NewPassword}"/>
                                             <TextBox Text="{Binding NewAdminPassword}" PasswordChar="●" Watermark="输入新密码"/>
                                         </StackPanel>
                                         <StackPanel Spacing="8">
-                                            <TextBlock Text="确认新密码"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_ConfirmPassword}"/>
                                             <TextBox Text="{Binding ConfirmAdminPassword}" PasswordChar="●" Watermark="再次输入新密码"/>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                            <Button Content="重置密码" Command="{Binding ResetAdminPasswordCommand}" Classes="accent"/>
+                                            <Button Content="{DynamicResource Btn_ResetPassword}" Command="{Binding ResetAdminPasswordCommand}" Classes="accent"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -152,20 +152,20 @@
 
                         <ScrollViewer>
                             <StackPanel Spacing="16" MaxWidth="700">
-                                <TextBlock Text="双重验证绑定" Classes="h3"/>
-                                <TextBlock Text="使用认证器扫描二维码并输入验证码以启用" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Init_TwoFactorBinding_Title}" Classes="h3"/>
+                                <TextBlock Text="{DynamicResource Init_TwoFactorBinding_Subtitle}" Classes="caption" Opacity="0.7"/>
                                 <Border Classes="card" Padding="16">
                                     <StackPanel Spacing="12">
                                         <Image Source="{Binding QrCodeBitmap}" Width="220" Height="220"/>
                                         <StackPanel Spacing="8">
-                                            <TextBlock Text="或手动输入密钥"/>
-                                            <ToggleSwitch Content="手动输入密钥" IsChecked="{Binding UseManualSecret}"/>
-                                            <TextBox Text="{Binding TwoFactorSecret}" IsReadOnly="True" Watermark="系统生成的密钥"/>
-                                            <TextBox Text="{Binding ManualSecretInput}" Watermark="如需自定义密钥，在此输入"/>
+                                            <TextBlock Text="{DynamicResource Init_ManualSecret}"/>
+                                            <ToggleSwitch Content="{DynamicResource Init_ManualSecret_Toggle}" IsChecked="{Binding UseManualSecret}"/>
+                                            <TextBox Text="{Binding TwoFactorSecret}" IsReadOnly="True" Watermark="{DynamicResource Init_SystemSecret_Watermark}"/>
+                                            <TextBox Text="{Binding ManualSecretInput}" Watermark="{DynamicResource Init_ManualSecret_Watermark}"/>
                                         </StackPanel>
                                         <StackPanel Spacing="8">
-                                            <TextBlock Text="双重验证码"/>
-                                            <TextBox Text="{Binding TwoFactorInputCode}" Watermark="请输入认证器显示的6位验证码"/>
+                                            <TextBlock Text="{DynamicResource Init_TwoFactorCode}"/>
+                                            <TextBox Text="{Binding TwoFactorInputCode}" Watermark="{DynamicResource Init_TwoFactorCode_Watermark}"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -174,16 +174,16 @@
 
                         <ScrollViewer>
                             <StackPanel Spacing="16" MaxWidth="900">
-                                <TextBlock Text="应用拦截" Classes="h3"/>
-                                <TextBlock Text="可在应用管理中继续配置" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Init_AppBlocking_Title}" Classes="h3"/>
+                                <TextBlock Text="{DynamicResource Init_AppBlocking_Subtitle}" Classes="caption" Opacity="0.7"/>
                                 <Border Classes="card" Padding="16">
                                     <StackPanel Spacing="12">
-                                        <ToggleSwitch Content="开启基础防护" IsChecked="{Binding BasicProtectionEnabled}"/>
-                                        <ToggleSwitch Content="开启应用拦截" IsChecked="{Binding AppBlockingEnabled}"/>
-                                        <TextBlock Text="允许应用 (逗号分隔)"/>
-                                        <TextBox Text="{Binding AllowedAppsText}" Watermark="例如：notepad,calc"/>
-                                        <TextBlock Text="拦截规则 (逗号分隔)"/>
-                                        <TextBox Text="{Binding BlockedRulesText}" Watermark="例如：cmd,taskmgr"/>
+                                        <ToggleSwitch Content="{DynamicResource Init_EnableBasicProtection}" IsChecked="{Binding BasicProtectionEnabled}"/>
+                                        <ToggleSwitch Content="{DynamicResource Init_EnableAppBlocking}" IsChecked="{Binding AppBlockingEnabled}"/>
+                                        <TextBlock Text="{DynamicResource Init_AllowedApps_Label}"/>
+                                        <TextBox Text="{Binding AllowedAppsText}" Watermark="{DynamicResource Init_AllowedApps_Watermark}"/>
+                                        <TextBlock Text="{DynamicResource Init_BlockedRules_Label}"/>
+                                        <TextBox Text="{Binding BlockedRulesText}" Watermark="{DynamicResource Init_BlockedRules_Watermark}"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
@@ -191,14 +191,14 @@
 
                         <ScrollViewer>
                             <StackPanel Spacing="16" MaxWidth="900">
-                                <TextBlock Text="网络拦截" Classes="h3"/>
-                                <TextBlock Text="可在网络拦截中继续配置" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Init_NetworkBlocking_Title}" Classes="h3"/>
+                                <TextBlock Text="{DynamicResource Init_NetworkBlocking_Subtitle}" Classes="caption" Opacity="0.7"/>
                                 <Border Classes="card" Padding="16">
                                     <StackPanel Spacing="12">
-                                        <ToggleSwitch Content="开启网络拦截" IsChecked="{Binding NetworkLockEnabled}"/>
-                                        <TextBlock Text="拦截域名 (逗号分隔)"/>
-                                        <TextBox Text="{Binding NetworkDomainsText}" Watermark="例如：bilibili.com,douyin.com"/>
-                                        <TextBlock Text="完成后点击下一步应用规则" FontSize="12" Opacity="0.7"/>
+                                        <ToggleSwitch Content="{DynamicResource Init_EnableNetworkLock}" IsChecked="{Binding NetworkLockEnabled}"/>
+                                        <TextBlock Text="{DynamicResource Init_BlockDomains_Label}"/>
+                                        <TextBox Text="{Binding NetworkDomainsText}" Watermark="{DynamicResource Init_BlockDomains_Watermark}"/>
+                                        <TextBlock Text="{DynamicResource Init_ApplyRulesNextStep_Tip}" FontSize="12" Opacity="0.7"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
@@ -208,9 +208,9 @@
             </Grid>
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                <Button Content="返回" Command="{Binding BackCommand}" Classes="outline"/>
-                <Button Content="跳过" Command="{Binding SkipCommand}" Classes="outline" IsEnabled="{Binding CanSkip}"/>
-                <Button Content="下一步" Command="{Binding NextCommand}" Classes="accent"/>
+                <Button Content="{DynamicResource Btn_Back}" Command="{Binding BackCommand}" Classes="outline"/>
+                <Button Content="{DynamicResource Btn_Skip}" Command="{Binding SkipCommand}" Classes="outline" IsEnabled="{Binding CanSkip}"/>
+                <Button Content="{DynamicResource Btn_Next}" Command="{Binding NextCommand}" Classes="accent"/>
             </StackPanel>
         </Grid>
     </Border>

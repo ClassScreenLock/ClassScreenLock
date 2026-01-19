@@ -202,9 +202,53 @@ public partial class App : Application
         }
     }
 
-    private void MenuOpenLockSettings_OnClick(object? sender, EventArgs e)
+    private async void MenuOpenLockSettings_OnClick(object? sender, EventArgs e)
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow is MainWindow mainWindow)
+        var required = SettingsService.Lock.SidebarLockSettingsMinAccountType;
+        var allowed = required == null || SecurityService.Instance.IsAuthenticated || AccountService.Instance.HasPermission(required.Value);
+
+        if (!allowed)
+        {
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var verifyVm = new SecurityCenterViewModel();
+                var verifyWindow = new VerifyWindow { DataContext = verifyVm };
+
+                bool verified = false;
+                verifyVm.PropertyChanged += (s, args) =>
+                {
+                    if (args.PropertyName == nameof(SecurityCenterViewModel.IsAuthenticated) && verifyVm.IsAuthenticated)
+                    {
+                        verified = true;
+                        verifyWindow.Close();
+                    }
+                };
+
+                if (desktop.MainWindow != null && desktop.MainWindow.IsVisible)
+                {
+                    await verifyWindow.ShowDialog(desktop.MainWindow);
+                }
+                else
+                {
+                    verifyWindow.Show();
+                    var tcs = new TaskCompletionSource<bool>();
+                    verifyWindow.Closed += (s, e) => tcs.TrySetResult(verified);
+                    await tcs.Task;
+                }
+
+                if (!verified)
+                {
+                    NotificationService.Instance.ShowWarning("权限不足：锁屏设置需要更高权限");
+                    return;
+                }
+
+                allowed = required == null || SecurityService.Instance.IsAuthenticated || AccountService.Instance.HasPermission(required.Value);
+            }
+        }
+
+        if (!allowed) return;
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime && lifetime.MainWindow is MainWindow mainWindow)
         {
             if (mainWindow.DataContext is MainWindowViewModel vm)
             {

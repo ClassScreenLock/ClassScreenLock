@@ -214,16 +214,16 @@
                                     ToolTip.Tip="{DynamicResource Sidebar_Schedule}">
                                 <icons:Icon Value="fas fa-list" Width="16" Height="16"/>
                             </Button>
-                            <Button Command="{Binding AddClassCommand}" Classes="accent" Padding="12,6">
+                            <Button Command="{Binding AddClassCommand}" Classes="accent" Padding="12,6" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <icons:Icon Value="fas fa-chalkboard-teacher" Width="16" Height="16" Foreground="White"/>
-                                    <TextBlock Text="{DynamicResource Schedule_Class}"/>
+                                    <TextBlock Text="{DynamicResource Schedule_Class}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
-                            <Button Command="{Binding AddBreakCommand}" Padding="12,6">
+                            <Button Command="{Binding AddBreakCommand}" Classes="accent" Padding="12,6" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <icons:Icon Value="fas fa-coffee" Width="16" Height="16"/>
-                                    <TextBlock Text="{DynamicResource Schedule_Break}"/>
+                                    <icons:Icon Value="fas fa-coffee" Width="16" Height="16" Foreground="White"/>
+                                    <TextBlock Text="{DynamicResource Schedule_Break}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                             <Button Command="{Binding AddDividerCommand}" Padding="12,6" IsVisible="{Binding !IsMobileView}">

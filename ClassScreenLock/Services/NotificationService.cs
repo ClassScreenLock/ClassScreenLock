@@ -449,6 +449,10 @@ public class NotificationService : IDisposable
                     ? new SolidColorBrush(Color.FromRgb(255, 255, 255))
                     : new SolidColorBrush(Color.FromRgb(0, 0, 0));
 
+                var chromeBrush = isDarkMode
+                    ? new SolidColorBrush(Color.FromRgb(58, 58, 58))
+                    : new SolidColorBrush(Color.FromRgb(230, 230, 230));
+
                 var borderBrush = type switch
                 {
                     "Success" => new SolidColorBrush(Color.FromRgb(76, 175, 80)),
@@ -473,24 +477,24 @@ public class NotificationService : IDisposable
                     ? new SolidColorBrush(Color.FromRgb(150, 150, 150))
                     : new SolidColorBrush(Color.FromRgb(100, 100, 100));
 
+                var iconBackgroundBrush = isDarkMode
+                    ? new SolidColorBrush(Color.FromRgb(45, 45, 45))
+                    : new SolidColorBrush(Color.FromRgb(245, 245, 245));
+
                 notificationWindow = new Window
                 {
                     Title = title,
-                    Width = 380,
-                    Height = message.Length > 50 ? 140 : 120,
-                    WindowStartupLocation = mainWindow != null
-                        ? WindowStartupLocation.Manual
-                        : WindowStartupLocation.CenterScreen,
+                    Width = 360,
+                    SizeToContent = SizeToContent.Height,
+                    WindowStartupLocation = (SettingsService.General.NotificationPosition == Models.NotificationPosition.Center)
+                        ? WindowStartupLocation.CenterScreen
+                        : WindowStartupLocation.Manual,
                     CanResize = false,
                     ShowInTaskbar = false,
                     Topmost = true,
-                    SystemDecorations = SystemDecorations.BorderOnly,
-                    Background = backgroundBrush,
+                    SystemDecorations = SystemDecorations.None,
+                    Background = Brushes.Transparent,
                     Foreground = foregroundBrush,
-                    BorderBrush = borderBrush,
-                    BorderThickness = new Thickness(2),
-                    CornerRadius = new CornerRadius(12),
-                    Padding = new Thickness(0),
                     ExtendClientAreaToDecorationsHint = true,
                     ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome,
                     ShowActivated = false,
@@ -498,25 +502,40 @@ public class NotificationService : IDisposable
                     Opacity = 1
                 };
 
-                if (mainWindow != null)
+                var rootBorder = new Border
                 {
-                    var screen = mainWindow.Screens.ScreenFromPoint(mainWindow.Position);
-                    if (screen != null)
-                    {
-                        notificationWindow.Position = new PixelPoint(
-                            (int)(screen.WorkingArea.X + (screen.WorkingArea.Width - notificationWindow.Width) / 2),
-                            (int)(screen.WorkingArea.Y + (screen.WorkingArea.Height - notificationWindow.Height) / 3)
-                        );
-                    }
-                }
+                    Background = backgroundBrush,
+                    BorderBrush = chromeBrush,
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(12),
+                    Padding = new Thickness(12)
+                };
 
                 var mainGrid = new Grid
                 {
-                    Margin = new Thickness(20),
-                    ColumnDefinitions = new ColumnDefinitions("auto * auto"),
-                    RowDefinitions = new RowDefinitions("auto auto")
+                    ColumnDefinitions = new ColumnDefinitions("4,auto,*,auto"),
+                    RowDefinitions = new RowDefinitions("auto,auto")
                 };
 
+                var accentBorder = new Border
+                {
+                    Background = borderBrush,
+                    CornerRadius = new CornerRadius(6, 0, 0, 6)
+                };
+                Grid.SetColumn(accentBorder, 0);
+                Grid.SetRowSpan(accentBorder, 2);
+                mainGrid.Children.Add(accentBorder);
+
+                var iconContainer = new Border
+                {
+                    Background = iconBackgroundBrush,
+                    CornerRadius = new CornerRadius(16),
+                    Width = 32,
+                    Height = 32,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(6, 0, 4, 0)
+                };
                 var iconTextBlock = new TextBlock
                 {
                     Text = type switch
@@ -526,54 +545,56 @@ public class NotificationService : IDisposable
                         "Error" => "✕",
                         _ => "ℹ"
                     },
-                    FontSize = 20,
+                    FontSize = 16,
                     FontWeight = FontWeight.Bold,
                     Foreground = iconBrush,
-                    VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(0, 2, 12, 0)
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
                 };
-                Grid.SetColumn(iconTextBlock, 0);
-                Grid.SetRowSpan(iconTextBlock, 2);
-                mainGrid.Children.Add(iconTextBlock);
+                iconContainer.Child = iconTextBlock;
+                Grid.SetColumn(iconContainer, 1);
+                Grid.SetRowSpan(iconContainer, 2);
+                mainGrid.Children.Add(iconContainer);
 
                 var titleTextBlock = new TextBlock
                 {
                     Text = title,
                     FontWeight = FontWeight.SemiBold,
-                    FontSize = 16,
+                    FontSize = 15,
                     Foreground = foregroundBrush,
                     TextWrapping = TextWrapping.Wrap
                 };
-                Grid.SetColumn(titleTextBlock, 1);
+                Grid.SetColumn(titleTextBlock, 2);
                 Grid.SetRow(titleTextBlock, 0);
                 mainGrid.Children.Add(titleTextBlock);
 
                 var messageTextBlock = new TextBlock
                 {
                     Text = message,
-                    FontSize = 14,
+                    FontSize = 13,
                     Foreground = messageBrush,
                     TextWrapping = TextWrapping.Wrap,
-                    Margin = new Thickness(0, 4, 0, 0)
+                    Margin = new Thickness(0, 4, 0, 0),
+                    IsVisible = !string.IsNullOrWhiteSpace(message)
                 };
-                Grid.SetColumn(messageTextBlock, 1);
+                Grid.SetColumn(messageTextBlock, 2);
                 Grid.SetRow(messageTextBlock, 1);
                 mainGrid.Children.Add(messageTextBlock);
 
                 closeButton = new Button
                 {
                     Content = "×",
-                    FontSize = 18,
+                    FontSize = 16,
                     FontWeight = FontWeight.Bold,
                     Background = Brushes.Transparent,
                     Foreground = closeButtonForegroundBrush,
                     BorderThickness = new Thickness(0),
-                    Width = 24,
-                    Height = 24,
-                    CornerRadius = new CornerRadius(12),
+                    Width = 28,
+                    Height = 28,
+                    CornerRadius = new CornerRadius(14),
                     HorizontalAlignment = HorizontalAlignment.Right,
                     VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(0, -4, 0, 0)
+                    Margin = new Thickness(8, -2, 0, 0)
                 };
 
                 closeHandler = (s, e) =>
@@ -586,8 +607,8 @@ public class NotificationService : IDisposable
                 };
                 closeButton.Click += closeHandler;
 
-                Grid.SetColumn(closeButton, 2);
-                Grid.SetRowSpan(closeButton, 2);
+                Grid.SetColumn(closeButton, 3);
+                Grid.SetRow(closeButton, 0);
                 mainGrid.Children.Add(closeButton);
 
                 pointerEnteredHandler = (s, e) =>
@@ -596,7 +617,7 @@ public class NotificationService : IDisposable
 
                     closeButton.Background = isDarkMode
                         ? new SolidColorBrush(Color.FromRgb(60, 60, 60))
-                        : new SolidColorBrush(Color.FromRgb(220, 220, 220));
+                        : new SolidColorBrush(Color.FromRgb(230, 230, 230));
                     closeButton.Foreground = isDarkMode
                         ? new SolidColorBrush(Color.FromRgb(255, 255, 255))
                         : new SolidColorBrush(Color.FromRgb(0, 0, 0));
@@ -612,8 +633,45 @@ public class NotificationService : IDisposable
                 closeButton.PointerEntered += pointerEnteredHandler;
                 closeButton.PointerExited += pointerExitedHandler;
 
-                notificationWindow.Content = mainGrid;
+                rootBorder.Child = mainGrid;
+                notificationWindow.Content = rootBorder;
                 notificationWindow.Show();
+
+                var posAfterShow = SettingsService.General.NotificationPosition;
+                if (posAfterShow != Models.NotificationPosition.Center)
+                {
+                    var main = Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime d ? d.MainWindow : null;
+                    var screen = main != null ? main.Screens.ScreenFromPoint(main.Position) : null;
+                    if (screen != null)
+                    {
+                        var wa = screen.WorkingArea;
+                        var width = (int)notificationWindow.Width;
+                        var height = (int)notificationWindow.Height;
+                        var x = wa.X + wa.Width - width - 24;
+                        var y = wa.Y + 24;
+                        if (posAfterShow == Models.NotificationPosition.TopLeft)
+                        {
+                            x = wa.X + 24;
+                            y = wa.Y + 24;
+                        }
+                        else if (posAfterShow == Models.NotificationPosition.TopRight)
+                        {
+                            x = wa.X + wa.Width - width - 24;
+                            y = wa.Y + 24;
+                        }
+                        else if (posAfterShow == Models.NotificationPosition.BottomLeft)
+                        {
+                            x = wa.X + 24;
+                            y = wa.Y + wa.Height - height - 24;
+                        }
+                        else if (posAfterShow == Models.NotificationPosition.BottomRight)
+                        {
+                            x = wa.X + wa.Width - width - 24;
+                            y = wa.Y + wa.Height - height - 24;
+                        }
+                        notificationWindow.Position = new PixelPoint(x, y);
+                    }
+                }
             });
 
             if (duration < 250)

@@ -103,20 +103,22 @@ public partial class LockWindowViewModel : ViewModelBase
             return;
         }
 
+        var field = ResolveFocusedField();
+
         if (text.Length == 1 && char.IsLetter(text[0]) && IsCapsLockEnabled)
         {
             text = text.ToUpper(CultureInfo.CurrentCulture);
         }
 
-        if (FocusedField == "Username")
+        if (field == "Username")
         {
             Username += text;
         }
-        else if (FocusedField == "Password")
+        else if (field == "Password")
         {
             Password += text;
         }
-        else if (FocusedField == "TwoFactor")
+        else if (field == "TwoFactor")
         {
             TwoFactorCode += text;
         }
@@ -125,15 +127,16 @@ public partial class LockWindowViewModel : ViewModelBase
     [RelayCommand]
     private void Backspace()
     {
-        if (FocusedField == "Username" && Username.Length > 0)
+        var field = ResolveFocusedField();
+        if (field == "Username" && Username.Length > 0)
         {
             Username = Username.Substring(0, Username.Length - 1);
         }
-        else if (FocusedField == "Password" && Password.Length > 0)
+        else if (field == "Password" && Password.Length > 0)
         {
             Password = Password.Substring(0, Password.Length - 1);
         }
-        else if (FocusedField == "TwoFactor" && TwoFactorCode.Length > 0)
+        else if (field == "TwoFactor" && TwoFactorCode.Length > 0)
         {
             TwoFactorCode = TwoFactorCode.Substring(0, TwoFactorCode.Length - 1);
         }
@@ -142,15 +145,16 @@ public partial class LockWindowViewModel : ViewModelBase
     [RelayCommand]
     private void ClearFocusedField()
     {
-        if (FocusedField == "Username")
+        var field = ResolveFocusedField();
+        if (field == "Username")
         {
             Username = string.Empty;
         }
-        else if (FocusedField == "Password")
+        else if (field == "Password")
         {
             Password = string.Empty;
         }
-        else if (FocusedField == "TwoFactor")
+        else if (field == "TwoFactor")
         {
             TwoFactorCode = string.Empty;
         }
@@ -159,7 +163,12 @@ public partial class LockWindowViewModel : ViewModelBase
     [RelayCommand]
     private void ToggleCapsLock()
     {
-        IsCapsLockEnabled = !IsCapsLockEnabled;
+        UpdateCapsLockState(!IsCapsLockEnabled);
+    }
+
+    public void UpdateCapsLockState(bool isEnabled)
+    {
+        IsCapsLockEnabled = isEnabled;
     }
 
     [RelayCommand]
@@ -226,6 +235,7 @@ public partial class LockWindowViewModel : ViewModelBase
         {
             IsPasswordInputVisible = true;
             IsTwoFactorInputVisible = false;
+            EnsureFocusedField();
             return;
         }
 
@@ -235,6 +245,7 @@ public partial class LockWindowViewModel : ViewModelBase
         if (!SecurityService.Instance.Settings.IsTwoFactorEnabled)
         {
             IsTwoFactorInputVisible = false;
+            EnsureFocusedField();
             return;
         }
 
@@ -245,6 +256,32 @@ public partial class LockWindowViewModel : ViewModelBase
             AdminLoginVerificationMode.TwoFactorOnly => true,
             _ => false
         };
+
+        EnsureFocusedField();
+    }
+
+    private string ResolveFocusedField()
+    {
+        var field = string.IsNullOrWhiteSpace(FocusedField) ? "Username" : FocusedField;
+        if (field == "Password" && !IsPasswordInputVisible)
+        {
+            field = IsTwoFactorInputVisible ? "TwoFactor" : "Username";
+        }
+        else if (field == "TwoFactor" && !IsTwoFactorInputVisible)
+        {
+            field = IsPasswordInputVisible ? "Password" : "Username";
+        }
+
+        return field;
+    }
+
+    private void EnsureFocusedField()
+    {
+        var resolved = ResolveFocusedField();
+        if (FocusedField != resolved)
+        {
+            FocusedField = resolved;
+        }
     }
 
     private void OnTimerTick(object? sender, EventArgs e)

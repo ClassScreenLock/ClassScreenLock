@@ -40,7 +40,6 @@ public class ContentAnalysisEngine
         if (string.IsNullOrWhiteSpace(text)) 
             return new AnalysisResult { IsViolation = false };
 
-        // 1. 精确匹配规则 (同时检查域名和描述)
         foreach (var rule in rules.Where(r => r.IsEnabled))
         {
             if (!string.IsNullOrEmpty(rule.Domain))
@@ -57,7 +56,6 @@ public class ContentAnalysisEngine
                     };
                 }
             }
-
         }
 
         // 2. 特征启发式分析 (Heuristic Analysis)

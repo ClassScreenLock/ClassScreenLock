@@ -30,7 +30,7 @@
             </Grid>
 
             <!-- 下课锁屏设置 -->
-            <Border Classes="card" Padding="20">
+            <Border Classes="card" Padding="20" IsEnabled="{Binding CanEditBreakTimeLock}">
                 <StackPanel Spacing="20">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <icons:Icon Value="fas fa-lock" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
@@ -156,34 +156,37 @@
                     </Grid>
 
                     <!-- 预览区域 -->
-                    <Border Background="#20000000" CornerRadius="12" Padding="20" Margin="0,8,0,0">
-                        <StackPanel Spacing="12" HorizontalAlignment="Center">
-                            <TextBlock Text="锁屏文字效果预览" FontSize="16" Opacity="0.8" HorizontalAlignment="Center"/>
-                            <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                <TextBlock Text="屏幕已锁定" FontSize="32" FontWeight="Light" Foreground="White" HorizontalAlignment="Center">
-                                    <TextBlock.Effect>
-                                        <DropShadowEffect Color="#CC000000"
-                                                          BlurRadius="{Binding LockTextShadowBlurRadius}"
-                                                          Opacity="{Binding LockTextShadowOpacity}"/>
-                                    </TextBlock.Effect>
-                                </TextBlock>
-                                <TextBlock Text="12:34:56" FontSize="56" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center">
-                                    <TextBlock.Effect>
-                                        <DropShadowEffect Color="#E6000000"
-                                                          BlurRadius="{Binding LockTextShadowBlurRadius}"
-                                                          Opacity="{Binding LockTextShadowOpacity}"/>
-                                    </TextBlock.Effect>
-                                </TextBlock>
-                                <TextBlock Text="距离下节课: 10:00" FontSize="18" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
-                                    <TextBlock.Effect>
-                                        <DropShadowEffect Color="#CC000000"
-                                                          BlurRadius="{Binding LockTextShadowBlurRadius}"
-                                                          Opacity="{Binding LockTextShadowOpacity}"/>
-                                    </TextBlock.Effect>
-                                </TextBlock>
+                    <Grid Margin="0,8,0,0">
+                        <Border Background="Black" CornerRadius="12" Opacity="{Binding LockBackgroundOpacity}"/>
+                        <Border Background="Transparent" CornerRadius="12" Padding="20">
+                            <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                <TextBlock Text="锁屏文字效果预览" FontSize="16" Opacity="0.8" HorizontalAlignment="Center"/>
+                                <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                    <TextBlock Text="屏幕已锁定" FontSize="32" FontWeight="Light" Foreground="White" HorizontalAlignment="Center">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#CC000000"
+                                                              BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                              Opacity="{Binding LockTextShadowOpacity}"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                    <TextBlock Text="12:34:56" FontSize="56" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#E6000000"
+                                                              BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                              Opacity="{Binding LockTextShadowOpacity}"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                    <TextBlock Text="距离下节课: 10:00" FontSize="18" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#CC000000"
+                                                              BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                              Opacity="{Binding LockTextShadowOpacity}"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </Border>
+                    </Grid>
                 </StackPanel>
             </Border>
 

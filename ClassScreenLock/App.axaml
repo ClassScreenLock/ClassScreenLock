@@ -49,7 +49,7 @@
     <TrayIcon.Icons>
         <TrayIcons>
             <TrayIcon Icon="avares://ClassScreenLock/ClassScreenLock.ico" 
-                      ToolTipText="课堂锁屏"
+                      ToolTipText="{DynamicResource AppTitle}"
                       Clicked="TrayIcon_OnClicked">
                 <TrayIcon.Menu>
                     <NativeMenu>

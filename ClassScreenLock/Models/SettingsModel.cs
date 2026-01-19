@@ -27,4 +27,7 @@ public class SettingsModel
     
     [JsonPropertyName("useSystemAccentColor")]
     public bool UseSystemAccentColor { get; set; } = false;
+
+    [JsonPropertyName("notificationPosition")]
+    public NotificationPosition NotificationPosition { get; set; } = NotificationPosition.Center;
 }

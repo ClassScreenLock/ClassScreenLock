@@ -6,6 +6,7 @@ using System.Text.Unicode;
 using System.Security.Cryptography;
 using System.Text;
 using System.Linq;
+using System.Globalization;
 using ClassScreenLock.Models;
 
 namespace ClassScreenLock.Services;
@@ -101,6 +102,10 @@ public class SettingsService
             if (!File.Exists(path))
             {
                 var defaultVal = new T();
+                if (defaultVal is SettingsModel general)
+                {
+                    general.Language = ResolveDefaultLanguage();
+                }
                 SaveSettingsInternal(path, defaultVal);
                 return defaultVal;
             }
@@ -207,4 +212,19 @@ public class SettingsService
     public static void UpdateGeneral(Action<SettingsModel> action) { action(General); SaveGeneral(General); }
     public static void UpdateLock(Action<LockSettingsModel> action) { action(Lock); SaveLock(Lock); }
     public static void UpdateBlockage(Action<SoftwareBlockageModel> action) { action(Blockage); SaveBlockage(Blockage); }
+
+    private static string ResolveDefaultLanguage()
+    {
+        try
+        {
+            var name = CultureInfo.CurrentUICulture?.Name ?? string.Empty;
+            if (name.StartsWith("zh", StringComparison.OrdinalIgnoreCase)) return "zh-CN";
+            if (name.StartsWith("en", StringComparison.OrdinalIgnoreCase)) return "en-US";
+        }
+        catch
+        {
+        }
+
+        return "en-US";
+    }
 }

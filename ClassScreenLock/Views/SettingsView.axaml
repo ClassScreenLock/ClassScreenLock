@@ -31,7 +31,7 @@
                                 <TextBlock Text="{DynamicResource Settings_DarkMode}" Classes="subtitle"/>
                                 <TextBlock Text="选择应用的主题" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
-                            <ComboBox Grid.Column="1" SelectedIndex="{Binding DarkMode, Converter={x:Static converters:BooleanToIntConverter.Instance}}" 
+                            <ComboBox Grid.Column="1" SelectedIndex="{Binding DarkMode, Converter={x:Static converters:BooleanToIntConverter.Instance}, ConverterParameter=Invert}" 
                                        Width="200" HorizontalAlignment="Right" VerticalAlignment="Center">
                                  <ComboBoxItem Content="{DynamicResource Theme_Light}" />
                                  <ComboBoxItem Content="{DynamicResource Theme_Dark}" />
@@ -183,6 +183,22 @@
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding ShowNotifications}" 
                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- 通知位置 -->
+                        <Grid ColumnDefinitions="Auto,*">
+                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
+                                <TextBlock Text="{DynamicResource Settings_NotificationPosition}" Classes="subtitle"/>
+                                <TextBlock Text="{DynamicResource Settings_NotificationPosition_Description}" Classes="caption" Opacity="0.7"/>
+                            </StackPanel>
+                            <ComboBox Grid.Column="1" SelectedIndex="{Binding NotificationPositionIndex, Mode=TwoWay}" 
+                                      Width="200" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <ComboBoxItem Content="{DynamicResource NotificationPosition_Center}" />
+                                <ComboBoxItem Content="{DynamicResource NotificationPosition_TopLeft}" />
+                                <ComboBoxItem Content="{DynamicResource NotificationPosition_TopRight}" />
+                                <ComboBoxItem Content="{DynamicResource NotificationPosition_BottomLeft}" />
+                                <ComboBoxItem Content="{DynamicResource NotificationPosition_BottomRight}" />
+                            </ComboBox>
                         </Grid>
                     </StackPanel>
                 </Border>

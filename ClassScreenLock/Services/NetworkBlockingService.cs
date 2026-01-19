@@ -36,6 +36,7 @@ public class NetworkBlockingService
     private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
     private const int SW_MINIMIZE = 6;
+    private const int SW_RESTORE = 9;
     private const byte VK_CONTROL = 0x11;
     private const byte VK_W = 0x57;
     private const uint KEYEVENTF_KEYUP = 0x0002;
@@ -98,7 +99,7 @@ public class NetworkBlockingService
             var settings = SettingsService.Blockage;
             var lockService = LockScreenService.Instance;
             bool lockState = lockService.IsLocked || lockService.IsProtectionOnlyActive;
-            if (settings != null && (settings.IsNetworkLockEnabled || lockState))
+            if (settings != null && (settings.IsNetworkLockEnabled || lockState || settings.IsBasicProtectionEnabled))
             {
                 try
                 {
@@ -111,7 +112,7 @@ public class NetworkBlockingService
             }
 
             int elapsed = (int)stopwatch.ElapsedMilliseconds;
-            int intervalMs = (lockService.IsLocked || lockService.IsProtectionOnlyActive) ? 500 : 5000;
+            int intervalMs = (lockService.IsLocked || lockService.IsProtectionOnlyActive || (settings?.IsNetworkLockEnabled ?? false) || (settings?.IsBasicProtectionEnabled ?? false)) ? 100 : 2000;
             int sleepTime = intervalMs - elapsed;
             if (sleepTime > 0)
             {
@@ -122,14 +123,18 @@ public class NetworkBlockingService
 
     private HashSet<uint> _cachedBrowserPids = new();
     private DateTime _lastPidUpdate = DateTime.MinValue;
+    private readonly Dictionary<uint, DateTime> _lastInterceptionAt = new();
+    private readonly Dictionary<uint, string> _lastInterceptionTitle = new();
 
     private void ExecuteDetectionCycle()
     {
         var settings = SettingsService.Blockage;
-        if (settings == null || !settings.IsNetworkLockEnabled) return;
+        if (settings == null) return;
 
-        // 如果没有锁屏，且没有处于基础防护模式，则跳过昂贵的窗口遍历
-        if (!LockScreenService.Instance.IsLocked && !settings.IsBasicProtectionEnabled) return;
+        var lockService = LockScreenService.Instance;
+        bool lockState = lockService.IsLocked || lockService.IsProtectionOnlyActive;
+
+        if (!lockState && !settings.IsNetworkLockEnabled && !settings.IsBasicProtectionEnabled) return;
 
         // 获取当前活动窗口
         IntPtr foregroundHwnd = GetForegroundWindow();
@@ -149,6 +154,29 @@ public class NetworkBlockingService
         
         if (!activeRules.Any()) return;
 
+        try
+        {
+            GetWindowThreadProcessId(foregroundHwnd, out uint fgPid);
+            using var fgProcess = Process.GetProcessById((int)fgPid);
+            var name = fgProcess.ProcessName;
+            if (_browserProcesses.Any(b => string.Equals(b, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                var sb = new StringBuilder(1024);
+                GetWindowText(foregroundHwnd, sb, sb.Capacity);
+                string title = sb.ToString();
+                if (!string.IsNullOrEmpty(title))
+                {
+                    var analysis = ContentAnalysisEngine.Instance.Analyze(title, activeRules);
+                    if (analysis.IsViolation)
+                    {
+                        ExecuteInterception((uint)fgProcess.Id, analysis, foregroundHwnd);
+                        return;
+                    }
+                }
+            }
+        }
+        catch { }
+
         // 每秒更新一次浏览器进程 PID 列表
         if (isDeepScanCycle || _cachedBrowserPids.Count == 0 || (DateTime.Now - _lastPidUpdate).TotalSeconds > 5)
         {
@@ -157,10 +185,11 @@ public class NetworkBlockingService
 
         if (!_cachedBrowserPids.Any()) return;
 
-        // 使用 EnumWindows 遍历所有窗口
+        var interceptedPidsThisCycle = new HashSet<uint>();
         EnumWindows((hWnd, lParam) =>
         {
             GetWindowThreadProcessId(hWnd, out uint processId);
+            if (interceptedPidsThisCycle.Contains(processId)) return true;
             if (_cachedBrowserPids.Contains(processId))
             {
                 // 1. 快速扫描：获取当前窗口标题
@@ -174,6 +203,7 @@ public class NetworkBlockingService
                     if (analysis.IsViolation)
                     {
                         ExecuteInterception(processId, analysis, hWnd);
+                        interceptedPidsThisCycle.Add(processId);
                         return true;
                     }
                 }
@@ -205,6 +235,25 @@ public class NetworkBlockingService
         try
         {
             var p = Process.GetProcessById((int)processId);
+            var sb = new StringBuilder(1024);
+            GetWindowText(hWnd, sb, sb.Capacity);
+            var title = sb.ToString();
+
+            var now = DateTime.UtcNow;
+            if (_lastInterceptionAt.TryGetValue(processId, out var last))
+            {
+                if ((now - last) < TimeSpan.FromMilliseconds(1200))
+                {
+                    if (_lastInterceptionTitle.TryGetValue(processId, out var lastTitle) && string.Equals(lastTitle, title, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return;
+                    }
+                }
+            }
+
+            _lastInterceptionAt[processId] = now;
+            _lastInterceptionTitle[processId] = title;
+
             PerformInterception(p, analysis, hWnd);
         }
         catch { }
@@ -220,7 +269,7 @@ public class NetworkBlockingService
         {
             if (hWnd != IntPtr.Zero)
             {
-                // 确保窗口在前台以便发送关闭快捷键
+                ShowWindow(hWnd, SW_RESTORE);
                 SetForegroundWindow(hWnd);
                 
                 // 发送 Ctrl+W 关闭当前违规标签页
@@ -228,6 +277,8 @@ public class NetworkBlockingService
                 keybd_event(VK_W, 0, 0, 0);
                 keybd_event(VK_W, 0, KEYEVENTF_KEYUP, 0);
                 keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
+
+                
                 
                 // 立即切断该进程的所有活动 TCP 连接（防火墙式行为）
                 KillTcpConnectionsForProcess(p.Id);
@@ -383,7 +434,7 @@ public class NetworkBlockingService
 
             // 所有启用的域名规则都用于构造防火墙 IP 阻断
             var activeRules = rules
-                .Where(r => r.IsEnabled && r.Type == "Domain")
+                .Where(r => r.IsEnabled && r.Type == "Domain" && (r.Method == InterceptionMethod.Hosts || r.Method == InterceptionMethod.Both))
                 .ToList();
 
             if (!activeRules.Any()) return;
@@ -462,7 +513,7 @@ public class NetworkBlockingService
 
             // 所有启用的域名规则都写入 Hosts，实现纯网络层阻断
             var activeRules = rules
-                .Where(r => r.IsEnabled && r.Type == "Domain")
+                .Where(r => r.IsEnabled && r.Type == "Domain" && (r.Method == InterceptionMethod.Hosts || r.Method == InterceptionMethod.Both))
                 .ToList();
             
             if (activeRules.Any())

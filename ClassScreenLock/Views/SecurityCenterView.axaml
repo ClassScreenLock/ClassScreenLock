@@ -424,6 +424,14 @@
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <icons:Icon Value="fas fa-coffee" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="下课锁屏设置" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding BreakTimeLockSettingsLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                                             <icons:Icon Value="fas fa-calendar-alt" Width="16" Height="16" Opacity="0.8"/>
                                             <TextBlock Text="课表" VerticalAlignment="Center"/>
                                         </StackPanel>

@@ -14,7 +14,9 @@
         ShowInTaskbar="False"
         RequestedThemeVariant="Dark"
         Background="Transparent"
-        TransparencyLevelHint="Transparent">
+        TransparencyLevelHint="Transparent"
+        KeyDown="Window_OnKeyDown"
+        KeyUp="Window_OnKeyUp">
 
     <Window.Styles>
         <Style Selector="TextBox">
@@ -57,6 +59,11 @@
             <Setter Property="Background" Value="#4D4D4D"/>
             <Setter Property="Width" Value="80"/>
         </Style>
+        <Style Selector="Button.keypad.caps-on">
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
 
         <!-- 强制输入框在各种状态下保持深色背景和白色文字 -->
         <Style Selector="TextBox /template/ Border#PART_BorderElement">
@@ -86,6 +93,7 @@
     </Window.Styles>
 
     <Grid>
+        <Border Background="Black" Opacity="{Binding LockBackgroundOpacity}"/>
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="40" IsVisible="{Binding !IsLoginVisible}">
             <!-- 图标和标题 -->
             <StackPanel Spacing="16" HorizontalAlignment="Center">
@@ -360,11 +368,13 @@
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
                             <Button x:Name="CapsKey"
                                     Classes="keypad keypad-func"
+                                    Classes.caps-on="{Binding IsCapsLockEnabled}"
                                     Width="120"
                                     Command="{Binding ToggleCapsLockCommand}">
                                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                                     <icons:Icon Value="fas fa-arrow-up" Width="16" Height="16"/>
-                                    <TextBlock Text="大写"/>
+                                    <TextBlock Text="大写" IsVisible="{Binding IsCapsLockEnabled}"/>
+                                    <TextBlock Text="小写" IsVisible="{Binding !IsCapsLockEnabled}"/>
                                 </StackPanel>
                             </Button>
 

@@ -41,6 +41,9 @@ public class LockSettingsModel
     [JsonPropertyName("exitAppMinAccountType")]
     public AccountType? ExitAppMinAccountType { get; set; } = null;
 
+    [JsonPropertyName("breakTimeLockSettingsMinAccountType")]
+    public AccountType? BreakTimeLockSettingsMinAccountType { get; set; } = null;
+
     [JsonPropertyName("sidebarHomeMinAccountType")]
     public AccountType? SidebarHomeMinAccountType { get; set; } = null;
 

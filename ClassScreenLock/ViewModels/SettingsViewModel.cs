@@ -45,6 +45,9 @@ public partial class SettingsViewModel : ViewModelBase
     
     [ObservableProperty]
     private bool _showNotifications = true;
+
+    [ObservableProperty]
+    private int _notificationPositionIndex = 0;
     
     [ObservableProperty]
     private string _language = "zh-CN";
@@ -163,6 +166,7 @@ public partial class SettingsViewModel : ViewModelBase
         Language = Settings.Language;
         UseSystemAccentColor = Settings.UseSystemAccentColor;
         CustomAccentColor = Settings.AccentColor; // 初始化为当前强调色
+        NotificationPositionIndex = (int)Settings.NotificationPosition;
         
         // 如果使用系统强调色，则获取系统强调色
         if (UseSystemAccentColor)
@@ -287,6 +291,11 @@ public partial class SettingsViewModel : ViewModelBase
     {
         UpdateSetting(s => s.ShowNotifications = value);
         NotificationService.Instance.UpdateNotificationSettings(value);
+    }
+
+    partial void OnNotificationPositionIndexChanged(int value)
+    {
+        UpdateSetting(s => s.NotificationPosition = (NotificationPosition)value);
     }
 
     partial void OnLanguageChanged(string value)
@@ -512,6 +521,7 @@ public partial class SettingsViewModel : ViewModelBase
             AccentColor = defaultSettings.AccentColor;
             ShowNotifications = defaultSettings.ShowNotifications;
             Language = defaultSettings.Language;
+            NotificationPositionIndex = (int)defaultSettings.NotificationPosition;
         }
         finally
         {
