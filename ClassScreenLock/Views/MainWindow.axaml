@@ -1,0 +1,97 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:ClassScreenLock.Views"
+        xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+        xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+        x:Class="ClassScreenLock.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/ClassScreenLock.ico"
+        Title="ClassScreenLock"
+        Classes="acrylic">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+        
+        <!-- 标题栏 -->
+        <Border Grid.Row="0" Classes="chrome" 
+                Padding="16,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="ClassScreenLock" Classes="badge"/>
+            </Grid>
+        </Border>
+        
+        <!-- 主内容区域 -->
+        <Grid Grid.Row="1" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- 侧边栏 -->
+            <views:Sidebar Grid.Column="0" 
+                           DataContext="{Binding SidebarViewModel}"
+                           IsEnabled="{Binding !$parent[Window].((vm:MainWindowViewModel)DataContext).IsAnyLockActive}"
+                           IsVisible="{Binding !$parent[Window].((vm:MainWindowViewModel)DataContext).IsOnboarding}"/>
+            
+            <!-- 内容区域 -->
+            <Border Grid.Column="1" 
+                    Padding="24"
+                    CornerRadius="0"
+                    Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+                <Grid>
+                    <!-- 关于页面 -->
+                    <ContentControl Content="{Binding CurrentView}" 
+                                    IsVisible="{Binding CurrentView, Converter={x:Static Converters:IsNotNullConverter.Instance}}">
+                        <ContentControl.ContentTemplate>
+                            <DataTemplate>
+                                <ContentPresenter Content="{Binding}"/>
+                            </DataTemplate>
+                        </ContentControl.ContentTemplate>
+                    </ContentControl>
+                    
+                    <!-- 默认内容 -->
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16"
+                                IsVisible="{Binding CurrentView, Converter={x:Static Converters:IsNullConverter.Instance}}">
+                        <TextBlock Text="{Binding Greeting}" Classes="subtitle"
+                                   HorizontalAlignment="Center"/>
+                        
+                        <Button Content="开始锁定" Command="{Binding StartLockCommand}" 
+                                IsVisible="{Binding !IsAnyLockActive}"
+                                Classes="accent" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+        
+        <!-- 底部状态栏 -->
+        <Border Grid.Row="2" Classes="chrome" 
+                Padding="16,8"
+                IsVisible="{Binding !$parent[Window].((vm:MainWindowViewModel)DataContext).IsOnboarding}">
+            <TextBlock Text="{Binding Status}" Classes="status"/>
+        </Border>
+        <!-- 点击反馈覆盖层：不参与命中测试，承载扩散动画 -->
+        <Canvas x:Name="RippleOverlay"
+                IsHitTestVisible="False"
+                Background="Transparent"
+                Grid.RowSpan="3"
+                Panel.ZIndex="9999"/>
+    </Grid>
+</Window>

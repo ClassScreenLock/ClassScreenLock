@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:services="clr-namespace:ClassScreenLock.Services"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="ClassScreenLock.Views.LogManagementView"
+             x:DataType="vm:LogManagementViewModel">
+
+    <Design.DataContext>
+        <vm:LogManagementViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- 标题和操作按钮 -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="24,24,24,16">
+            <TextBlock Text="安全日志" Classes="h1" VerticalAlignment="Center"/>
+            
+            <Button Grid.Column="1" Command="{Binding RefreshLogsCommand}" Classes="accent" Margin="0,0,12,0" Padding="12,8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <PathIcon Data="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" Width="16" Height="16"/>
+                    <TextBlock Text="刷新"/>
+                </StackPanel>
+            </Button>
+
+            <Button Grid.Column="2" Command="{Binding ClearLogsCommand}" Classes="danger" Padding="12,8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <PathIcon Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" Width="16" Height="16"/>
+                    <TextBlock Text="清除日志"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- 日志列表 -->
+        <DataGrid Grid.Row="1" 
+                  ItemsSource="{Binding Logs}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserSortColumns="True"
+                  GridLinesVisibility="Horizontal"
+                  SelectionMode="Single"
+                  Background="Transparent"
+                  RowHeight="42"
+                  Margin="24,0,24,24">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="时间" Binding="{Binding Timestamp, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="180"/>
+                <DataGridTextColumn Header="类型" Binding="{Binding Type}" Width="100"/>
+                <DataGridTextColumn Header="操作" Binding="{Binding Action}" Width="100"/>
+                <DataGridTextColumn Header="目标" Binding="{Binding Target}" Width="200"/>
+                <DataGridTextColumn Header="详情" Binding="{Binding Details}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

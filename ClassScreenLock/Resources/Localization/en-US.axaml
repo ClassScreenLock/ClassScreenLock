@@ -1,0 +1,246 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Application Title -->
+    <x:String x:Key="AppTitle">ClassScreenLock</x:String>
+    
+    <!-- Sidebar Navigation -->
+    <x:String x:Key="Sidebar_Home">Main Screen</x:String>
+    <x:String x:Key="Sidebar_LockSettings">Lock Settings</x:String>
+    <x:String x:Key="Sidebar_Schedule">Time Schedule</x:String>
+    <x:String x:Key="Sidebar_AppManagement">App Management</x:String>
+    <x:String x:Key="Sidebar_NetworkInterception">Network Interception</x:String>
+    <x:String x:Key="Sidebar_SecurityLogs">Security Logs</x:String>
+    <x:String x:Key="Sidebar_SecurityCenter">Password Security</x:String>
+    <x:String x:Key="Sidebar_Settings">System Settings</x:String>
+    <x:String x:Key="Sidebar_About">About</x:String>
+    <x:String x:Key="Sidebar_Collapse">Collapse Sidebar</x:String>
+    <x:String x:Key="Sidebar_Expand">Expand Sidebar</x:String>
+    
+    <!-- Settings Page -->
+    <x:String x:Key="Settings_Title">System Settings</x:String>
+    <x:String x:Key="Settings_Appearance_Title">Appearance Settings</x:String>
+    <x:String x:Key="Settings_Theme">Theme</x:String>
+    <x:String x:Key="Settings_Language">Language</x:String>
+    <x:String x:Key="Settings_AccentColor">Accent Color</x:String>
+    <x:String x:Key="Settings_FontSize">Font Size</x:String>
+    <x:String x:Key="Settings_FontFamily">Font Family</x:String>
+    <x:String x:Key="Settings_FontPreview">Font Preview</x:String>
+    <x:String x:Key="Settings_DarkMode">Dark Mode</x:String>
+    <x:String x:Key="Settings_Behavior_Title">Behavior Settings</x:String>
+    <x:String x:Key="Settings_Startup">Start with Windows</x:String>
+    <x:String x:Key="Settings_LockTimeout">Lock Timeout</x:String>
+    <x:String x:Key="Settings_ShowNotifications">Show Notifications</x:String>
+    <x:String x:Key="Settings_Language_Title">Language Settings</x:String>
+    <x:String x:Key="Settings_InterfaceLanguage">Interface Language</x:String>
+    <x:String x:Key="Settings_InterfaceLanguage_Description">Select the display language for the application</x:String>
+    <x:String x:Key="Settings_ResetToDefaults">Reset to Default</x:String>
+    
+    <!-- Theme Options -->
+    <x:String x:Key="Theme_Default">Default</x:String>
+    <x:String x:Key="Theme_Light">Light</x:String>
+    <x:String x:Key="Theme_Dark">Dark</x:String>
+    
+    <!-- Color Options -->
+    <x:String x:Key="Color_Blue">Blue</x:String>
+    <x:String x:Key="Color_Green">Green</x:String>
+    <x:String x:Key="Color_Orange">Orange</x:String>
+    <x:String x:Key="Color_Purple">Purple</x:String>
+    <x:String x:Key="Color_Red">Red</x:String>
+    
+    <!-- Font Size Options -->
+    <x:String x:Key="FontSize_Small">Small</x:String>
+    <x:String x:Key="FontSize_Medium">Medium</x:String>
+    <x:String x:Key="FontSize_Large">Large</x:String>
+    
+    <!-- Language Options -->
+    <x:String x:Key="Language_Chinese">Chinese</x:String>
+    <x:String x:Key="Language_English">English</x:String>
+    
+    <!-- Button Text -->
+    <x:String x:Key="Btn_Save">Save</x:String>
+    <x:String x:Key="Btn_Cancel">Cancel</x:String>
+    <x:String x:Key="Btn_Apply">Apply</x:String>
+    <x:String x:Key="Btn_Reset">Reset</x:String>
+    
+    <!-- Notification Messages -->
+    <x:String x:Key="Notify_SettingsSaved">Settings saved</x:String>
+    <x:String x:Key="Notify_DefaultsRestored">Defaults restored</x:String>
+    <x:String x:Key="Notify_LanguageChanged">Language changed</x:String>
+    <x:String x:Key="Notify_ThemeChanged">Theme changed</x:String>
+    <x:String x:Key="Notification_Info">Info</x:String>
+    <x:String x:Key="Notification_Success">Success</x:String>
+    <x:String x:Key="Notification_Warning">Warning</x:String>
+    <x:String x:Key="Notification_Error">Error</x:String>
+
+    <!-- Security Center -->
+    <x:String x:Key="SecurityCenter_Title">Password Security Center</x:String>
+    <x:String x:Key="SecurityCenter_AdminLogin">Admin Login</x:String>
+    <x:String x:Key="SecurityCenter_Username">Username</x:String>
+    <x:String x:Key="SecurityCenter_Password">Password</x:String>
+    <x:String x:Key="SecurityCenter_Login">Login</x:String>
+    <x:String x:Key="SecurityCenter_Logout">Logout</x:String>
+    <x:String x:Key="SecurityCenter_Biometric">Use Biometric</x:String>
+    <x:String x:Key="SecurityCenter_CurrentPassword">Current Password</x:String>
+    <x:String x:Key="SecurityCenter_NewPassword">New Password</x:String>
+    <x:String x:Key="SecurityCenter_ConfirmPassword">Confirm New Password</x:String>
+    <x:String x:Key="SecurityCenter_ChangePassword">Change Password</x:String>
+    <x:String x:Key="SecurityCenter_Strength">Password Strength</x:String>
+    <x:String x:Key="SecurityCenter_LeakCheck">Check Leak</x:String>
+    <x:String x:Key="SecurityCenter_GeneratePassword">Generate Strong Password</x:String>
+    <x:String x:Key="SecurityCenter_ReportTitle">Password Security Report</x:String>
+
+    <!-- Account Info & Management -->
+    <x:String x:Key="Account_Info_Title">Account Info</x:String>
+    <x:String x:Key="Account_Type_SuperAdmin">Super Administrator</x:String>
+    <x:String x:Key="Account_Type_Admin">Administrator</x:String>
+    <x:String x:Key="Account_Type_User">User</x:String>
+    <x:String x:Key="Account_Status_LoggedOut">Logged Out</x:String>
+    <x:String x:Key="Account_Status_LoggedIn">Logged In</x:String>
+    <x:String x:Key="Account_Status_Locked">Locked</x:String>
+    <x:String x:Key="Account_Status">Status</x:String>
+    <x:String x:Key="Account_Status_Error">Failed to load account info</x:String>
+    <x:String x:Key="Account_Status_ErrorDetail">Unable to retrieve current account information. Please check configuration or try again.</x:String>
+    <x:String x:Key="Account_Status_Loading">Loading account information...</x:String>
+    <x:String x:Key="Account_CurrentAccount">Current Account</x:String>
+    <x:String x:Key="Account_LoginTime">Login Time</x:String>
+    <x:String x:Key="Account_Manage">Account Management</x:String>
+    <x:String x:Key="Account_Login">Login</x:String>
+    <x:String x:Key="Account_Logout">Logout</x:String>
+    <x:String x:Key="Account_Create">Create Sub-Account</x:String>
+    <x:String x:Key="Account_Username">Username</x:String>
+    <x:String x:Key="Account_Password">Password</x:String>
+    <x:String x:Key="Account_Type">Account Type</x:String>
+    <x:String x:Key="Account_Delete">Delete</x:String>
+    <x:String x:Key="Account_Delete_Confirm">Are you sure to delete this account? This action cannot be undone.</x:String>
+    <x:String x:Key="Account_Delete_Title">Delete Account Confirmation</x:String>
+    <x:String x:Key="Account_Init_Title">System Initialization</x:String>
+    <x:String x:Key="Account_Init_Subtitle">Welcome! Please set up a super administrator account to enable security features.</x:String>
+    <x:String x:Key="Account_Init_Button">Complete Initialization</x:String>
+    <x:String x:Key="Account_Init_Success">System initialization successful!</x:String>
+    <x:String x:Key="Account_ConfirmPassword">Confirm Password</x:String>
+    
+    <!-- Classes -->
+    <x:String x:Key="Classes_Title">My Classes</x:String>
+    <x:String x:Key="Class_AddNew">Add New Class</x:String>
+    <x:String x:Key="Class_Name">Class Name</x:String>
+    <x:String x:Key="Class_Code">Class Code</x:String>
+    <x:String x:Key="Class_Teacher">Teacher</x:String>
+    <x:String x:Key="Class_Room">Room</x:String>
+    
+    <!-- Font Preview -->
+    <x:String x:Key="Settings_FontPreview_Title">Font Preview</x:String>
+    <x:String x:Key="Settings_FontPreview_Chinese">中文预览：你好，世界！</x:String>
+    <x:String x:Key="Settings_FontPreview_English">English Preview: Hello, World!</x:String>
+    <x:String x:Key="Settings_FontRestartTip">Tip: Some font changes require restarting the app</x:String>
+    <x:String x:Key="Settings_RestartApp">Restart App</x:String>
+    <x:String x:Key="Class_Time">Time</x:String>
+    
+    <!-- Home Page -->
+    <x:String x:Key="Home_Welcome">Welcome to Class Screen Lock</x:String>
+    <x:String x:Key="Home_LockScreen">Lock Screen</x:String>
+    <x:String x:Key="Home_UnlockScreen">Unlock Screen</x:String>
+    <x:String x:Key="Home_CurrentClass">Current Class</x:String>
+    <x:String x:Key="Home_NextClass">Next Class</x:String>
+    
+    <!-- App Management -->
+    <x:String x:Key="AppManagement_Title">App Management</x:String>
+    <x:String x:Key="AppManagement_RunningApps">Running Apps</x:String>
+    <x:String x:Key="AppManagement_AllowedApps">Allowed Apps</x:String>
+    <x:String x:Key="AppManagement_BlockedApps">Blocked Apps</x:String>
+    <x:String x:Key="AppManagement_AddApp">Add App</x:String>
+    <x:String x:Key="AppManagement_RemoveApp">Remove App</x:String>
+    <x:String x:Key="AppManagement_Refresh">Refresh List</x:String>
+    <x:String x:Key="AppManagement_KillProcess">Kill Process</x:String>
+    <x:String x:Key="AppManagement_Name">Name</x:String>
+    <x:String x:Key="AppManagement_PID">PID</x:String>
+    <x:String x:Key="AppManagement_CPU">CPU</x:String>
+    <x:String x:Key="AppManagement_Memory">Memory</x:String>
+    <x:String x:Key="AppManagement_Path">Path</x:String>
+    <x:String x:Key="AppManagement_Actions">Actions</x:String>
+    <x:String x:Key="AppManagement_BlockedPaths">Blocked Paths</x:String>
+    <x:String x:Key="AppManagement_AddPath">Add Path</x:String>
+    <x:String x:Key="AppManagement_AddToAllowed">Add to allowed list</x:String>
+    <x:String x:Key="AppManagement_AddToBlocked">Add to blocked list</x:String>
+    <x:String x:Key="AppManagement_OpenFileLocation">Open file location</x:String>
+    <x:String x:Key="AppManagement_CopyPath">Copy path</x:String>
+    <x:String x:Key="AppManagement_CopyProcessName">Copy process name</x:String>
+    <x:String x:Key="AppManagement_GPU">GPU</x:String>
+    <x:String x:Key="AppManagement_Threads">Threads</x:String>
+    <x:String x:Key="AppManagement_Handles">Handles</x:String>
+
+    <!-- Lock Settings -->
+    <x:String x:Key="LockSettings_Title">Lock Settings</x:String>
+    <x:String x:Key="LockSettings_BreakTimeLock">Break Time Lock</x:String>
+    <x:String x:Key="LockSettings_EnableBreakTimeLock">Enable Break Time Lock</x:String>
+    <x:String x:Key="LockSettings_EnableBreakTimeLock_Desc">Automatically show break button when class ends</x:String>
+    <x:String x:Key="LockSettings_LockMode">Lock Mode</x:String>
+    <x:String x:Key="LockSettings_LockMode_Desc">Select the lock level triggered by the break button</x:String>
+    <x:String x:Key="LockSettings_LockMode_ProtectionOnly">Protection Only (No Screen Control)</x:String>
+    <x:String x:Key="LockSettings_LockMode_ScreenOnly">Screen Only</x:String>
+    <x:String x:Key="LockSettings_LockMode_Full">Full Lock (Protection + Screen)</x:String>
+    <x:String x:Key="LockSettings_AutoUnlock">Auto Unlock</x:String>
+    <x:String x:Key="LockSettings_AutoUnlock_Desc">Automatically unlock before class starts</x:String>
+    <x:String x:Key="LockSettings_AutoUnlockTime">Auto Unlock Before Class (min)</x:String>
+    <x:String x:Key="LockSettings_ShowFloatingLockWidget">Show Desktop Floating Lock Button</x:String>
+    <x:String x:Key="LockSettings_ShowFloatingLockWidget_Desc">Show a semi-transparent draggable button on the desktop to quickly enter break lock state</x:String>
+    <x:String x:Key="LockSettings_EarlyUnlockMinAccountType">Minimum account level for early unlock</x:String>
+    <x:String x:Key="LockSettings_EarlyUnlockMinAccountType_Desc">Accounts below this level cannot perform early unlock from lock screen</x:String>
+    <x:String x:Key="LockSettings_TopmostExempt">Topmost Exemption</x:String>
+    <x:String x:Key="LockSettings_TopmostExempt_Desc">These apps will be allowed to display above the lock screen.</x:String>
+    <x:String x:Key="LockSettings_AddApp_Watermark">Enter process name (e.g. Classisland)</x:String>
+    <x:String x:Key="LockSettings_ForcedTopmost">Forced Topmost Apps</x:String>
+    <x:String x:Key="LockSettings_ForcedTopmost_Desc">These apps will be forced to stay at the front during lock.</x:String>
+    
+    <!-- Schedule -->
+    <x:String x:Key="Schedule_Title">Schedule</x:String>
+    <x:String x:Key="Schedule_Add">Add</x:String>
+    <x:String x:Key="Schedule_Copy">Copy</x:String>
+    <x:String x:Key="Schedule_Class">Class</x:String>
+    <x:String x:Key="Schedule_Break">Break</x:String>
+    <x:String x:Key="Schedule_Divider">Divider</x:String>
+    <x:String x:Key="Schedule_Action">Action</x:String>
+    <x:String x:Key="Schedule_Delete">Delete</x:String>
+    <x:String x:Key="Schedule_Refresh">Refresh</x:String>
+    <x:String x:Key="Schedule_Info">Schedule Info</x:String>
+    <x:String x:Key="Schedule_DeletePlan">Delete Schedule</x:String>
+    <x:String x:Key="Schedule_DefaultClassDuration">Default Class Duration</x:String>
+    <x:String x:Key="Schedule_DefaultBreakDuration">Default Break Duration</x:String>
+    <x:String x:Key="Schedule_NewPlan">New Schedule</x:String>
+    <x:String x:Key="Schedule_TimePointDetail">Time Point Details</x:String>
+    <x:String x:Key="Schedule_Label">Label</x:String>
+    <x:String x:Key="Schedule_Type">Type</x:String>
+    <x:String x:Key="Schedule_StartTime">Start Time</x:String>
+    <x:String x:Key="Schedule_EndTime">End Time</x:String>
+    <x:String x:Key="Schedule_Duration">Duration (min)</x:String>
+    <x:String x:Key="Schedule_Description">Description</x:String>
+    <x:String x:Key="Schedule_Save">Save Changes</x:String>
+    <x:String x:Key="Schedule_SelectPrompt">Select a time point to edit</x:String>
+    <x:String x:Key="Schedule_NoPlanPrompt">Select or create a schedule</x:String>
+
+    <!-- Network Interception -->
+    <x:String x:Key="Network_Title">Network Interception</x:String>
+    <x:String x:Key="Network_DomainRules">Domain Rules</x:String>
+    <x:String x:Key="Network_GlobalLock">Network Interception Master Switch</x:String>
+    <x:String x:Key="Network_AddRule">Add Blocked Domain</x:String>
+    <x:String x:Key="Network_Domain">Domain (e.g. baidu.com)</x:String>
+    <x:String x:Key="Network_Description">Description</x:String>
+    <x:String x:Key="Network_Status">Status</x:String>
+    <x:String x:Key="Network_Enabled">Enabled</x:String>
+    <x:String x:Key="Network_Disabled">Disabled</x:String>
+    <x:String x:Key="Network_GlobalLock_Desc">When enabled, the domain blacklist rules below will be enforced (requires admin rights)</x:String>
+    <x:String x:Key="Network_ApplyChanges">Apply Changes</x:String>
+    <x:String x:Key="Network_RuleExists">Rule already exists</x:String>
+    <x:String x:Key="Network_InvalidDomain">Invalid domain format</x:String>
+    <x:String x:Key="Network_InterceptionMethod">Interception Method</x:String>
+    <x:String x:Key="Network_Method_App">This App (High Freq)</x:String>
+    <x:String x:Key="Network_Method_Hosts">Hosts File</x:String>
+    <x:String x:Key="Network_Method_Both">Both Methods</x:String>
+    <x:String x:Key="Network_DoHTip">Tip: If interception fails, please try:&#x0a;1. Click "Apply Changes" and allow admin rights.&#x0a;2. Disable "Secure DNS" (DNS-over-HTTPS) in browser settings.&#x0a;3. Restart browser or clear browser cache.</x:String>
+    
+    <!-- System Tray -->
+    <x:String x:Key="Tray_Show">Show Main Window</x:String>
+    <x:String x:Key="Tray_Exit">Exit</x:String>
+    <x:String x:Key="Tray_QuickLock">Quick Lock</x:String>
+    <x:String x:Key="Tray_QuickUnlock">Quick Unlock</x:String>
+    <x:String x:Key="Tray_OpenLockSettings">Lock Settings</x:String>
+    <x:String x:Key="Tray_OpenSchedule">Schedule</x:String>
+</ResourceDictionary>

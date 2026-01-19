@@ -1,0 +1,85 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="480"
+        x:Class="ClassScreenLock.Views.SplashWindow"
+        Width="560"
+        Height="360"
+        WindowStartupLocation="CenterScreen"
+        SystemDecorations="None"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Icon="avares://ClassScreenLock/ClassScreenLock.ico"
+        RequestedThemeVariant="Default"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <LinearGradientBrush x:Key="SplashBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1A1A1A" Offset="0"/>
+                        <GradientStop Color="#2D2D2D" Offset="1"/>
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <LinearGradientBrush x:Key="SplashBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#F6F6F6" Offset="0"/>
+                        <GradientStop Color="#FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border Background="{DynamicResource SplashBackgroundBrush}"
+            CornerRadius="14"
+            ClipToBounds="True"
+            BoxShadow="0 10 30 0 #2A000000"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <Grid Margin="24" RowDefinitions="*,Auto">
+                <Image x:Name="LogoImage"
+                       Grid.Row="0"
+                       Source="avares://ClassScreenLock/Assets/CSL.png"
+                       Width="360"
+                       MaxHeight="200"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Margin="0,8,0,12"
+                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+
+                <StackPanel Grid.Row="1" HorizontalAlignment="Center" Spacing="10" Margin="0,0,0,4">
+                    <Viewbox x:Name="RingViewbox"
+                             Width="120"
+                             Height="120"
+                             Stretch="None"
+                             RenderTransformOrigin="0.5,0.5">
+                        <Canvas x:Name="DotRingCanvas" Width="100" Height="100" RenderTransformOrigin="0.5,0.5">
+                            <Canvas.RenderTransform>
+                                <RotateTransform Angle="0" CenterX="50" CenterY="50"/>
+                            </Canvas.RenderTransform>
+
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="1" Canvas.Left="47" Canvas.Top="13"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.9" Canvas.Left="64" Canvas.Top="18"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.8" Canvas.Left="76" Canvas.Top="30"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.7" Canvas.Left="81" Canvas.Top="47"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.6" Canvas.Left="76" Canvas.Top="64"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.5" Canvas.Left="64" Canvas.Top="76"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.4" Canvas.Left="47" Canvas.Top="81"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.3" Canvas.Left="30" Canvas.Top="76"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.25" Canvas.Left="18" Canvas.Top="64"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.2" Canvas.Left="13" Canvas.Top="47"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.15" Canvas.Left="18" Canvas.Top="30"/>
+                            <Ellipse Width="6" Height="6" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="0.1" Canvas.Left="30" Canvas.Top="18"/>
+                        </Canvas>
+                    </Viewbox>
+                    <TextBlock x:Name="VersionText" FontSize="12" Opacity="0.7" HorizontalAlignment="Center"/>
+                </StackPanel>
+        </Grid>
+    </Border>
+</Window>

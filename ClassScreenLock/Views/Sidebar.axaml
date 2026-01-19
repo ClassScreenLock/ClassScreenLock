@@ -1,0 +1,149 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
+             mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="600"
+             x:Class="ClassScreenLock.Views.Sidebar"
+             x:DataType="vm:SidebarViewModel">
+
+    <Grid Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
+        <Border CornerRadius="0,8,8,0"
+                Width="{Binding SidebarWidth}"
+                ClipToBounds="True">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Width" Duration="0:0:0.2" />
+                </Transitions>
+            </Border.Transitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                
+                <!-- 菜单项 -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="4,8">
+                    <ItemsControl ItemsSource="{Binding MenuItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:MenuItemViewModel">
+                                <Button Classes="SidebarButton"
+                                                Command="{Binding Command}"
+                                                CommandParameter="{Binding Target}"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Left"
+                                                Padding="{Binding $parent[UserControl].DataContext.IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='16,12|6,12'}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <icons:Icon Grid.Column="0"
+                                                    Value="{Binding Icon}"
+                                                    Width="20"
+                                                    Height="20"
+                                                    Margin="{Binding $parent[UserControl].DataContext.IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='0,0,12,0|0,0,0,0'}"
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                                        
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Title}"
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                                   Opacity="{Binding $parent[UserControl].DataContext.IsExpanded, Converter={x:Static Converters:BoolToOpacityConverter.Instance}}">
+                                            <TextBlock.Transitions>
+                                                <Transitions>
+                                                    <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                                                </Transitions>
+                                            </TextBlock.Transitions>
+                                        </TextBlock>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                
+                <!-- 底部区域：账户信息 + 侧边栏切换 -->
+                <Border Grid.Row="2" Padding="{Binding IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='16,16|6,16'}">
+                    <StackPanel Spacing="8">
+                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                                CornerRadius="8" Padding="12" Margin="4,0,4,4"
+                                Classes="account-card"
+                                ToolTip.Tip="{Binding AccountDetailText}"
+                                ToolTip.IsEnabled="{Binding IsLoggedIn}">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity" Duration="0:0:0.25" />
+                                    <BrushTransition Property="Background" Duration="0:0:0.25" />
+                                </Transitions>
+                            </Border.Transitions>
+                            <StackPanel>
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <Border Width="36" Height="36" CornerRadius="18" Background="{DynamicResource SystemControlBackgroundListLowBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition Property="Opacity" Duration="0:0:0.25" />
+                                        </Transitions>
+                                    </Border.Transitions>
+                                    <icons:Icon Value="{Binding AccountIcon}"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Height="20"/>
+                                </Border>
+
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding AccountName}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                               Opacity="{Binding IsLoggedIn, Converter={x:Static Converters:BoolToOpacityConverter.Instance}}"/>
+                                    
+                                    <TextBlock Text="{Binding AccountStatusText}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                               IsVisible="{Binding !IsLoggedIn}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                        </Border>
+
+                        <Button Classes="SidebarButton"
+                                Command="{Binding ToggleSidebarCommand}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Padding="{Binding IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='16,12|6,12'}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                
+                                <icons:Icon Grid.Column="0"
+                                            Value="{Binding ToggleIcon}"
+                                            Width="20"
+                                            Height="20"
+                                            Margin="{Binding IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='0,0,12,0|0,0,0,0'}"
+                                            Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                                
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding ToggleText}"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                           Opacity="{Binding IsExpanded, Converter={x:Static Converters:BoolToOpacityConverter.Instance}}">
+                                    <TextBlock.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                                        </Transitions>
+                                    </TextBlock.Transitions>
+                                </TextBlock>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

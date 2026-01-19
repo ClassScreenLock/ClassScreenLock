@@ -1,0 +1,245 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- 应用程序标题 -->
+    <x:String x:Key="AppTitle">课堂锁屏</x:String>
+    
+    <!-- 侧边栏导航 -->
+    <x:String x:Key="Sidebar_Home">主屏幕</x:String>
+    <x:String x:Key="Sidebar_LockSettings">锁定设置</x:String>
+    <x:String x:Key="Sidebar_Schedule">时间计划</x:String>
+    <x:String x:Key="Sidebar_AppManagement">应用管理</x:String>
+    <x:String x:Key="Sidebar_NetworkInterception">网络拦截</x:String>
+    <x:String x:Key="Sidebar_SecurityLogs">安全日志</x:String>
+    <x:String x:Key="Sidebar_SecurityCenter">密码安全</x:String>
+    <x:String x:Key="Sidebar_Settings">系统设置</x:String>
+    <x:String x:Key="Sidebar_About">关于</x:String>
+    <x:String x:Key="Sidebar_Collapse">收起侧边栏</x:String>
+    <x:String x:Key="Sidebar_Expand">展开侧边栏</x:String>
+    
+    <!-- 设置页面 -->
+    <x:String x:Key="Settings_Title">系统设置</x:String>
+    <x:String x:Key="Settings_Appearance_Title">外观设置</x:String>
+    <x:String x:Key="Settings_Theme">主题</x:String>
+    <x:String x:Key="Settings_Language">语言</x:String>
+    <x:String x:Key="Settings_AccentColor">强调色</x:String>
+    <x:String x:Key="Settings_FontSize">字体大小</x:String>
+    <x:String x:Key="Settings_FontFamily">字体</x:String>
+    <x:String x:Key="Settings_FontPreview">字体预览</x:String>
+    <x:String x:Key="Settings_DarkMode">暗黑模式</x:String>
+    <x:String x:Key="Settings_Behavior_Title">行为设置</x:String>
+    <x:String x:Key="Settings_Startup">开机自启动</x:String>
+    <x:String x:Key="Settings_LockTimeout">锁定超时</x:String>
+    <x:String x:Key="Settings_ShowNotifications">显示通知</x:String>
+    <x:String x:Key="Settings_Language_Title">语言设置</x:String>
+    <x:String x:Key="Settings_InterfaceLanguage">界面语言</x:String>
+    <x:String x:Key="Settings_InterfaceLanguage_Description">选择应用的显示语言</x:String>
+    <x:String x:Key="Settings_ResetToDefaults">恢复默认</x:String>
+    
+    <!-- 主题选项 -->
+    <x:String x:Key="Theme_Default">默认</x:String>
+    <x:String x:Key="Theme_Light">深色</x:String>
+    <x:String x:Key="Theme_Dark">浅色</x:String>
+    
+    <!-- 颜色选项 -->
+    <x:String x:Key="Color_Blue">蓝色</x:String>
+    <x:String x:Key="Color_Green">绿色</x:String>
+    <x:String x:Key="Color_Orange">橙色</x:String>
+    <x:String x:Key="Color_Purple">紫色</x:String>
+    <x:String x:Key="Color_Red">红色</x:String>
+    
+    <!-- 字体大小选项 -->
+    <x:String x:Key="FontSize_Small">小</x:String>
+    <x:String x:Key="FontSize_Medium">中</x:String>
+    <x:String x:Key="FontSize_Large">大</x:String>
+    
+    <!-- 语言选项 -->
+    <x:String x:Key="Language_Chinese">中文</x:String>
+    <x:String x:Key="Language_English">英文</x:String>
+    
+    <!-- 按钮文本 -->
+    <x:String x:Key="Btn_Save">保存</x:String>
+    <x:String x:Key="Btn_Cancel">取消</x:String>
+    <x:String x:Key="Btn_Apply">应用</x:String>
+    <x:String x:Key="Btn_Reset">重置</x:String>
+    
+    <!-- 通知消息 -->
+    <x:String x:Key="Notify_SettingsSaved">设置已保存</x:String>
+    <x:String x:Key="Notify_DefaultsRestored">已恢复默认设置</x:String>
+    <x:String x:Key="Notify_LanguageChanged">语言已更改</x:String>
+    <x:String x:Key="Notify_ThemeChanged">主题已更改</x:String>
+    <x:String x:Key="Notification_Info">信息</x:String>
+    <x:String x:Key="Notification_Success">成功</x:String>
+    <x:String x:Key="Notification_Warning">警告</x:String>
+    <x:String x:Key="Notification_Error">错误</x:String>
+
+    <!-- 密码安全中心 -->
+    <x:String x:Key="SecurityCenter_Title">密码安全中心</x:String>
+    <x:String x:Key="SecurityCenter_AdminLogin">管理员登录</x:String>
+    <x:String x:Key="SecurityCenter_Username">用户名</x:String>
+    <x:String x:Key="SecurityCenter_Password">密码</x:String>
+    <x:String x:Key="SecurityCenter_Login">登录</x:String>
+    <x:String x:Key="SecurityCenter_Logout">退出登录</x:String>
+    <x:String x:Key="SecurityCenter_Biometric">使用生物识别</x:String>
+    <x:String x:Key="SecurityCenter_CurrentPassword">当前密码</x:String>
+    <x:String x:Key="SecurityCenter_NewPassword">新密码</x:String>
+    <x:String x:Key="SecurityCenter_ConfirmPassword">确认新密码</x:String>
+    <x:String x:Key="SecurityCenter_ChangePassword">修改密码</x:String>
+    <x:String x:Key="SecurityCenter_Strength">密码强度</x:String>
+    <x:String x:Key="SecurityCenter_LeakCheck">检测泄露</x:String>
+    <x:String x:Key="SecurityCenter_GeneratePassword">生成强密码</x:String>
+    <x:String x:Key="SecurityCenter_ReportTitle">密码安全报告</x:String>
+
+    <!-- 账户信息与管理 -->
+    <x:String x:Key="Account_Info_Title">账户信息</x:String>
+    <x:String x:Key="Account_Type_SuperAdmin">超级管理员</x:String>
+    <x:String x:Key="Account_Type_Admin">管理员</x:String>
+    <x:String x:Key="Account_Type_User">用户</x:String>
+    <x:String x:Key="Account_Status_LoggedOut">未登录</x:String>
+    <x:String x:Key="Account_Status_LoggedIn">已登录</x:String>
+    <x:String x:Key="Account_Status_Locked">已锁定</x:String>
+    <x:String x:Key="Account_Status">状态</x:String>
+    <x:String x:Key="Account_Status_Error">账户信息获取失败</x:String>
+    <x:String x:Key="Account_Status_ErrorDetail">无法获取当前账户信息，请检查配置或重试。</x:String>
+    <x:String x:Key="Account_Status_Loading">正在加载账户信息...</x:String>
+    <x:String x:Key="Account_CurrentAccount">当前账户</x:String>
+    <x:String x:Key="Account_LoginTime">登录时间</x:String>
+    <x:String x:Key="Account_Manage">账户管理</x:String>
+    <x:String x:Key="Account_Login">登录</x:String>
+    <x:String x:Key="Account_Logout">退出</x:String>
+    <x:String x:Key="Account_Create">创建子账号</x:String>
+    <x:String x:Key="Account_Username">用户名</x:String>
+    <x:String x:Key="Account_Password">密码</x:String>
+    <x:String x:Key="Account_Type">账户类型</x:String>
+    <x:String x:Key="Account_Delete">删除</x:String>
+    <x:String x:Key="Account_Delete_Confirm">确定要删除此账号吗？该操作不可恢复。</x:String>
+    <x:String x:Key="Account_Delete_Title">删除账号确认</x:String>
+    <x:String x:Key="Account_Init_Title">系统初始化</x:String>
+    <x:String x:Key="Account_Init_Subtitle">欢迎使用！请设置超级管理员账户以启用系统安全功能。</x:String>
+    <x:String x:Key="Account_Init_Button">完成初始化</x:String>
+    <x:String x:Key="Account_Init_Success">系统初始化成功！</x:String>
+    <x:String x:Key="Account_ConfirmPassword">确认密码</x:String>
+    
+    <!-- 课程相关 -->
+    <x:String x:Key="Classes_Title">我的课程</x:String>
+    <x:String x:Key="Class_AddNew">添加新课程</x:String>
+    <x:String x:Key="Class_Name">课程名称</x:String>
+    <x:String x:Key="Class_Code">课程代码</x:String>
+    <x:String x:Key="Class_Teacher">教师</x:String>
+    <x:String x:Key="Class_Room">教室</x:String>
+    
+    <!-- 字体预览 -->
+    <x:String x:Key="Settings_FontPreview_Title">字体预览</x:String>
+    <x:String x:Key="Settings_FontPreview_Chinese">中文预览：你好，世界！</x:String>
+    <x:String x:Key="Settings_FontPreview_English">English Preview: Hello, World!</x:String>
+    <x:String x:Key="Settings_FontRestartTip">提示：部分字体更改需要重启软件后生效</x:String>
+    <x:String x:Key="Settings_RestartApp">重启软件</x:String>
+    <x:String x:Key="Class_Time">时间</x:String>
+    
+    <!-- 首页相关 -->
+    <x:String x:Key="Home_Welcome">欢迎使用课堂锁屏</x:String>
+    <x:String x:Key="Home_LockScreen">锁屏</x:String>
+    <x:String x:Key="Home_UnlockScreen">解锁</x:String>
+    <x:String x:Key="Home_CurrentClass">当前课程</x:String>
+    <x:String x:Key="Home_NextClass">下一节课</x:String>
+    
+    <!-- 应用管理 -->
+    <x:String x:Key="AppManagement_Title">应用管理</x:String>
+    <x:String x:Key="AppManagement_RunningApps">运行中的应用</x:String>
+    <x:String x:Key="AppManagement_AllowedApps">允许运行的应用</x:String>
+    <x:String x:Key="AppManagement_BlockedApps">阻止运行的应用</x:String>
+    <x:String x:Key="AppManagement_AddApp">添加应用</x:String>
+    <x:String x:Key="AppManagement_RemoveApp">移除应用</x:String>
+    <x:String x:Key="AppManagement_Refresh">刷新列表</x:String>
+    <x:String x:Key="AppManagement_KillProcess">结束进程</x:String>
+    <x:String x:Key="AppManagement_Name">名称</x:String>
+    <x:String x:Key="AppManagement_PID">PID</x:String>
+    <x:String x:Key="AppManagement_CPU">CPU</x:String>
+    <x:String x:Key="AppManagement_Memory">内存</x:String>
+    <x:String x:Key="AppManagement_Path">路径</x:String>
+    <x:String x:Key="AppManagement_Actions">操作</x:String>
+    <x:String x:Key="AppManagement_BlockedPaths">阻止运行的路径</x:String>
+    <x:String x:Key="AppManagement_AddPath">添加路径</x:String>
+    <x:String x:Key="AppManagement_AddToAllowed">添加到允许列表</x:String>
+    <x:String x:Key="AppManagement_AddToBlocked">添加到阻止列表</x:String>
+    <x:String x:Key="AppManagement_OpenFileLocation">打开文件位置</x:String>
+    <x:String x:Key="AppManagement_CopyPath">复制路径</x:String>
+    <x:String x:Key="AppManagement_CopyProcessName">复制进程名</x:String>
+    <x:String x:Key="AppManagement_GPU">GPU</x:String>
+    <x:String x:Key="AppManagement_Threads">线程</x:String>
+    
+    <!-- 锁定设置 -->
+    <x:String x:Key="LockSettings_Title">锁定设置</x:String>
+    <x:String x:Key="LockSettings_BreakTimeLock">下课锁屏</x:String>
+    <x:String x:Key="LockSettings_EnableBreakTimeLock">启用下课锁屏</x:String>
+    <x:String x:Key="LockSettings_EnableBreakTimeLock_Desc">在课程结束进入课间时自动显示下课按钮</x:String>
+    <x:String x:Key="LockSettings_LockMode">锁屏模式</x:String>
+    <x:String x:Key="LockSettings_LockMode_Desc">选择点击下课按钮后触发的锁定级别</x:String>
+    <x:String x:Key="LockSettings_LockMode_ProtectionOnly">仅防护（不控屏）</x:String>
+    <x:String x:Key="LockSettings_LockMode_ScreenOnly">仅锁屏</x:String>
+    <x:String x:Key="LockSettings_LockMode_Full">完整锁定（防护+锁屏）</x:String>
+    <x:String x:Key="LockSettings_AutoUnlock">自动解锁</x:String>
+    <x:String x:Key="LockSettings_AutoUnlock_Desc">在即将上课前自动解除锁定</x:String>
+    <x:String x:Key="LockSettings_AutoUnlockTime">提前解锁时间 (分钟)</x:String>
+    <x:String x:Key="LockSettings_ShowFloatingLockWidget">显示桌面悬浮锁屏按钮</x:String>
+    <x:String x:Key="LockSettings_ShowFloatingLockWidget_Desc">在桌面上显示一个半透明的可拖动按钮，点击可快速进入下课锁定状态</x:String>
+    <x:String x:Key="LockSettings_EarlyUnlockMinAccountType">提前解锁所需最小账户级别</x:String>
+    <x:String x:Key="LockSettings_EarlyUnlockMinAccountType_Desc">低于此级别的账户无法在锁屏界面提前解锁</x:String>
+    <x:String x:Key="LockSettings_TopmostExempt">程序置顶豁免</x:String>
+    <x:String x:Key="LockSettings_TopmostExempt_Desc">在屏幕锁定期间，以下程序将被允许显示在锁屏界面之上。</x:String>
+    <x:String x:Key="LockSettings_AddApp_Watermark">输入进程名称 (例如: Classisland)</x:String>
+    <x:String x:Key="LockSettings_ForcedTopmost">强制置顶程序</x:String>
+    <x:String x:Key="LockSettings_ForcedTopmost_Desc">在屏幕锁定期间，以下程序将被强制保持在最前端。</x:String>
+    
+    <!-- 时间计划 -->
+    <x:String x:Key="Schedule_Title">时间计划</x:String>
+    <x:String x:Key="Schedule_Add">添加</x:String>
+    <x:String x:Key="Schedule_Copy">复制</x:String>
+    <x:String x:Key="Schedule_Class">上课</x:String>
+    <x:String x:Key="Schedule_Break">课间</x:String>
+    <x:String x:Key="Schedule_Divider">分割线</x:String>
+    <x:String x:Key="Schedule_Action">行动</x:String>
+    <x:String x:Key="Schedule_Delete">删除</x:String>
+    <x:String x:Key="Schedule_Refresh">刷新</x:String>
+    <x:String x:Key="Schedule_Info">时间表信息</x:String>
+    <x:String x:Key="Schedule_DeletePlan">删除时间表</x:String>
+    <x:String x:Key="Schedule_DefaultClassDuration">默认上课时长</x:String>
+    <x:String x:Key="Schedule_DefaultBreakDuration">默认课间时长</x:String>
+    <x:String x:Key="Schedule_NewPlan">新时间表</x:String>
+    <x:String x:Key="Schedule_TimePointDetail">时间点详情</x:String>
+    <x:String x:Key="Schedule_Label">标签</x:String>
+    <x:String x:Key="Schedule_Type">类型</x:String>
+    <x:String x:Key="Schedule_StartTime">开始时间</x:String>
+    <x:String x:Key="Schedule_EndTime">结束时间</x:String>
+    <x:String x:Key="Schedule_Duration">持续时间 (分钟)</x:String>
+    <x:String x:Key="Schedule_Description">描述</x:String>
+    <x:String x:Key="Schedule_Save">保存更改</x:String>
+    <x:String x:Key="Schedule_SelectPrompt">请选择一个时间点进行编辑</x:String>
+    <x:String x:Key="Schedule_NoPlanPrompt">请选择或创建一个时间表</x:String>
+
+    <!-- 网络拦截 -->
+    <x:String x:Key="Network_Title">网络拦截</x:String>
+    <x:String x:Key="Network_DomainRules">域名拦截规则</x:String>
+    <x:String x:Key="Network_GlobalLock">网络拦截主开关</x:String>
+    <x:String x:Key="Network_AddRule">添加拦截域名</x:String>
+    <x:String x:Key="Network_Domain">域名 (如: baidu.com)</x:String>
+    <x:String x:Key="Network_Description">描述</x:String>
+    <x:String x:Key="Network_Status">状态</x:String>
+    <x:String x:Key="Network_Enabled">已启用</x:String>
+    <x:String x:Key="Network_Disabled">已禁用</x:String>
+    <x:String x:Key="Network_GlobalLock_Desc">开启后将根据下方列表进行黑名单域名阻断（需管理员权限）</x:String>
+    <x:String x:Key="Network_ApplyChanges">应用更改</x:String>
+    <x:String x:Key="Network_RuleExists">该规则已存在</x:String>
+    <x:String x:Key="Network_InvalidDomain">域名格式无效</x:String>
+    <x:String x:Key="Network_InterceptionMethod">拦截方式</x:String>
+    <x:String x:Key="Network_Method_App">本应用 (高频)</x:String>
+    <x:String x:Key="Network_Method_Hosts">Hosts 文件</x:String>
+    <x:String x:Key="Network_Method_Both">两者同时</x:String>
+    <x:String x:Key="Network_DoHTip">提示：如果拦截不生效，请尝试：&#x0a;1. 点击“应用更改”并允许管理员权限。&#x0a;2. 关闭浏览器的“安全 DNS”(DNS-over-HTTPS) 设置。&#x0a;3. 重启浏览器或清理浏览器缓存。</x:String>
+    
+    <!-- 系统托盘 -->
+    <x:String x:Key="Tray_Show">显示主界面</x:String>
+    <x:String x:Key="Tray_Exit">退出</x:String>
+    <x:String x:Key="Tray_QuickLock">快速锁定</x:String>
+    <x:String x:Key="Tray_QuickUnlock">快速解锁</x:String>
+    <x:String x:Key="Tray_OpenLockSettings">锁屏设置</x:String>
+    <x:String x:Key="Tray_OpenSchedule">时间计划</x:String>
+</ResourceDictionary>
