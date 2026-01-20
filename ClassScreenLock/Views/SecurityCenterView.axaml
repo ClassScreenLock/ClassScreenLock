@@ -89,7 +89,7 @@
                                         
                                         <StackPanel Orientation="Horizontal" Spacing="12">
                                             <Button Content="登录" Command="{Binding LoginCommand}" 
-                                                    Classes="accent" Width="120" Height="36"/>
+                                                    Classes="accent" Width="120" Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
                                             <Button Command="{Binding UseBiometricCommand}" 
                                                     IsEnabled="{Binding IsBiometricAvailable}"
                                                     ToolTip.Tip="使用生物识别登录" Padding="8">
