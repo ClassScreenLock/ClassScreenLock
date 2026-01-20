@@ -168,8 +168,9 @@
                                 </Style>
                             </DataGrid.Styles>
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="类型" Binding="{Binding Category}" SortMemberPath="CategoryOrder" Width="80"/>
-                                <DataGridTemplateColumn Header="{DynamicResource AppManagement_Name}" SortMemberPath="Name" Width="180">
+                                <DataGridTextColumn Header="类型" Binding="{Binding Category}" SortMemberPath="CategoryOrder"/>
+                                <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}"/>
+                                <DataGridTemplateColumn Header="{DynamicResource AppManagement_Name}" SortMemberPath="Name">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate x:DataType="models:AppInfo">
                                             <StackPanel Orientation="Horizontal" Spacing="12" Margin="12,0" VerticalAlignment="Center">
@@ -182,7 +183,6 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}" Width="70"/>
                                 <DataGridTextColumn Header="内存" Binding="{Binding MemoryUsageString}" Width="90"/>
                                 <DataGridTextColumn Header="网速" Binding="{Binding NetworkSpeed}" Width="90"/>
                                 <DataGridTextColumn Header="网络总量" Binding="{Binding TotalNetworkUsage}" Width="100"/>

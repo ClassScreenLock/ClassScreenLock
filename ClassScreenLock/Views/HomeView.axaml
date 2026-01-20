@@ -22,7 +22,7 @@
                     </StackPanel>
                 </StackPanel>
                 
-                <Button Grid.Column="2" Classes="accent" Command="{Binding StartLockCommand}" IsVisible="{Binding !IsLocked}" Content="立即锁定" Padding="20,10"/>
+                <Button Grid.Column="2" Classes="accent" Command="{Binding StartLockCommand}" IsVisible="{Binding !IsLocked}" Content="立即锁定" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
             </Grid>
         </Border>
 
@@ -66,7 +66,7 @@
                  <StackPanel Spacing="15">
                      <TextBlock Text="快速操作" FontSize="16" FontWeight="SemiBold"/>
                      <WrapPanel>
-                         <Button Content="系统设置" Command="{Binding NavigateToSettingsCommand}" Margin="0,0,10,10" Width="120"/>
+                         <Button Content="系统设置" Command="{Binding NavigateToSettingsCommand}" Margin="0,0,10,10" Width="120" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
                      </WrapPanel>
                  </StackPanel>
             </Border>
