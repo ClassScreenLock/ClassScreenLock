@@ -93,9 +93,19 @@
 ## 许可证
 - GNU General Public License v3.0
 
-当你打开时，请注意按照设置向导操作
+
+## 操作解释
+
+当您打开时，请注意按照设置向导操作
 
 <img width="1596" height="939" alt="1" src="https://github.com/user-attachments/assets/bfb3a0ff-aa06-4d8d-957c-c7be1ba35481" />
+
+在此页面您会有两个选择：
+- F2A验证加管理员验证
+- 纯密码验证
+如不需要F2A，请选择仅密码
+
+<img width="1597" height="980" alt="image" src="https://github.com/user-attachments/assets/d7f6a8ff-db18-4691-bff7-6fbb04e64c3a" />
 
 当你进入了这个页面，即恭喜你这代表你已经可以使用了
 
