@@ -92,3 +92,17 @@
 
 ## 许可证
 - GNU General Public License v3.0
+
+当你打开时，请注意按照设置向导操作
+
+<img width="1596" height="939" alt="1" src="https://github.com/user-attachments/assets/bfb3a0ff-aa06-4d8d-957c-c7be1ba35481" />
+
+当你进入了这个页面，即恭喜你这代表你已经可以使用了
+
+<img width="801" height="494" alt="image" src="https://github.com/user-attachments/assets/89d552aa-4d09-456d-bf28-58f66aa73c93" />
+
+但注意，状态还是未登录的，需要登录您在设置向导设置的超级管理员账户后才能配置权限和创建其它账户
+
+<img width="801" height="494" alt="image" src="https://github.com/user-attachments/assets/3bbe9861-b836-4aaa-a638-b6eecbc3c2c9" />
+
+感谢您的使用！
