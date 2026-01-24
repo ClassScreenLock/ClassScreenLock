@@ -1,7 +1,7 @@
 # 注意：需要下载的看Releases，这个只是测试版本，请不要大规模使用，造成问题后果自负！，有BUG赶紧去Issues提！我会在寒假修掉！
 
 <p align="center">
-  <img width="70%" align="center" src="img/xuanchuan.png" alt="xuanchuan">
+  <img width="90%" align="center" src="img/xuanchuan.png" alt="xuanchuan">
 </p>
 
 # ClassScreenLock
