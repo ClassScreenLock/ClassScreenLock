@@ -35,7 +35,10 @@ public class FloatingWidgetService
             {
                 if (!_window.IsVisible)
                 {
+                    _window.Opacity = 0;
                     _window.Show();
+                    _window.EnsureBottom();
+                    Dispatcher.UIThread.Post(() => { if (_window != null) _window.Opacity = 1; });
                 }
                 return;
             }
@@ -49,6 +52,7 @@ public class FloatingWidgetService
                     ShowWidget();
                 }
             };
+            _window.Opacity = 0;
             _window.Show();
         });
     }
@@ -175,6 +179,7 @@ public class FloatingWidgetService
                     Position = new PixelPoint(wa.X + wa.Width - 120, wa.Y + wa.Height - 140);
                 }
                 EnsureBottom();
+                Dispatcher.UIThread.Post(() => Opacity = 1);
             };
         }
 
@@ -238,7 +243,7 @@ public class FloatingWidgetService
             _confirmContent.IsVisible = confirming;
         }
 
-        private void EnsureBottom()
+        public void EnsureBottom()
         {
             if (!OperatingSystem.IsWindows()) return;
 
