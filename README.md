@@ -1,6 +1,8 @@
 # 注意：需要下载的看Releases，这个只是测试版本，请不要大规模使用，造成问题后果自负！，有BUG赶紧去Issues提！我会在寒假修掉！
 
-<img width="801" height="362" alt="宣传片" src="https://github.com/user-attachments/assets/e16a9a6d-39fb-42a0-8c60-f25dbf51d219" />
+<p align="center">
+  <img width="100%" align="center" src="img/xuanchuan.png" alt="logo">
+</p>
 
 # ClassScreenLock
 
