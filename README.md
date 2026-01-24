@@ -48,29 +48,11 @@
 - 交互反馈保留轻量涟漪效果；
 - 统一字体与配色。
 
-## 构建与质量
-- 开发环境：Windows 11，.NET SDK 9.
-- 构建：
-  ```bash
-  dotnet build .\ClassScreenLock\ClassScreenLock.csproj -c Release -warnaserror
-  ```
-- 说明：所有编译警告按错误处理并需修复；Release 构建禁用 PDB/调试符号。
-
 ## 权限与系统要求
 - Windows 11 推荐；Windows 10 可运行但体验以 Win11 为基准；
 - 至少要有 300MB 运行内存；
 - 至少要有 500MB 硬盘空间；
 - 管理员权限：应用 Hosts 与防火墙规则时需要，非管理员运行会跳过相应操作。
-
-## 目录结构（关键）
-- 主项目：ClassScreenLock/
-  - Views：界面定义（axaml）；
-  - ViewModels：视图模型与命令；
-  - Services：系统核心服务与平台集成；
-  - Models：数据模型与枚举；
-  - Converters：UI 转换器；
-  - Styles：主题与样式；
-- 子项目（已内联功能）：BreakButtonProcess、MonitorProcess（架构优化后不再依赖，可移除）。
 
 ## 安全与隐私
 - 不收集个人隐私数据；日志仅包括拦截与系统事件。
