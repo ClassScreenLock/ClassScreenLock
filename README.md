@@ -19,7 +19,10 @@
 
 
 > [!NOTE]
-> ClassScreenLock 基于GPL-3协议开源，您可自由使用、修改和分发本项目，修改后的衍生作品同样需要遵循GPL-3协议。
+> ClassScreenLock 基于GPL-3协议开源，您可自由使用、修改和分发本项目，修改后的衍生作品同样需要遵循GPL-3协议
+
+> [!Note]
+> 使用本软件前请仔细阅读[用户协议](https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/UserAgreement.html)
 --------
 
 ## 🎯 为什么选择ClassScreenLock
