@@ -4,7 +4,6 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using ClassScreenLock.ViewModels;
-using System;
 
 namespace ClassScreenLock.Views;
 
@@ -14,6 +13,12 @@ public partial class ScheduleView : UserControl
     {
         InitializeComponent();
     }
+
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
+
 
     protected override void OnSizeChanged(SizeChangedEventArgs e)
     {
@@ -39,6 +44,10 @@ public partial class ScheduleView : UserControl
                 new FilePickerFileType("JSON 文件")
                 {
                     Patterns = new[] { "*.json" }
+                },
+                new FilePickerFileType("YAML 文件")
+                {
+                    Patterns = new[] { "*.yml", "*.yaml" }
                 }
             }
         });
@@ -49,6 +58,7 @@ public partial class ScheduleView : UserControl
             if (DataContext is ScheduleViewModel vm)
             {
                 vm.ImportScheduleCommand.Execute(path);
+                vm.LoadSchedulesCommand.Execute(null);
             }
         }
     }
@@ -58,12 +68,12 @@ public partial class ScheduleView : UserControl
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
         
-        if (DataContext is not ScheduleViewModel vm || vm.SelectedSchedule == null) return;
+        if (DataContext is not ScheduleViewModel vm) return;
 
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "导出时间表",
-            SuggestedFileName = vm.SelectedSchedule.Name + ".json",
+            Title = "导出周课表",
+            SuggestedFileName = (vm.SelectedWeekly?.Name ?? "周课表") + ".json",
             DefaultExtension = "json",
             FileTypeChoices = new[]
             {
@@ -77,7 +87,16 @@ public partial class ScheduleView : UserControl
         if (file != null)
         {
             var path = file.Path.LocalPath;
-            vm.ExportScheduleCommand.Execute(path);
+            if (vm.SelectedWeekly != null)
+            {
+                var weekNum = vm.SelectedWeekly.WeekNumber;
+                var weekly = ClassScreenLock.Services.WeeklyScheduleService.Instance.GetWeekly(weekNum);
+                if (weekly != null)
+                {
+                    var json = System.Text.Json.JsonSerializer.Serialize(weekly, ClassScreenLock.Services.WeeklyScheduleService.JsonOptions);
+                    System.IO.File.WriteAllText(path, json);
+                }
+            }
         }
     }
 }

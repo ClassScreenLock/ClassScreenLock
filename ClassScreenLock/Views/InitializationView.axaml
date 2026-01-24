@@ -7,13 +7,15 @@
              xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
              xmlns:ctrls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls"
              xmlns:animations="clr-namespace:Avalonia.Animation;assembly=Avalonia.Animation"
+             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="ClassScreenLock.Views.InitializationView"
              x:DataType="vm:InitializationViewModel">
 
     <Border Padding="32" Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="12">
         <Grid RowDefinitions="Auto,* ,Auto" ColumnDefinitions="*">
-            <Grid ColumnDefinitions="* , Auto">
+            <Grid ColumnDefinitions="* , Auto, Auto">
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="{DynamicResource Initialization_Title}" FontSize="26" FontWeight="SemiBold"/>
                     <TextBlock Text="{DynamicResource Initialization_Subtitle}" FontSize="14" Opacity="0.7"/>
@@ -24,6 +26,7 @@
                     <TextBlock Text="/"/>
                     <TextBlock Text="{Binding StepTotal}"/>
                 </StackPanel>
+                <!-- 右侧仅显示步骤进度，不再放置链接按钮 -->
             </Grid>
 
             <Grid Grid.Row="1">
@@ -36,6 +39,26 @@
 
                 <Carousel x:Name="InitCarousel" Grid.Row="1" SelectedIndex="{Binding StepIndex}">
                     <Carousel.Items>
+                        <ScrollViewer>
+                            <StackPanel Spacing="16" MaxWidth="900" HorizontalAlignment="Stretch">
+                                <TextBlock Text="用户协议" Classes="h3"/>
+                                <TextBlock Text="在使用本软件前，请详细阅读以下协议内容" Classes="caption" Opacity="0.7"/>
+                                <Border Classes="card" Padding="16" Height="350">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <md:MarkdownScrollViewer Markdown="{Binding AgreementContent}">
+                                            <md:MarkdownScrollViewer.Styles>
+                                                <Style Selector="TextBlock">
+                                                    <Setter Property="FontSize" Value="13"/>
+                                                    <Setter Property="LineHeight" Value="1.6"/>
+                                                </Style>
+                                            </md:MarkdownScrollViewer.Styles>
+                                        </md:MarkdownScrollViewer>
+                                    </ScrollViewer>
+                                </Border>
+                                <CheckBox IsChecked="{Binding IsAgreementAccepted}" Content="我已阅读并同意上述用户协议全部内容"/>
+                            </StackPanel>
+                        </ScrollViewer>
+
                         <ScrollViewer>
                             <StackPanel Spacing="16" MaxWidth="900" HorizontalAlignment="Stretch">
                                 <TextBlock Text="{DynamicResource Init_SystemConfig_Title}" Classes="h3"/>
@@ -207,11 +230,27 @@
                 </Carousel>
             </Grid>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,16,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
+                    <Button Command="{Binding OpenRepositoryCommand}" Classes="outline">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:Icon Value="fab fa-github" Width="16" Height="16"/>
+                            <TextBlock Text="{DynamicResource About_Repository}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding OpenUserAgreementCommand}" Classes="outline">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:Icon Value="fas fa-file-contract" Width="16" Height="16"/>
+                            <TextBlock Text="{DynamicResource About_UserAgreement}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                 <Button Content="{DynamicResource Btn_Back}" Command="{Binding BackCommand}" Classes="outline"/>
                 <Button Content="{DynamicResource Btn_Skip}" Command="{Binding SkipCommand}" Classes="outline" IsEnabled="{Binding CanSkip}"/>
                 <Button Content="{DynamicResource Btn_Next}" Command="{Binding NextCommand}" Classes="accent"/>
-            </StackPanel>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Border>
 </UserControl>

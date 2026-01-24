@@ -9,7 +9,7 @@
     <x:String x:Key="Sidebar_AppManagement">应用管理</x:String>
     <x:String x:Key="Sidebar_NetworkInterception">网络拦截</x:String>
     <x:String x:Key="Sidebar_SecurityLogs">安全日志</x:String>
-    <x:String x:Key="Sidebar_SecurityCenter">密码安全</x:String>
+    <x:String x:Key="Sidebar_SecurityCenter">安全中心</x:String>
     <x:String x:Key="Sidebar_Settings">系统设置</x:String>
     <x:String x:Key="Sidebar_About">关于</x:String>
     <x:String x:Key="Sidebar_Collapse">收起侧边栏</x:String>
@@ -71,8 +71,8 @@
     <x:String x:Key="Notification_Warning">警告</x:String>
     <x:String x:Key="Notification_Error">错误</x:String>
 
-    <!-- 密码安全中心 -->
-    <x:String x:Key="SecurityCenter_Title">密码安全中心</x:String>
+    <!-- 安全中心 -->
+    <x:String x:Key="SecurityCenter_Title">安全中心</x:String>
     <x:String x:Key="SecurityCenter_AdminLogin">管理员登录</x:String>
     <x:String x:Key="SecurityCenter_Username">用户名</x:String>
     <x:String x:Key="SecurityCenter_Password">密码</x:String>
@@ -212,6 +212,9 @@
     <x:String x:Key="Schedule_Duration">持续时间 (分钟)</x:String>
     <x:String x:Key="Schedule_Description">描述</x:String>
     <x:String x:Key="Schedule_Save">保存更改</x:String>
+    <x:String x:Key="Schedule_MoveUp">上移</x:String>
+    <x:String x:Key="Schedule_MoveDown">下移</x:String>
+    <x:String x:Key="Schedule_Sort">按时间排序</x:String>
     <x:String x:Key="Schedule_SelectPrompt">请选择一个时间点进行编辑</x:String>
     <x:String x:Key="Schedule_NoPlanPrompt">请选择或创建一个时间表</x:String>
 
@@ -302,4 +305,6 @@
     <x:String x:Key="NotificationPosition_TopRight">右上角</x:String>
     <x:String x:Key="NotificationPosition_BottomLeft">左下角</x:String>
     <x:String x:Key="NotificationPosition_BottomRight">右下角</x:String>
+    <x:String x:Key="About_Repository">开源仓库</x:String>
+    <x:String x:Key="About_UserAgreement">服务协议(注意链接可能打不开)</x:String>
 </ResourceDictionary>

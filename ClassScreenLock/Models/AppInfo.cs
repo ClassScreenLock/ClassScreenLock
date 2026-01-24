@@ -40,6 +40,12 @@ public partial class AppInfo : ObservableObject
     private string _networkSpeed = "0 B/s";
 
     [ObservableProperty]
+    private double _cpuUsage;
+
+    [ObservableProperty]
+    private string _cpuUsageString = "0%";
+
+    [ObservableProperty]
     private int _threadCount;
 
     [ObservableProperty]

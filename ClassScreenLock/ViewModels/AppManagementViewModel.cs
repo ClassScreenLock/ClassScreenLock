@@ -225,7 +225,12 @@ public partial class AppManagementViewModel : ViewModelBase
                             });
                         }
 
-                        long mem = process.WorkingSet64;
+                        long mem = 0;
+                        try { mem = process.PrivateMemorySize64; } catch { }
+                        if (mem <= 0)
+                        {
+                            try { mem = process.WorkingSet64; } catch { }
+                        }
                         int tc = process.Threads.Count;
                         int hc = process.HandleCount;
 
@@ -235,6 +240,14 @@ public partial class AppManagementViewModel : ViewModelBase
                             app.ThreadCount = tc;
                             app.HandleCount = hc;
                         });
+
+                        if (TryGetProcessCpuUsage(process, out double cpu))
+                        {
+                            Dispatcher.UIThread.Post(() => {
+                                app.CpuUsage = cpu;
+                                app.CpuUsageString = $"{cpu:0.#}%";
+                            });
+                        }
 
                         if (TryGetProcessIoTotal(process, out long ioTotal))
                         {
@@ -319,6 +332,38 @@ public partial class AppManagementViewModel : ViewModelBase
         catch
         {
             _ioRateSamples.TryRemove(p.Id, out _);
+            return false;
+        }
+    }
+
+    private readonly ConcurrentDictionary<int, (TimeSpan Cpu, DateTime Stamp)> _cpuSamples = new();
+
+    private bool TryGetProcessCpuUsage(Process p, out double percent)
+    {
+        percent = 0;
+        try
+        {
+            var now = DateTime.UtcNow;
+            var total = p.TotalProcessorTime;
+            if (_cpuSamples.TryGetValue(p.Id, out var last))
+            {
+                var sec = (now - last.Stamp).TotalSeconds;
+                _cpuSamples[p.Id] = (total, now);
+                if (sec > 0.1)
+                {
+                    var cpuDeltaMs = (total - last.Cpu).TotalMilliseconds;
+                    var denom = sec * Environment.ProcessorCount * 1000.0;
+                    percent = Math.Min(100, Math.Max(0, (cpuDeltaMs / denom) * 100));
+                    return true;
+                }
+                return false;
+            }
+            _cpuSamples[p.Id] = (total, now);
+            return false;
+        }
+        catch
+        {
+            _cpuSamples.TryRemove(p.Id, out _);
             return false;
         }
     }

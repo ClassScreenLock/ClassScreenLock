@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using System.Linq;
 using ClassScreenLock.Models;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace ClassScreenLock.Services;
 
@@ -149,25 +152,90 @@ public class ScheduleService
     {
         try
         {
-            var json = File.ReadAllText(sourcePath);
-            var schedule = JsonSerializer.Deserialize<SchedulePlan>(json, JsonOptions);
-            if (schedule != null)
+            var ext = Path.GetExtension(sourcePath).ToLowerInvariant();
+            if (ext is ".yml" or ".yaml")
             {
-                // 为导入的时间表生成新的 ID 以避免覆盖本地已有的时间表
-                schedule.Id = Guid.NewGuid().ToString();
-                
-                // 如果内部名称是默认的“新时间表”，尝试使用文件名作为名称
-                if (schedule.Name == "新时间表")
+                var yamlText = File.ReadAllText(sourcePath);
+                var deserializer = new DeserializerBuilder()
+                    .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                    .IgnoreUnmatchedProperties()
+                    .Build();
+
+                var root = deserializer.Deserialize<YamlRoot>(yamlText);
+                if (root?.Schedules != null && root.Schedules.Count > 0)
                 {
-                    var fileName = Path.GetFileNameWithoutExtension(sourcePath);
-                    if (!string.IsNullOrWhiteSpace(fileName))
+                    var subjectDict = (root.Subjects ?? new List<YamlSubject>())
+                        .Where(s => !string.IsNullOrWhiteSpace(s.Name))
+                        .ToDictionary(s => s.Name!, s => s);
+
+                    SchedulePlan? firstPlan = null;
+                    foreach (var s in root.Schedules)
                     {
-                        schedule.Name = fileName;
+                        var plan = new SchedulePlan
+                        {
+                            Name = string.IsNullOrWhiteSpace(s.Name) ? (Path.GetFileNameWithoutExtension(sourcePath) ?? "新时间表") : s.Name,
+                            EnableDay = s.EnableDay == 0 ? null : s.EnableDay,
+                            Weeks = string.IsNullOrWhiteSpace(s.Weeks) ? null : s.Weeks
+                        };
+
+                        // subjects
+                        var subjects = new System.Collections.ObjectModel.ObservableCollection<Subject>();
+                        foreach (var subj in root.Subjects ?? new List<YamlSubject>())
+                        {
+                            subjects.Add(new Subject
+                            {
+                                Name = subj.Name ?? string.Empty,
+                                SimplifiedName = subj.SimplifiedName ?? string.Empty,
+                                Teacher = subj.Teacher ?? string.Empty,
+                                Room = subj.Room ?? string.Empty
+                            });
+                        }
+                        plan.Subjects = subjects;
+
+                        // classes -> time points
+                        foreach (var c in s.Classes ?? new List<YamlClass>())
+                        {
+                            var isBreak = string.IsNullOrWhiteSpace(c.Subject);
+                            var start = ParseTime(c.StartTime);
+                            var end = ParseTime(c.EndTime);
+                            var tp = new TimePoint
+                            {
+                                Type = isBreak ? TimePointType.Break : TimePointType.Class,
+                                Label = isBreak ? "课间休息" : (subjectDict.TryGetValue(c.Subject ?? string.Empty, out var info) ? (info.SimplifiedName ?? info.Name ?? c.Subject ?? "课程") : (c.Subject ?? "课程")),
+                                StartTime = start,
+                                EndTime = end,
+                                Description = isBreak ? string.Empty : BuildDescription(subjectDict, c.Subject)
+                            };
+                            plan.TimePoints.Add(tp);
+                        }
+
+                        plan.Id = Guid.NewGuid().ToString();
+                        SaveSchedule(plan);
+                        firstPlan ??= plan;
                     }
+
+                    return firstPlan;
                 }
-                
-                SaveSchedule(schedule);
-                return schedule;
+                return null;
+            }
+            else
+            {
+                var json = File.ReadAllText(sourcePath);
+                var schedule = JsonSerializer.Deserialize<SchedulePlan>(json, JsonOptions);
+                if (schedule != null)
+                {
+                    schedule.Id = Guid.NewGuid().ToString();
+                    if (schedule.Name == "新时间表")
+                    {
+                        var fileName = Path.GetFileNameWithoutExtension(sourcePath);
+                        if (!string.IsNullOrWhiteSpace(fileName))
+                        {
+                            schedule.Name = fileName;
+                        }
+                    }
+                    SaveSchedule(schedule);
+                    return schedule;
+                }
             }
         }
         catch (Exception ex)
@@ -176,6 +244,64 @@ public class ScheduleService
             throw;
         }
         return null;
+    }
+
+    private static TimeSpan ParseTime(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return new TimeSpan(0, 0, 0);
+        if (TimeSpan.TryParse(s, out var ts)) return ts;
+        // 支持像 07:30 或 7:30
+        var parts = s.Split(':');
+        if (parts.Length >= 2)
+        {
+            int h = int.TryParse(parts[0], out var hh) ? hh : 0;
+            int m = int.TryParse(parts[1], out var mm) ? mm : 0;
+            return new TimeSpan(h, m, 0);
+        }
+        return new TimeSpan(0, 0, 0);
+    }
+
+    private static string BuildDescription(Dictionary<string, YamlSubject> subjectDict, string? subjectName)
+    {
+        if (string.IsNullOrWhiteSpace(subjectName)) return string.Empty;
+        if (subjectDict.TryGetValue(subjectName, out var info))
+        {
+            var teacher = string.IsNullOrWhiteSpace(info.Teacher) ? string.Empty : $"教师: {info.Teacher}";
+            var room = string.IsNullOrWhiteSpace(info.Room) ? string.Empty : $"教室: {info.Room}";
+            var sep = (!string.IsNullOrEmpty(teacher) && !string.IsNullOrEmpty(room)) ? "  " : string.Empty;
+            return $"{teacher}{sep}{room}";
+        }
+        return string.Empty;
+    }
+
+    private class YamlRoot
+    {
+        public int Version { get; set; }
+        public List<YamlSubject>? Subjects { get; set; }
+        public List<YamlDaySchedule>? Schedules { get; set; }
+    }
+
+    private class YamlSubject
+    {
+        public string? Name { get; set; }
+        public string? SimplifiedName { get; set; }
+        public string? Teacher { get; set; }
+        public string? Room { get; set; }
+    }
+
+    private class YamlDaySchedule
+    {
+        public string? Name { get; set; }
+        public List<YamlClass>? Classes { get; set; }
+        public int EnableDay { get; set; }
+        public string? Weeks { get; set; }
+    }
+
+    private class YamlClass
+    {
+        public string? Subject { get; set; }
+        public string? StartTime { get; set; }
+        public string? EndTime { get; set; }
     }
 
     public void DeleteSchedule(string id)
@@ -205,8 +331,8 @@ public class ScheduleService
 
     public SchedulePlan? GetActiveSchedule()
     {
-        var schedules = LoadAllSchedules();
-        return schedules.FirstOrDefault(s => s.IsActive) ?? schedules.FirstOrDefault();
+        var weeklyPlan = WeeklyScheduleService.Instance.BuildPlanFor(DateTime.Now);
+        return weeklyPlan;
     }
 
     public (TimePoint? current, TimePoint? next) GetCurrentAndNextTimePoint(TimeSpan time)
@@ -224,5 +350,20 @@ public class ScheduleService
             .FirstOrDefault();
 
         return (current, next);
+    }
+
+    private static int ToDayIndex(DayOfWeek day)
+    {
+        return day switch
+        {
+            DayOfWeek.Monday => 1,
+            DayOfWeek.Tuesday => 2,
+            DayOfWeek.Wednesday => 3,
+            DayOfWeek.Thursday => 4,
+            DayOfWeek.Friday => 5,
+            DayOfWeek.Saturday => 6,
+            DayOfWeek.Sunday => 7,
+            _ => 1
+        };
     }
 }

@@ -63,6 +63,7 @@ public class LockScreenService : INotifyPropertyChanged
     private bool _isManualLock;
     private string? _lastAutoLockedBreakId;
     private bool _wasManuallyUnlockedInBreak;
+    private (TimePoint? current, TimePoint? next) _lastLockScheduleSnapshot;
 
     public LockScreenService()
     {        _scheduleTimer = new Timer(_ => CheckSchedule(), null, 0, 5000);
@@ -116,7 +117,7 @@ public class LockScreenService : INotifyPropertyChanged
 
         // 1. 控制下课按钮进程（BreakButtonProcess）只在课间可见，上课或空档结束进程
         // 为避免按钮一闪一闪，只在状态发生变化时才调用 Show/Hide；如果本课间已手动解锁，则不再显示按钮
-        bool shouldShowWidget = settings.EnableBreakTimeLock && current != null && current.Type == TimePointType.Break && !_wasManuallyUnlockedInBreak;
+        bool shouldShowWidget = settings.EnableBreakTimeLock && !IsLocked && !IsProtectionOnlyActive && current != null && current.Type == TimePointType.Break && !_wasManuallyUnlockedInBreak;
         if (shouldShowWidget)
         {
             if (_lastAutoLockedBreakId != "__BREAK_WIDGET_ON__")
@@ -139,18 +140,40 @@ public class LockScreenService : INotifyPropertyChanged
             }
         }
 
-        // 2. 处理提前解锁 (针对锁定状态或仅防护状态)
         if (IsLocked || IsProtectionOnlyActive)
         {
-            if (next != null && next.Type == TimePointType.Class)
+            TimePoint? unlockPoint = null;
+
+            if (_lastLockScheduleSnapshot.current != null && _lastLockScheduleSnapshot.current.Type == TimePointType.Break)
             {
-                var timeToNextClass = (next.StartTime - now).TotalMinutes;
-                if (timeToNextClass > 0 && timeToNextClass <= settings.AutoUnlockBeforeClassMinutes)
+                unlockPoint = _lastLockScheduleSnapshot.current;
+            }
+            else if (next != null && next.Type == TimePointType.Class)
+            {
+                unlockPoint = next;
+            }
+
+            if (unlockPoint != null)
+            {
+                var unlockTime = unlockPoint.Type == TimePointType.Break
+                    ? unlockPoint.EndTime
+                    : unlockPoint.StartTime.Subtract(TimeSpan.FromMinutes(settings.AutoUnlockBeforeClassMinutes));
+
+                var minutesToUnlock = (unlockTime - now).TotalMinutes;
+
+                if (minutesToUnlock <= 0)
                 {
-                    Dispatcher.UIThread.Post(() => 
+                    Dispatcher.UIThread.Post(() =>
                     {
                         DeactivateLock();
-                        NotificationService.Instance.ShowInfo("即将上课，已自动提前解除锁定/防护");
+                        if (unlockPoint.Type == TimePointType.Break)
+                        {
+                            NotificationService.Instance.ShowInfo("本次课间已结束，已自动解除锁定/防护");
+                        }
+                        else
+                        {
+                            NotificationService.Instance.ShowInfo("即将上课，已自动提前解除锁定/防护");
+                        }
                     });
                 }
             }
@@ -166,6 +189,8 @@ public class LockScreenService : INotifyPropertyChanged
     {
         _currentMode = mode;
         _isManualLock = isManual;
+        FloatingWidgetService.Instance.HideWidget();
+        _lastAutoLockedBreakId = "__BREAK_WIDGET_OFF__";
 
         if (mode == LockMode.ProtectionOnly)
         {
@@ -186,6 +211,7 @@ public class LockScreenService : INotifyPropertyChanged
         }
 
         StartScreenLock();
+        _lastLockScheduleSnapshot = ScheduleService.Instance.GetCurrentAndNextTimePoint(DateTime.Now.TimeOfDay);
     }
 
     public void DeactivateLock()

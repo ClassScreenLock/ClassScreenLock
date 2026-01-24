@@ -7,11 +7,18 @@
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>ClassScreenLock.ico</ApplicationIcon>
         <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
+    <Version>1.2.7.1143</Version>
+    <AssemblyVersion>1.2.7.1143</AssemblyVersion>
+    <FileVersion>1.2.7.1143</FileVersion>
+    <InformationalVersion>1.2.7.1143</InformationalVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <DebugType>none</DebugType>
         <DebugSymbols>false</DebugSymbols>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     </PropertyGroup>
 
   <ItemGroup>
@@ -26,16 +33,18 @@
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
         <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.10" />
+        
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Include="Avalonia.Diagnostics" Version="11.3.10" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+        <PackageReference Include="Markdown.Avalonia" Version="11.0.2" />
         <PackageReference Include="Otp.NET" Version="1.4.1" />
         <PackageReference Include="Projektanker.Icons.Avalonia" Version="9.6.2" />
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.6.2" />
         <PackageReference Include="QRCoder" Version="1.7.0" />
         <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+        <PackageReference Include="YamlDotNet" Version="13.7.1" />
     </ItemGroup>
 
 </Project>

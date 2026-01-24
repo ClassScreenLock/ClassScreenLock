@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 
 namespace ClassScreenLock.Models;
@@ -30,4 +31,10 @@ public class SettingsModel
 
     [JsonPropertyName("notificationPosition")]
     public NotificationPosition NotificationPosition { get; set; } = NotificationPosition.Center;
+
+    [JsonPropertyName("weeklyCycleCount")]
+    public int WeeklyCycleCount { get; set; } = 4;
+
+    [JsonPropertyName("termStartDate")]
+    public DateTime? TermStartDate { get; set; }
 }

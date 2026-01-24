@@ -9,7 +9,7 @@
     <x:String x:Key="Sidebar_AppManagement">App Management</x:String>
     <x:String x:Key="Sidebar_NetworkInterception">Network Interception</x:String>
     <x:String x:Key="Sidebar_SecurityLogs">Security Logs</x:String>
-    <x:String x:Key="Sidebar_SecurityCenter">Password Security</x:String>
+    <x:String x:Key="Sidebar_SecurityCenter">Security Center</x:String>
     <x:String x:Key="Sidebar_Settings">System Settings</x:String>
     <x:String x:Key="Sidebar_About">About</x:String>
     <x:String x:Key="Sidebar_Collapse">Collapse Sidebar</x:String>
@@ -298,6 +298,8 @@
     <x:String x:Key="Btn_Next">Next</x:String>
     <x:String x:Key="Settings_NotificationPosition">Notification Position</x:String>
     <x:String x:Key="Settings_NotificationPosition_Description">Choose where notifications appear</x:String>
+    <x:String x:Key="About_Repository">Repository</x:String>
+    <x:String x:Key="About_UserAgreement">User Agreement</x:String>
     <x:String x:Key="NotificationPosition_Center">Center</x:String>
     <x:String x:Key="NotificationPosition_TopLeft">Top Left</x:String>
     <x:String x:Key="NotificationPosition_TopRight">Top Right</x:String>

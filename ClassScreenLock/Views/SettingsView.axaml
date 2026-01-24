@@ -200,6 +200,7 @@
                                 <ComboBoxItem Content="{DynamicResource NotificationPosition_BottomRight}" />
                             </ComboBox>
                         </Grid>
+
                     </StackPanel>
                 </Border>
                 

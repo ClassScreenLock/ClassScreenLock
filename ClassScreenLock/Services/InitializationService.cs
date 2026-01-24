@@ -7,13 +7,14 @@ namespace ClassScreenLock.Services;
 
 public enum InitStep
 {
-    SystemConfig = 0,
-    UserPreferences = 1,
-    PermissionSetup = 2,
-    AdminAccount = 3,
-    TwoFactorBinding = 4,
-    AppBlocking = 5,
-    NetworkBlocking = 6
+    UserAgreement = 0,
+    SystemConfig = 1,
+    UserPreferences = 2,
+    PermissionSetup = 3,
+    AdminAccount = 4,
+    TwoFactorBinding = 5,
+    AppBlocking = 6,
+    NetworkBlocking = 7
 }
 
 public class InitializationService
@@ -46,7 +47,8 @@ public class InitializationService
                 var include2fa = ShouldIncludeTwoFactorBinding();
                 var twoFactorDone = include2fa ? _state.TwoFactorBindingDone : true;
                 var adminConfigured = IsAdminConfiguredNoLock();
-                return !(_state.SystemConfigDone &&
+                return !(_state.UserAgreementDone &&
+                         _state.SystemConfigDone &&
                          _state.UserPreferencesDone &&
                          _state.PermissionSetupDone &&
                          adminConfigured &&
@@ -84,6 +86,9 @@ public class InitializationService
         {
             switch (step)
             {
+                case InitStep.UserAgreement:
+                    _state.UserAgreementDone = true;
+                    break;
                 case InitStep.SystemConfig:
                     _state.SystemConfigDone = true;
                     break;
@@ -125,6 +130,7 @@ public class InitializationService
         {
             return step switch
             {
+                InitStep.UserAgreement => _state.UserAgreementDone,
                 InitStep.SystemConfig => _state.SystemConfigDone,
                 InitStep.UserPreferences => _state.UserPreferencesDone,
                 InitStep.PermissionSetup => _state.PermissionSetupDone,
@@ -139,6 +145,7 @@ public class InitializationService
 
     private int GetNextStepIndexNoLock()
     {
+        if (!_state.UserAgreementDone) return (int)InitStep.UserAgreement;
         if (!_state.SystemConfigDone) return (int)InitStep.SystemConfig;
         if (!_state.UserPreferencesDone) return (int)InitStep.UserPreferences;
         if (!_state.PermissionSetupDone) return (int)InitStep.PermissionSetup;
@@ -209,6 +216,7 @@ public class InitializationService
     private class InitState
     {
         public DateTime? StartedAt { get; set; } = DateTime.Now;
+        public bool UserAgreementDone { get; set; }
         public bool SystemConfigDone { get; set; }
         public bool UserPreferencesDone { get; set; }
         public bool PermissionSetupDone { get; set; }

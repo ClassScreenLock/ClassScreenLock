@@ -15,7 +15,68 @@
         <converters:TimePointTypeToBrushConverter x:Key="TypeToBrushConverter"/>
         <converters:IsNullConverter x:Key="IsNullConverter"/>
         <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
+        <converters:EqualityMultiConverter x:Key="EqualConverter"/>
     </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.circle">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="Button.circle:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.circle">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="ToggleButton.circle:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.circle:checked">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
+        </Style>
+        <Style Selector="Button.pill">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}"/>
+        </Style>
+        <Style Selector="Button.pill:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.pill">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.pill:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.pill:checked">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
+        </Style>
+        <Style Selector="Button.pill.accent">
+            <Setter Property="CornerRadius" Value="18"/>
+        </Style>
+    </UserControl.Styles>
 
     <Grid>
         <Grid ColumnDefinitions="Auto,*,Auto,Auto">
@@ -32,14 +93,14 @@
                     <Border Grid.Row="0" Padding="16,20,16,10">
                         <StackPanel Spacing="10">
                             <TextBlock Text="{DynamicResource Sidebar_Schedule}" Classes="h3" FontWeight="Bold"/>
-                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" RowSpacing="8" ColumnSpacing="8">
-                                <Button Grid.Row="0" Grid.Column="0" Command="{Binding AddScheduleCommand}" HorizontalAlignment="Stretch" Padding="0,8" Classes="accent">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*" RowSpacing="8" ColumnSpacing="8">
+                                <Button Grid.Row="0" Grid.Column="0" Command="{Binding AddWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,8" Classes="accent">
                                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                                         <icons:Icon Value="fas fa-plus" Width="14" Height="14"/>
                                         <TextBlock Text="{DynamicResource Schedule_Add}"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Grid.Row="0" Grid.Column="1" Command="{Binding CopyScheduleCommand}" HorizontalAlignment="Stretch" Padding="0,8">
+                                <Button Grid.Row="0" Grid.Column="1" Command="{Binding CopyWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,8">
                                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                                         <icons:Icon Value="fas fa-copy" Width="14" Height="14"/>
                                         <TextBlock Text="{DynamicResource Schedule_Copy}"/>
@@ -57,14 +118,20 @@
                                         <TextBlock Text="导出"/>
                                     </StackPanel>
                                 </Button>
+                                <Button Grid.Row="2" Grid.Column="0" Command="{Binding ClearWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,8" Classes="danger">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <icons:Icon Value="fas fa-eraser" Width="14" Height="14"/>
+                                        <TextBlock Text="清空"/>
+                                    </StackPanel>
+                                </Button>
                             </Grid>
                         </StackPanel>
                     </Border>
 
-                    <!-- 时间表列表 -->
+                    <!-- 周课表列表 -->
                     <ListBox Grid.Row="1" 
-                             ItemsSource="{Binding Schedules}" 
-                             SelectedItem="{Binding SelectedSchedule}"
+                             ItemsSource="{Binding WeeklySchedules}" 
+                             SelectedItem="{Binding SelectedWeekly, Mode=TwoWay}"
                              Background="Transparent"
                              Margin="8,0,8,16">
                         <ListBox.Styles>
@@ -75,25 +142,13 @@
                             </Style>
                         </ListBox.Styles>
                         <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:SchedulePlan">
+                            <DataTemplate x:DataType="models:WeeklyScheduleFile">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
                                         <icons:Icon Value="fas fa-calendar" Width="16" Height="16" Opacity="0.6"/>
                                         <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                                        <icons:Icon Value="fas fa-check-circle" Width="14" Height="14" 
-                                                    Foreground="{DynamicResource SystemAccentColor}"
-                                                    IsVisible="{Binding IsActive}"
-                                                    ToolTip.Tip="当前活动计划"/>
-                                        <Button Classes="transparent" Padding="4"
-                                                IsVisible="{Binding !IsActive}"
-                                                Command="{Binding #Root.((vm:ScheduleViewModel)DataContext).ActivateScheduleCommand}"
-                                                CommandParameter="{Binding}"
-                                                ToolTip.Tip="激活此计划">
-                                            <icons:Icon Value="fas fa-play" Width="12" Height="12" Opacity="0.6"/>
-                                        </Button>
-                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -133,14 +188,14 @@
                     <StackPanel Grid.Row="1">
                         <!-- 操作按钮 -->
                         <Border Padding="16,16,16,8">
-                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" RowSpacing="12" ColumnSpacing="12">
-                                <Button Grid.Row="0" Grid.Column="0" Command="{Binding AddScheduleCommand}" HorizontalAlignment="Stretch" Padding="0,10" Classes="accent">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*" RowSpacing="12" ColumnSpacing="12">
+                                <Button Grid.Row="0" Grid.Column="0" Command="{Binding AddWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,10" Classes="accent">
                                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                                         <icons:Icon Value="fas fa-plus" Width="14" Height="14"/>
                                         <TextBlock Text="{DynamicResource Schedule_Add}"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Grid.Row="0" Grid.Column="1" Command="{Binding CopyScheduleCommand}" HorizontalAlignment="Stretch" Padding="0,10">
+                                <Button Grid.Row="0" Grid.Column="1" Command="{Binding CopyWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,10">
                                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                                         <icons:Icon Value="fas fa-copy" Width="14" Height="14"/>
                                         <TextBlock Text="{DynamicResource Schedule_Copy}"/>
@@ -158,12 +213,18 @@
                                         <TextBlock Text="导出"/>
                                     </StackPanel>
                                 </Button>
+                                <Button Grid.Row="2" Grid.Column="0" Command="{Binding ClearWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,10" Classes="danger">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <icons:Icon Value="fas fa-eraser" Width="14" Height="14"/>
+                                        <TextBlock Text="清空"/>
+                                    </StackPanel>
+                                </Button>
                             </Grid>
                         </Border>
 
                         <!-- 列表 -->
-                        <ListBox ItemsSource="{Binding Schedules}" 
-                                 SelectedItem="{Binding SelectedSchedule}"
+                        <ListBox ItemsSource="{Binding WeeklySchedules}" 
+                                 SelectedItem="{Binding SelectedWeekly, Mode=TwoWay}"
                                  Background="Transparent"
                                  Margin="8,8,8,16">
                             <ListBox.Styles>
@@ -174,23 +235,13 @@
                                 </Style>
                             </ListBox.Styles>
                             <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="models:SchedulePlan">
+                                <DataTemplate x:DataType="models:WeeklyScheduleFile">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
                                             <icons:Icon Value="fas fa-calendar" Width="18" Height="18" Opacity="0.6"/>
                                             <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="14"/>
                                         </StackPanel>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                                            <icons:Icon Value="fas fa-check-circle" Width="16" Height="16" 
-                                                        Foreground="{DynamicResource SystemAccentColor}"
-                                                        IsVisible="{Binding IsActive}"/>
-                                            <Button Classes="transparent" Padding="8"
-                                                    IsVisible="{Binding !IsActive}"
-                                                    Command="{Binding #Root.((vm:ScheduleViewModel)DataContext).ActivateScheduleCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <icons:Icon Value="fas fa-play" Width="14" Height="14" Opacity="0.6"/>
-                                            </Button>
-                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -200,14 +251,14 @@
             </Border>
 
             <!-- 2. 中间：时间点列表 -->
-            <Grid Grid.Column="1" RowDefinitions="Auto,*" 
+            <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" 
                   IsVisible="{Binding IsListVisible}"
                   Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
                   ZIndex="0">
                 <!-- 工具栏 -->
                 <Border Grid.Row="0" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
                     <Grid ColumnDefinitions="*,Auto">
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                        <WrapPanel Grid.Column="0" ItemSpacing="8">
                             <Button Command="{Binding ToggleSchedulePanelCommand}"
                                     IsVisible="{Binding IsMobileView}"
                                     Width="36" Height="36" Padding="0"
@@ -232,17 +283,40 @@
                                     <TextBlock Text="{DynamicResource Schedule_Divider}"/>
                                 </StackPanel>
                             </Button>
-                        </StackPanel>
+                            <Button Command="{Binding AddActionCommand}" Padding="12,6" IsVisible="{Binding !IsMobileView}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fas fa-bolt" Width="16" Height="16"/>
+                                    <TextBlock Text="{DynamicResource Schedule_Action}"/>
+                                </StackPanel>
+                            </Button>
+                            <Separator Margin="8,0"/>
+                        </WrapPanel>
                         
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                             <Button Command="{Binding StartBreakLockCommand}"
                                     IsVisible="{Binding IsBreakNow}"
-                                    Classes="accent"
+                                    Classes="accent pill"
                                     Padding="12,6">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <icons:Icon Value="fas fa-lock" Width="16" Height="16"/>
-                                    <TextBlock Text="下课锁屏"/>
+                                    <TextBlock Text="下课锁屏" IsVisible="{Binding !IsAwaitingBreakLockConfirm}"/>
+                                    <TextBlock Text="再次点击启动锁屏" IsVisible="{Binding IsAwaitingBreakLockConfirm}"/>
                                 </StackPanel>
+                            </Button>
+                            <Button Command="{Binding MoveSelectedUpCommand}" IsEnabled="{Binding SelectedTimePoint, Converter={StaticResource IsNotNullConverter}}" Classes="circle" ToolTip.Tip="{DynamicResource Schedule_MoveUp}">
+                                <icons:Icon Value="fas fa-arrow-up" Width="16" Height="16"/>
+                            </Button>
+                            <Button Command="{Binding MoveSelectedDownCommand}" IsEnabled="{Binding SelectedTimePoint, Converter={StaticResource IsNotNullConverter}}" Classes="circle" ToolTip.Tip="{DynamicResource Schedule_MoveDown}">
+                                <icons:Icon Value="fas fa-arrow-down" Width="16" Height="16"/>
+                            </Button>
+                            <Button Command="{Binding SortTimePointsCommand}" IsEnabled="{Binding SelectedSchedule, Converter={StaticResource IsNotNullConverter}}" Classes="circle" ToolTip.Tip="{DynamicResource Schedule_Sort}">
+                                <icons:Icon Value="fas fa-sort" Width="16" Height="16"/>
+                            </Button>
+                            <Button Click="ImportSchedule_Click" Classes="circle" ToolTip.Tip="导入">
+                                <icons:Icon Value="fas fa-file-import" Width="16" Height="16"/>
+                            </Button>
+                            <Button Click="ExportSchedule_Click" Classes="circle" ToolTip.Tip="导出">
+                                <icons:Icon Value="fas fa-file-export" Width="16" Height="16"/>
                             </Button>
                             <Button Command="{Binding ToggleSettingsCommand}" 
                                     IsVisible="{Binding CanToggleSettings}"
@@ -256,8 +330,14 @@
                     </Grid>
                 </Border>
 
-                <!-- 时间点列表 -->
-                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                <TextBlock Grid.Row="1"
+                           Margin="16,4,16,0"
+                           FontSize="12"
+                           Opacity="0.7"
+                           Text="{Binding TodayScheduleSummary}"/>
+
+                <!-- 周课表编辑 -->
+                <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Border Padding="16">
                         <StackPanel>
                         <!-- 小窗模式下的时间表基本设置 -->
@@ -286,7 +366,7 @@
                                 </Button>
                                 
                                 <Button Grid.Row="0" Grid.Column="2" 
-                                        Command="{Binding DeleteScheduleCommand}" 
+                                        IsEnabled="False"
                                         Classes="danger" 
                                         Width="36" Height="36" Padding="0" Margin="8,0,0,0"
                                         ToolTip.Tip="{DynamicResource Schedule_DeletePlan}">
@@ -322,11 +402,86 @@
                                 </StackPanel>
                             </Grid>
                         </Border>
-                        <TextBlock IsVisible="{Binding IsMobileView}" Text="{DynamicResource Schedule_TimePoints}" FontWeight="Bold" FontSize="16" Margin="4,0,0,12"/>
+                        <TextBlock IsVisible="{Binding IsMobileView}" Text="周课表" FontWeight="Bold" FontSize="16" Margin="4,0,0,12"/>
+
+                        <Border Margin="0,0,0,12" Padding="12"
+                                Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                                CornerRadius="12">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
+                                    <TextBlock Text="周轮换设置" FontWeight="SemiBold"/>
+                                    <TextBlock Text="轮换周数与开学日期" Opacity="0.7" FontSize="12"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="8" HorizontalAlignment="Right">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                        <TextBlock Text="轮换周数" VerticalAlignment="Center" Opacity="0.7" FontSize="12"/>
+                                        <ComboBox ItemsSource="{Binding WeeklyCycleOptions}"
+                                                  SelectedItem="{Binding WeeklyCycleCount, Mode=TwoWay}"
+                                                  Width="120" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                        <TextBlock Text="开学日期" VerticalAlignment="Center" Opacity="0.7" FontSize="12"/>
+                                        <StackPanel Spacing="4" HorizontalAlignment="Right">
+                                            <Grid ColumnDefinitions="*,Auto" Width="200">
+                                                <TextBox Grid.Column="0"
+                                                         Text="{Binding TermStartDateText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                                         Watermark="yyyy-MM-dd"
+                                                         Height="32"
+                                                         Classes="clear"
+                                                         VerticalAlignment="Center"/>
+                                                <Button Grid.Column="1"
+                                                        Classes="transparent"
+                                                        Width="32" Height="32"
+                                                        Padding="0"
+                                                        VerticalAlignment="Center">
+                                                    <icons:Icon Value="fas fa-calendar" Width="14" Height="14" Opacity="0.6"/>
+                                                    <Button.Flyout>
+                                                        <Flyout Placement="Bottom">
+                                                            <Border Padding="12">
+                                                                <StackPanel Spacing="8">
+                                                                <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                                                                        CornerRadius="12"
+                                                                        Padding="8">
+                                                                    <Calendar SelectedDate="{Binding TermStartDateCalendar, Mode=TwoWay}"
+                                                                              Width="280"
+                                                                              Height="300"/>
+                                                                </Border>
+                                                                <Button Command="{Binding ClearTermStartDateCommand}"
+                                                                        Classes="danger"
+                                                                        Content="清除开学日期"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </Flyout>
+                                                    </Button.Flyout>
+                                                </Button>
+                                            </Grid>
+                                            <TextBlock Text="{Binding TermStartDateValidationMessage}"
+                                                       IsVisible="{Binding IsTermStartDateInvalid}"
+                                                       Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                                       FontSize="12"
+                                                       Opacity="0.9"
+                                                       TextWrapping="Wrap"
+                                                       Width="200"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <TabControl SelectedIndex="{Binding SelectedDayTabIndex, Mode=TwoWay}">
+                            <TabItem Header="周一"/>
+                            <TabItem Header="周二"/>
+                            <TabItem Header="周三"/>
+                            <TabItem Header="周四"/>
+                            <TabItem Header="周五"/>
+                            <TabItem Header="周六"/>
+                            <TabItem Header="周日"/>
+                        </TabControl>
 
                         <ListBox ItemsSource="{Binding SelectedSchedule.TimePoints}" 
-                                 SelectedItem="{Binding SelectedTimePoint}"
-                                 Background="Transparent">
+                                 SelectedItem="{Binding SelectedTimePoint, Mode=TwoWay}" 
+                                 Background="Transparent"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 Margin="0,8,0,0">
                             <ListBox.Styles>
                                 <Style Selector="ListBoxItem">
                                     <Setter Property="CornerRadius" Value="12"/>
@@ -335,13 +490,6 @@
                                     <Setter Property="BorderThickness" Value="1"/>
                                     <Setter Property="BorderBrush" Value="Transparent"/>
                                     <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
-                                </Style>
-                                <Style Selector="ListBoxItem:pointerover">
-                                    <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
-                                </Style>
-                                <Style Selector="ListBoxItem:selected">
-                                    <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
-                                    <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
                                 </Style>
                             </ListBox.Styles>
                             <ListBox.ItemTemplate>
@@ -356,20 +504,15 @@
                                                 </StackPanel>
                                                 <TextBlock Text="{Binding Duration, StringFormat=\{0\} min}" FontSize="11" Opacity="0.5" Margin="2,0,0,0"/>
                                             </StackPanel>
-                                            
                                             <Border Grid.Column="1" Width="4" Height="32" Margin="12,0" CornerRadius="2" Background="{Binding Type, Converter={StaticResource TypeToBrushConverter}}"/>
-                                            
                                             <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
                                                 <TextBlock Text="{Binding Label}" FontSize="16" FontWeight="SemiBold"/>
                                                 <TextBlock Text="{Binding TypeDisplayName}" FontSize="12" Opacity="0.5"/>
                                             </StackPanel>
-                                            
                                             <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                                                 <Button Command="{Binding $parent[UserControl].((vm:ScheduleViewModel)DataContext).DeleteTimePointCommand}"
                                                         CommandParameter="{Binding}"
-                                                        Classes="transparent" 
-                                                        Width="32" Height="32" Padding="0"
-                                                        ToolTip.Tip="{DynamicResource Schedule_Delete}">
+                                                        Classes="transparent" Width="32" Height="32" Padding="0" ToolTip.Tip="{DynamicResource Schedule_Delete}">
                                                     <icons:Icon Value="fas fa-trash" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
                                                 </Button>
                                                 <icons:Icon Value="fas fa-chevron-right" Width="12" Height="12" Opacity="0.3" VerticalAlignment="Center"/>
@@ -378,7 +521,7 @@
                                     </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
-                         </ListBox>
+                        </ListBox>
                      </StackPanel>
                     </Border>
                  </ScrollViewer>
@@ -386,14 +529,13 @@
 
             <!-- 3. 右侧：全局设置 (大屏下始终可见) -->
             <!-- 在中屏模式下，它也是一个覆盖层 -->
-            <Border Grid.Column="1" Grid.ColumnSpan="3"
+            <Border Grid.Column="2" Grid.ColumnSpan="2"
                     Width="320"
                     HorizontalAlignment="Right"
                     IsVisible="{Binding ShowSettingsPanel}"
                     Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                     BorderThickness="1,0,0,0"
-                    ZIndex="9"
                     BoxShadow="0 0 20 0 #20000000">
                 <Grid IsVisible="{Binding SelectedSchedule, Converter={StaticResource IsNotNullConverter}}"
                       RowDefinitions="Auto,*">
@@ -443,7 +585,7 @@
 
                             <StackPanel Spacing="12">
                                 <Button Content="{DynamicResource Schedule_Save}" Command="{Binding SaveCurrentScheduleCommand}" Classes="accent" HorizontalAlignment="Stretch" Height="40"/>
-                                <Button Content="{DynamicResource Schedule_DeletePlan}" Command="{Binding DeleteScheduleCommand}" Classes="danger" HorizontalAlignment="Stretch" Height="40"/>
+                                <Button Content="{DynamicResource Schedule_DeletePlan}" IsEnabled="False" Classes="danger" HorizontalAlignment="Stretch" Height="40"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -495,7 +637,7 @@
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="{DynamicResource Schedule_Type}" Classes="caption" FontWeight="SemiBold" Opacity="0.7"/>
                                             <ComboBox ItemsSource="{Binding AllTimePointTypes}" 
-                                                      SelectedItem="{Binding SelectedTimePoint.Type}"
+                                                      SelectedItem="{Binding SelectedTimePoint.Type, Mode=TwoWay}"
                                                       HorizontalAlignment="Stretch">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>

@@ -127,8 +127,7 @@ sealed class Program
     public static AppBuilder BuildAvaloniaApp()
     {
         var builder = AppBuilder.Configure<App>()
-            .UsePlatformDetect()
-            .WithInterFont();
+            .UsePlatformDetect();
 
 #if DEBUG
         builder = builder.LogToTrace();

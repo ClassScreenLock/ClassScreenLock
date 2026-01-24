@@ -104,7 +104,6 @@ public partial class SidebarViewModel : ViewModelBase
     {
         MenuItems.Clear();
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_Home"), "fa-home", NavigateCommand, "Home"));
-        MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_LockSettings"), "fa-lock", NavigateCommand, "LockSettings"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_Schedule"), "fa-calendar-alt", NavigateCommand, "Schedule"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_AppManagement"), "fa-th-large", NavigateCommand, "AppManagement"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_NetworkInterception"), "fa-network-wired", NavigateCommand, "NetworkInterception"));
@@ -287,9 +286,7 @@ public partial class SidebarViewModel : ViewModelBase
             case "Home":
                 _mainWindowViewModel?.NavigateToHome();
                 break;
-            case "LockSettings":
-                _mainWindowViewModel?.NavigateToLockSettings();
-                break;
+            // 锁屏设置已迁移至安全中心
             case "Schedule":
                 _mainWindowViewModel?.NavigateToSchedule();
                 break;

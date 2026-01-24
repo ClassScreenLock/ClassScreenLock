@@ -255,7 +255,7 @@ public partial class App : Application
                 mainWindow.Show();
                 mainWindow.WindowState = Avalonia.Controls.WindowState.Normal;
                 mainWindow.Activate();
-                vm.NavigateToLockSettings();
+                vm.NavigateToSecurityCenter();
             }
         }
     }

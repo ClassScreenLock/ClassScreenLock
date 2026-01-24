@@ -1,3 +1,4 @@
+using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ClassScreenLock.Services;
@@ -5,13 +6,18 @@ using ClassScreenLock.Models;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Avalonia.Media.Imaging;
 using System.IO;
 using System;
 using Avalonia;
+using Avalonia.Media;
+using Avalonia.Threading;
+using System.Windows.Input;
 using Avalonia.Styling;
 using Avalonia.Controls;
 using ClassScreenLock.Helpers;
+using System.Diagnostics;
 
 namespace ClassScreenLock.ViewModels;
 
@@ -36,6 +42,12 @@ public partial class InitializationViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _canSkip;
+
+    [ObservableProperty]
+    private bool _isAgreementAccepted;
+
+    [ObservableProperty]
+    private string _agreementContent = string.Empty;
 
     [ObservableProperty]
     private string _username = string.Empty;
@@ -122,6 +134,12 @@ public partial class InitializationViewModel : ViewModelBase
         "#107C10", "#00B7C3", "#5C2D91", "#A4262C", "#FFB900"
     };
 
+        [ObservableProperty]
+        private string _repositoryUrl = "https://github.com/jiugulixiaoniu/ClassScreenLock";
+
+        [ObservableProperty]
+        private string _userAgreementUrl = "https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/UserAgreement.html";
+
     public InitializationViewModel(MainWindowViewModel mainWindowViewModel)
     {
         _mainWindowViewModel = mainWindowViewModel;
@@ -146,6 +164,36 @@ public partial class InitializationViewModel : ViewModelBase
 
     private void LoadInitialState()
     {
+        try
+        {
+            // 优先尝试从 Avalonia 资源中加载 (Assets/README.md 已在 csproj 中标记为 AvaloniaResource)
+            try
+            {
+                var uri = new Uri("avares://ClassScreenLock/Assets/README.md");
+                using var stream = AssetLoader.Open(uri);
+                using var reader = new StreamReader(stream);
+                AgreementContent = reader.ReadToEnd();
+            }
+            catch
+            {
+                // 如果资源加载失败，尝试从文件系统读取
+                var readmePath = Path.Combine(AppContext.BaseDirectory, "Assets", "README.md");
+                if (File.Exists(readmePath))
+                {
+                    AgreementContent = File.ReadAllText(readmePath);
+                }
+                else
+                {
+                    AgreementContent = "无法加载用户协议，请访问 GitHub 查看。";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Init", "LoadAgreementError", ex.Message);
+            AgreementContent = "加载用户协议时出错。";
+        }
+
         var general = SettingsService.General;
         AutoStart = general.AutoStart;
         DarkMode = general.DarkMode;
@@ -180,6 +228,26 @@ public partial class InitializationViewModel : ViewModelBase
         {
             PrepareTwoFactorSetup();
         }
+    }
+
+    [RelayCommand]
+    private void OpenRepository()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(RepositoryUrl) { UseShellExecute = true });
+        }
+        catch { }
+    }
+
+    [RelayCommand]
+    private void OpenUserAgreement()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(UserAgreementUrl) { UseShellExecute = true });
+        }
+        catch { }
     }
 
 
@@ -245,17 +313,22 @@ public partial class InitializationViewModel : ViewModelBase
     [RelayCommand]
     private void Back()
     {
-        if (StepIndex > 0)
+        if (StepIndex > (int)InitStep.UserAgreement)
         {
             var nextIndex = StepIndex - 1;
-            if (!ShouldIncludeTwoFactorBinding() && (InitStep)nextIndex == InitStep.TwoFactorBinding)
+            // 如果是 2FA 步骤且当前设置不需要 2FA，则再往前跳一步
+            if (nextIndex == (int)InitStep.TwoFactorBinding && !ShouldIncludeTwoFactorBinding())
             {
                 nextIndex--;
             }
-            StepIndex = Math.Max(0, nextIndex);
-            RefreshStepUi(StepIndex);
-            LogService.Instance.Log("Init", "Back", StepIndex.ToString());
-            InitializationService.Instance.SaveState();
+
+            if (nextIndex >= (int)InitStep.UserAgreement)
+            {
+                StepIndex = nextIndex;
+                RefreshStepUi(StepIndex);
+                LogService.Instance.Log("Init", "Back", StepIndex.ToString());
+                InitializationService.Instance.SaveState();
+            }
         }
     }
 
@@ -264,6 +337,16 @@ public partial class InitializationViewModel : ViewModelBase
     {
         switch ((InitStep)StepIndex)
         {
+            case InitStep.UserAgreement:
+                if (!IsAgreementAccepted)
+                {
+                    NotificationService.Instance.ShowWarning("请先阅读并同意用户协议");
+                    return;
+                }
+                InitializationService.Instance.MarkStepComplete(InitStep.UserAgreement);
+                StepIndex++;
+                RefreshStepUi(StepIndex);
+                break;
             case InitStep.SystemConfig:
                 if (!ValidateSystemConfig())
                 {
@@ -715,7 +798,7 @@ public partial class InitializationViewModel : ViewModelBase
     private void RefreshStepUi(int stepIndex)
     {
         var include2fa = ShouldIncludeTwoFactorBinding();
-        StepTotal = include2fa ? 7 : 6;
+        StepTotal = include2fa ? 8 : 7;
         StepProgressMax = Math.Max(0, StepTotal - 1);
 
         var display = stepIndex + 1;
@@ -725,7 +808,7 @@ public partial class InitializationViewModel : ViewModelBase
         }
         StepDisplay = Math.Clamp(display, 1, StepTotal);
         StepProgressValue = Math.Clamp(StepDisplay - 1, 0, StepProgressMax);
-        CanSkip = StepDisplay < StepTotal;
+        CanSkip = StepDisplay < StepTotal && (InitStep)stepIndex != InitStep.UserAgreement && (InitStep)stepIndex != InitStep.AdminAccount;
     }
 
     private void PrepareTwoFactorSetup()

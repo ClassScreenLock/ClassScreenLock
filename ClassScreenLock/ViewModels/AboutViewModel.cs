@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Diagnostics;
 
 namespace ClassScreenLock.ViewModels;
 
@@ -8,7 +10,7 @@ public partial class AboutViewModel : ViewModelBase
     private string _appName = "ClassScreenLock";
     
     [ObservableProperty]
-    private string _appVersion = "V1.1.5.1005";
+    private string _appVersion = "V1.2.7.1143";
     
     [ObservableProperty]
     private string _appDescription = "一款专业的课堂屏幕锁定工具，帮助教师管理课堂环境，提高教学效率。";
@@ -23,5 +25,31 @@ public partial class AboutViewModel : ViewModelBase
     private string _license = "本软件基于GNU GPL3.0开源";
     
     [ObservableProperty]
-    private string _workspaceInfo = "工作空间：D:/46517/Documents/Rider/ClassScreenLock";
+    private string _workspaceInfo = " ";
+
+    [ObservableProperty]
+    private string _repositoryUrl = "https://github.com/jiugulixiaoniu/ClassScreenLock";
+
+    [ObservableProperty]
+    private string _userAgreementUrl = "https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/UserAgreement.html";
+
+    [RelayCommand]
+    private void OpenRepository()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(RepositoryUrl) { UseShellExecute = true });
+        }
+        catch { }
+    }
+
+    [RelayCommand]
+    private void OpenUserAgreement()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(UserAgreementUrl) { UseShellExecute = true });
+        }
+        catch { }
+    }
 }

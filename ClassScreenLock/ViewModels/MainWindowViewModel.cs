@@ -40,8 +40,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private LogManagementViewModel _logManagementViewModel;
 
-    [ObservableProperty]
-    private LockSettingsViewModel _lockSettingsViewModel;
+    // 锁屏设置已迁移至安全中心
 
     [ObservableProperty]
     private ScheduleViewModel _scheduleViewModel;
@@ -90,8 +89,7 @@ public partial class MainWindowViewModel : ViewModelBase
         // 创建日志管理视图模型实例
         LogManagementViewModel = new LogManagementViewModel();
 
-        // 创建锁定设置视图模型实例
-        LockSettingsViewModel = new LockSettingsViewModel();
+        // 锁屏设置已迁移至安全中心
 
         // 创建时间计划视图模型实例
         ScheduleViewModel = new ScheduleViewModel();
@@ -195,13 +193,7 @@ public partial class MainWindowViewModel : ViewModelBase
         IsOnboarding = false;
     }
 
-    public void NavigateToLockSettings()
-    {
-        OnViewChanging();
-        CurrentView = new LockSettingsView { DataContext = LockSettingsViewModel };
-        Status = "锁定设置";
-        IsOnboarding = false;
-    }
+    // 锁屏设置已迁移至安全中心
     
     public void NavigateToSettings()
     {
@@ -242,7 +234,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnViewChanging();
         CurrentView = new SecurityCenterView { DataContext = SecurityCenterViewModel };
-        Status = "密码安全";
+        Status = "安全中心";
         IsOnboarding = false;
     }
 

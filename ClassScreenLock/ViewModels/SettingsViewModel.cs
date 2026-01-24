@@ -48,6 +48,12 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private int _notificationPositionIndex = 0;
+
+    [ObservableProperty]
+    private int _weeklyCycleCount = 4;
+
+    [ObservableProperty]
+    private DateTime? _termStartDate;
     
     [ObservableProperty]
     private string _language = "zh-CN";
@@ -167,6 +173,8 @@ public partial class SettingsViewModel : ViewModelBase
         UseSystemAccentColor = Settings.UseSystemAccentColor;
         CustomAccentColor = Settings.AccentColor; // 初始化为当前强调色
         NotificationPositionIndex = (int)Settings.NotificationPosition;
+        WeeklyCycleCount = Settings.WeeklyCycleCount;
+        TermStartDate = Settings.TermStartDate;
         
         // 如果使用系统强调色，则获取系统强调色
         if (UseSystemAccentColor)
@@ -296,6 +304,20 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnNotificationPositionIndexChanged(int value)
     {
         UpdateSetting(s => s.NotificationPosition = (NotificationPosition)value);
+    }
+
+    partial void OnWeeklyCycleCountChanged(int value)
+    {
+        if (_suppressSettingSideEffects) return;
+        if (value < 1) value = 1;
+        if (value > 6) value = 6;
+        UpdateSetting(s => s.WeeklyCycleCount = value);
+    }
+
+    partial void OnTermStartDateChanged(DateTime? value)
+    {
+        if (_suppressSettingSideEffects) return;
+        UpdateSetting(s => s.TermStartDate = value);
     }
 
     partial void OnLanguageChanged(string value)

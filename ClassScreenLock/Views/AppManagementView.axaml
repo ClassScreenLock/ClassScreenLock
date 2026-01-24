@@ -183,9 +183,10 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="CPU" Binding="{Binding CpuUsageString}" Width="70"/>
                                 <DataGridTextColumn Header="内存" Binding="{Binding MemoryUsageString}" Width="90"/>
-                                <DataGridTextColumn Header="网速" Binding="{Binding NetworkSpeed}" Width="90"/>
-                                <DataGridTextColumn Header="网络总量" Binding="{Binding TotalNetworkUsage}" Width="100"/>
+                                <DataGridTextColumn Header="I/O速率" Binding="{Binding NetworkSpeed}" Width="100"/>
+                                <DataGridTextColumn Header="I/O总量" Binding="{Binding TotalNetworkUsage}" Width="110"/>
                                 <DataGridTextColumn Header="路径" Binding="{Binding ExecutablePath}" Width="*"/>
                             </DataGrid.Columns>
                         </DataGrid>

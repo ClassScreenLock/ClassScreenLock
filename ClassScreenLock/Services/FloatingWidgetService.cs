@@ -89,19 +89,20 @@ public class FloatingWidgetService
     private sealed class FloatingBreakButtonWindow : Window
     {
         [DllImport("user32.dll")]
-        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
 
-        private static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+        private static readonly IntPtr HWND_BOTTOM = new(1);
         private const uint SWP_NOSIZE = 0x0001;
         private const uint SWP_NOMOVE = 0x0002;
         private const uint SWP_NOACTIVATE = 0x0010;
+        private const uint SWP_NOOWNERZORDER = 0x0200;
+        private const uint SWP_NOSENDCHANGING = 0x0400;
 
         private readonly Button _button;
         private readonly Panel _normalContent;
         private readonly Panel _confirmContent;
         private bool _isConfirming;
         private DateTime _lastClickTime;
-        private readonly System.Timers.Timer _bottomTimer;
 
         public FloatingBreakButtonWindow()
         {
@@ -112,6 +113,8 @@ public class FloatingWidgetService
             Topmost = false;
             ShowInTaskbar = false;
             CanResize = false;
+            ShowActivated = false;
+            Focusable = false;
             Background = Brushes.Transparent;
             TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
 
@@ -119,13 +122,16 @@ public class FloatingWidgetService
             {
                 Width = 60,
                 Height = 60,
-                Background = new SolidColorBrush(Color.Parse("#CC0078D4")),
+                MinWidth = 60,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(0),
                 HorizontalContentAlignment = HorizontalAlignment.Center,
                 VerticalContentAlignment = VerticalAlignment.Center,
-                CornerRadius = new CornerRadius(40)
+                CornerRadius = new CornerRadius(30)
             };
+
+            _button.Classes.Add("accent");
+            _button.Classes.Add("circular");
 
             _normalContent = BuildNormalContent();
             _confirmContent = BuildConfirmContent();
@@ -141,45 +147,12 @@ public class FloatingWidgetService
             };
 
             _button.Click += (_, __) => HandleButtonClick();
-            _button.PointerEntered += (_, __) =>
-            {
-                if (!_isConfirming)
-                {
-                    _button.Background = new SolidColorBrush(Color.Parse("#FF0078D4"));
-                }
-            };
-            _button.PointerExited += (_, __) =>
-            {
-                if (_isConfirming)
-                {
-                    _button.Background = new SolidColorBrush(Color.Parse("#FFE81123"));
-                }
-                else
-                {
-                    _button.Background = new SolidColorBrush(Color.Parse("#CC0078D4"));
-                }
-            };
             _button.PointerPressed += (_, e) =>
             {
-                if (!_isConfirming)
-                {
-                    _button.Background = new SolidColorBrush(Color.Parse("#FF005A9E"));
-                }
-
                 if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
                 {
                     try { BeginMoveDrag(e); } catch { }
-                }
-            };
-            _button.PointerReleased += (_, __) =>
-            {
-                if (_isConfirming)
-                {
-                    _button.Background = new SolidColorBrush(Color.Parse("#FFE81123"));
-                }
-                else
-                {
-                    _button.Background = new SolidColorBrush(Color.Parse("#FF0078D4"));
+                    EnsureBottom();
                 }
             };
 
@@ -202,16 +175,6 @@ public class FloatingWidgetService
                     Position = new PixelPoint(wa.X + wa.Width - 120, wa.Y + wa.Height - 140);
                 }
                 EnsureBottom();
-            };
-
-            _bottomTimer = new System.Timers.Timer(500);
-            _bottomTimer.Elapsed += (_, __) => EnsureBottom();
-            _bottomTimer.Start();
-
-            Closed += (_, __) =>
-            {
-                try { _bottomTimer.Stop(); } catch { }
-                try { _bottomTimer.Dispose(); } catch { }
             };
         }
 
@@ -259,11 +222,16 @@ public class FloatingWidgetService
         {
             if (confirming)
             {
-                _button.Background = new SolidColorBrush(Color.Parse("#FFE81123"));
+                _button.Classes.Remove("accent");
+                _button.Classes.Add("danger");
             }
             else
             {
-                _button.Background = new SolidColorBrush(Color.Parse("#CC0078D4"));
+                _button.Classes.Remove("danger");
+                if (!_button.Classes.Contains("accent"))
+                {
+                    _button.Classes.Add("accent");
+                }
             }
 
             _normalContent.IsVisible = !confirming;
@@ -279,7 +247,8 @@ public class FloatingWidgetService
                 var handle = TryGetPlatformHandle()?.Handle;
                 if (handle != null)
                 {
-                    SetWindowPos(handle.Value, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+                    SetWindowPos(handle.Value, HWND_BOTTOM, 0, 0, 0, 0,
+                        SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING);
                 }
             });
         }
