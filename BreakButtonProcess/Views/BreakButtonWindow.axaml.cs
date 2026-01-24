@@ -4,7 +4,6 @@ using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using System;
 using System.IO.Pipes;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,15 +11,6 @@ namespace BreakButtonProcess.Views;
 
 public partial class BreakButtonWindow : Window
 {
-    [DllImport("user32.dll")]
-    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
-
-    private static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
-    private const uint SWP_NOSIZE = 0x0001;
-    private const uint SWP_NOMOVE = 0x0002;
-    private const uint SWP_NOACTIVATE = 0x0010;
-
-    private System.Timers.Timer? _bottomTimer;
     private DateTime _lastClickTime = DateTime.MinValue;
     private bool _isConfirming = false;
 
@@ -28,18 +18,12 @@ public partial class BreakButtonWindow : Window
     {
         InitializeComponent();
         Opened += OnOpened;
-        Closing += (_, __) => _bottomTimer?.Stop();
         
         var b = this.FindControl<Button>("LockButton");
         if (b != null)
         {
             b.Click += (_, __) => HandleButtonClick();
         }
-
-        // 极其频繁地确保置底，频率提高到 500ms 一次
-        _bottomTimer = new System.Timers.Timer(500);
-        _bottomTimer.Elapsed += (_, __) => EnsureBottom();
-        _bottomTimer.Start();
     }
 
     private void HandleButtonClick()
@@ -109,26 +93,8 @@ public partial class BreakButtonWindow : Window
             if (s != null)
             {
                 var wa = s.WorkingArea;
-                // 放在右下角稍微靠上的位置，避免被任务栏完全遮挡，但保持置底
                 Position = new PixelPoint(wa.X + wa.Width - 120, wa.Y + wa.Height - 140);
             }
-        }
-
-        EnsureBottom();
-    }
-
-    private void EnsureBottom()
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                var handle = TryGetPlatformHandle()?.Handle;
-                if (handle != null)
-                {
-                    SetWindowPos(handle.Value, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
-                }
-            });
         }
     }
 
