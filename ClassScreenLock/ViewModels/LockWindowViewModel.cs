@@ -287,6 +287,7 @@ public partial class LockWindowViewModel : ViewModelBase
     private void OnTimerTick(object? sender, EventArgs e)
     {
         UpdateCurrentTime();
+        LoadScheduleInfo();
         UpdateCountdown();
     }
 
@@ -298,15 +299,28 @@ public partial class LockWindowViewModel : ViewModelBase
     private void LoadScheduleInfo()
     {
         var now = DateTime.Now.TimeOfDay;
-        var (_, next) = ScheduleService.Instance.GetCurrentAndNextTimePoint(now);
-
-        if (next != null)
+        var schedule = ScheduleService.Instance.GetActiveSchedule();
+        if (schedule == null || schedule.TimePoints == null)
         {
-            _nextClassTime = DateTime.Today.Add(next.StartTime);
-            var timeLabel = next.StartTime.Hours.ToString("D2") + ":" + next.StartTime.Minutes.ToString("D2");
-            NextClassLabel = string.IsNullOrWhiteSpace(next.Label)
+            _nextClassTime = null;
+            NextClassLabel = string.Empty;
+            CountdownText = string.Empty;
+            HasCountdown = false;
+            return;
+        }
+
+        var nextClass = schedule.TimePoints
+            .Where(t => t.Type == TimePointType.Class && t.StartTime > now)
+            .OrderBy(t => t.StartTime)
+            .FirstOrDefault();
+
+        if (nextClass != null)
+        {
+            _nextClassTime = DateTime.Today.Add(nextClass.StartTime);
+            var timeLabel = nextClass.StartTime.Hours.ToString("D2") + ":" + nextClass.StartTime.Minutes.ToString("D2");
+            NextClassLabel = string.IsNullOrWhiteSpace(nextClass.Label)
                 ? $"下节课 {timeLabel} 开始"
-                : next.Label;
+                : $"{nextClass.Label} {timeLabel} 开始";
             HasCountdown = true;
         }
         else
