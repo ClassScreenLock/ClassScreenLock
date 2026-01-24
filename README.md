@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<image src="img/xuanchuan.png" width="768" height="768" />
+<image src="img/xuanchuan.png" width="600" height="600" />
 
 🎯 **课堂专注管理工具** | 🚀 **简易高效屏幕管控** | 🎨 **友好交互体验**
 
