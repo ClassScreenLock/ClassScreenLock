@@ -142,31 +142,30 @@ public class LockScreenService : INotifyPropertyChanged
 
         if (IsLocked || IsProtectionOnlyActive)
         {
-            TimePoint? unlockPoint = null;
+            TimeSpan? breakEnd = current != null && current.Type == TimePointType.Break ? current.EndTime : null;
+            TimeSpan? earlyUnlock = next != null && next.Type == TimePointType.Class
+                ? next.StartTime.Subtract(TimeSpan.FromMinutes(settings.AutoUnlockBeforeClassMinutes))
+                : null;
 
-            if (_lastLockScheduleSnapshot.current != null && _lastLockScheduleSnapshot.current.Type == TimePointType.Break)
+            TimeSpan? targetUnlock = null;
+            if (breakEnd != null && earlyUnlock != null)
             {
-                unlockPoint = _lastLockScheduleSnapshot.current;
+                targetUnlock = breakEnd.Value <= earlyUnlock.Value ? breakEnd : earlyUnlock;
             }
-            else if (next != null && next.Type == TimePointType.Class)
+            else
             {
-                unlockPoint = next;
+                targetUnlock = breakEnd ?? earlyUnlock;
             }
 
-            if (unlockPoint != null)
+            if (targetUnlock != null)
             {
-                var unlockTime = unlockPoint.Type == TimePointType.Break
-                    ? unlockPoint.EndTime
-                    : unlockPoint.StartTime.Subtract(TimeSpan.FromMinutes(settings.AutoUnlockBeforeClassMinutes));
-
-                var minutesToUnlock = (unlockTime - now).TotalMinutes;
-
+                var minutesToUnlock = (targetUnlock.Value - now).TotalMinutes;
                 if (minutesToUnlock <= 0)
                 {
                     Dispatcher.UIThread.Post(() =>
                     {
                         DeactivateLock();
-                        if (unlockPoint.Type == TimePointType.Break)
+                        if (breakEnd != null && (earlyUnlock == null || breakEnd.Value <= earlyUnlock.Value))
                         {
                             NotificationService.Instance.ShowInfo("本次课间已结束，已自动解除锁定/防护");
                         }
