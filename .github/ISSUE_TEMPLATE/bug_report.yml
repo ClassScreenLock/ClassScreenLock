@@ -1,0 +1,124 @@
+name: Bug 反馈 | Bug Report
+description: 在使用 ClassScreenLock 的过程中遇到了 Bug。
+title: （将此栏【替换】为你的标题）
+labels: ["Bug", "待查看", "优先级：无"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您进行 Bug 反馈！请在上方文本框⬆️填写清晰描述问题的标题（避免模糊表述），便于开发者快速定位问题。
+
+        > [!important]
+        > 🔴 重要提醒：
+        > 1. 若需反馈**多个 Bug**，请为每个 Bug 单独创建 Issue，避免混合提交
+        > 2. 提交前建议阅读《提问的智慧》（[链接](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)），提升反馈效率
+        > 3. 本项目仅用于非商业教育场景，反馈需符合开源协议相关规定
+
+  - type: checkboxes
+    id: pre-checklist
+    attributes:
+      label: 提交前检查清单
+      description: 为避免重复反馈和无效沟通，请先完成以下检查：
+      options:
+        - label: 我已更新到项目最新版本（查看 [最新提交](https://github.com/jiugulixiaoniu/ClassScreenLock/commits/main/)），确认该 Bug 未被修复
+        - label: 我已在 [Issues](https://github.com/jiugulixiaoniu/ClassScreenLock/issues?q=type%3ABug) 中检索关键词，确认该 Bug 未被提交过
+        - label: 我已知晓并同意：此处仅用于反馈程序本身的功能 Bug，非程序问题（如使用咨询、需求建议）请通过邮件联系（Lavachicken2512@outlook.com）
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### 📋 Bug 核心信息
+        请详细描述遇到的问题，可附上截图、录屏、错误日志等材料。完整的信息将大幅缩短修复周期！
+
+        > [!note]
+        > 📎 附件上传说明：
+        > - 直接拖拽/粘贴文件到输入框即可通过 GitHub 附件系统上传
+        > - 多文件建议打包为 ZIP 格式上传
+        > - 避免使用需要登录的第三方网盘（如百度网盘等），影响问题处理效率
+        > - 截图建议包含操作界面和错误提示，录屏建议控制在 30 秒内聚焦核心问题
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 🎯 期望的行为
+      description: 详细描述你认为正常情况下应该发生的结果，明确与实际行为的差异
+      placeholder: 例如：点击「导入」按钮后应弹出文件选择框，且能正常解析 Excel 并显示数据。
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: ❌ 实际发生的结果
+      description: 详细描述实际遇到的异常现象，包括错误提示、页面状态、数据变化等
+      placeholder: 例如：点击「导入」按钮后页面无响应，控制台报错 `Uncaught TypeError：Cannot read properties of undefined`。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce-steps
+    attributes:
+      label: 🔍 重现步骤
+      description: 提供精准可复现的操作步骤（越详细越好），确保开发者能快速复现问题
+      placeholder: |
+        1. 打开首页
+        2. 点击「导入」按钮
+        3. 选择附件中的 Excel 文件
+        4. 观察控制台报错
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment-info
+    attributes:
+      label: 💻 运行环境
+      description: 请提供完整的设备和浏览器信息，避免因环境差异导致无法复现
+      placeholder: |
+        桌面端：
+        - 操作系统：Windows 11 专业版 23H2
+        - 浏览器：Chrome 128.0.6613.138
+        - 屏幕分辨率：1920×1080
+        - 网络环境：校园网（有线）
+
+        移动端（如适用）：
+        - 设备型号：iPhone 14 Pro
+        - 操作系统：iOS 17.5
+        - 浏览器：Safari 移动版
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: 📜 错误日志（可选）
+      description: 若浏览器控制台有错误信息、系统有崩溃日志，请复制粘贴到此处
+      placeholder: |
+        例：
+        Uncaught TypeError: Cannot read properties of undefined (reading 'import')
+          at HTMLButtonElement.importExcel (index.js:125:30)
+          at HTMLButtonElement.handleClick (index.js:89:18)
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: 📌 补充信息（可选）
+      description: 其他有助于定位问题的信息，如：问题出现频率（必现/偶现）、最近是否有系统更新、尝试过的解决方法及结果等
+      placeholder: 例如：问题必现；昨天更新到 commit abc123 后出现；尝试清除缓存无效。
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: final-confirmation
+    attributes:
+      label: 📝 最终确认
+      description: 提交前请再次确认以下内容：
+      options:
+        - label: 我已提供上述所有必要信息，描述清晰、准确，足以支持开发者复现和修复问题
+          required: true
+        - label: 我承诺反馈内容真实有效，未虚构 Bug 或提供误导性信息
+          required: true
+        - label: 我已知晓：若反馈信息不完整、描述模糊，Issue 可能被标记为「需要补充信息」或直接关闭
+          required: true
