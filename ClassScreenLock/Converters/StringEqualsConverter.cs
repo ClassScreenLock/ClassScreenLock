@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Data;
@@ -10,9 +10,26 @@ public class StringEqualsConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is string stringValue && parameter is string parameterValue)
+        if (parameter is string paramStr)
         {
-            return stringValue == parameterValue ? "selected-item" : "";
+            var parts = paramStr.Split('|');
+            if (parts.Length == 3)
+            {
+                var target = parts[0];
+                var trueVal = parts[1];
+                var falseVal = parts[2];
+
+                bool isMatch = false;
+                if (value == null) isMatch = target == "null";
+                else isMatch = value.ToString() == target;
+
+                return isMatch ? trueVal : falseVal;
+            }
+            
+            if (value is string stringValue)
+            {
+                return stringValue == paramStr ? "selected-item" : "";
+            }
         }
         return "";
     }
