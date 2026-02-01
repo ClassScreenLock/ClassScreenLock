@@ -109,6 +109,7 @@ public partial class SidebarViewModel : ViewModelBase
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_NetworkInterception"), "fa-network-wired", NavigateCommand, "NetworkInterception"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_SecurityLogs"), "fa-clipboard-list", NavigateCommand, "SecurityLogs"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_SecurityCenter"), "fas fa-user-shield", NavigateCommand, "SecurityCenter"));
+        MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_ScreenshotHistory"), "fas fa-camera", NavigateCommand, "ScreenshotHistory"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_Settings"), "fa-cog", NavigateCommand, "Settings"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_About"), "fa-info-circle", NavigateCommand, "About"));
     }
@@ -299,6 +300,9 @@ public partial class SidebarViewModel : ViewModelBase
             case "SecurityCenter":
                 _mainWindowViewModel?.NavigateToSecurityCenter();
                 break;
+            case "ScreenshotHistory":
+                _mainWindowViewModel?.NavigateToScreenshotHistory();
+                break;
             case "SecurityLogs":
                 _mainWindowViewModel?.NavigateToSecurityLogs();
                 break;
@@ -322,6 +326,7 @@ public partial class SidebarViewModel : ViewModelBase
             "AppManagement" => s.SidebarAppManagementMinAccountType,
             "NetworkInterception" => s.SidebarNetworkInterceptionMinAccountType,
             "SecurityLogs" => s.SidebarSecurityLogsMinAccountType,
+            "ScreenshotHistory" => s.SidebarScreenshotHistoryMinAccountType,
             "SecurityCenter" => s.SidebarSecurityCenterMinAccountType,
             "Settings" => s.SidebarSettingsMinAccountType,
             "About" => s.SidebarAboutMinAccountType,

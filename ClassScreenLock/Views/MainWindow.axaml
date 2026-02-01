@@ -19,6 +19,13 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
+    <Window.Resources>
+        <Converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
+        <Converters:IsNullConverter x:Key="IsNullConverter"/>
+        <Converters:BoolToIntConverter x:Key="BoolToIntConverter"/>
+        <Converters:BoolToThicknessConverter x:Key="BoolToThicknessConverter"/>
+    </Window.Resources>
+
     <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -28,7 +35,8 @@
         
         <!-- 标题栏 -->
         <Border Grid.Row="0" Classes="chrome" 
-                Padding="16,8">
+                Padding="16,8"
+                IsVisible="{Binding !IsOnboarding}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -39,7 +47,9 @@
         </Border>
         
         <!-- 主内容区域 -->
-        <Grid Grid.Row="1" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
+        <Grid Grid.Row="{Binding IsOnboarding, Converter={StaticResource BoolToIntConverter}, ConverterParameter=0}" 
+              Grid.RowSpan="{Binding IsOnboarding, Converter={StaticResource BoolToIntConverter}, ConverterParameter=3}" 
+              Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -48,12 +58,13 @@
             <!-- 侧边栏 -->
             <views:Sidebar Grid.Column="0" 
                            DataContext="{Binding SidebarViewModel}"
-                           IsEnabled="{Binding !$parent[Window].((vm:MainWindowViewModel)DataContext).IsAnyLockActive}"
-                           IsVisible="{Binding !$parent[Window].((vm:MainWindowViewModel)DataContext).IsOnboarding}"/>
+                           IsEnabled="{Binding !((vm:MainWindowViewModel)DataContext).IsAnyLockActive, RelativeSource={RelativeSource AncestorType=Window}}"
+                           IsVisible="{Binding !((vm:MainWindowViewModel)DataContext).IsOnboarding, RelativeSource={RelativeSource AncestorType=Window}}"/>
             
             <!-- 内容区域 -->
-            <Border Grid.Column="1" 
-                    Padding="24"
+            <Border Grid.Column="{Binding IsOnboarding, Converter={StaticResource BoolToIntConverter}, ConverterParameter=0}" 
+                    Grid.ColumnSpan="{Binding IsOnboarding, Converter={StaticResource BoolToIntConverter}, ConverterParameter=2}"
+                    Padding="{Binding IsOnboarding, Converter={StaticResource BoolToThicknessConverter}, ConverterParameter='0|24'}"
                     CornerRadius="0"
                     Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
                 <Grid>
@@ -84,7 +95,7 @@
         <!-- 底部状态栏 -->
         <Border Grid.Row="2" Classes="chrome" 
                 Padding="16,8"
-                IsVisible="{Binding !$parent[Window].((vm:MainWindowViewModel)DataContext).IsOnboarding}">
+                IsVisible="{Binding !IsOnboarding}">
             <TextBlock Text="{Binding Status}" Classes="status"/>
         </Border>
         <!-- 点击反馈覆盖层：不参与命中测试，承载扩散动画 -->

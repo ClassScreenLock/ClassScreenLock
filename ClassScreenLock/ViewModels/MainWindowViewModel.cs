@@ -49,6 +49,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private SecurityCenterViewModel _securityCenterViewModel;
 
     [ObservableProperty]
+    private ScreenshotHistoryViewModel _screenshotHistoryViewModel;
+
+    [ObservableProperty]
     private bool _isInitialized;
     
     private bool _disposed = false;
@@ -96,6 +99,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // 创建密码安全中心视图模型实例
         SecurityCenterViewModel = new SecurityCenterViewModel();
+
+        // 创建截图历史视图模型实例
+        ScreenshotHistoryViewModel = new ScreenshotHistoryViewModel();
         
         // 监听锁定状态
         IsLocked = LockScreenService.Instance.IsLocked;
@@ -235,6 +241,15 @@ public partial class MainWindowViewModel : ViewModelBase
         OnViewChanging();
         CurrentView = new SecurityCenterView { DataContext = SecurityCenterViewModel };
         Status = "安全中心";
+        IsOnboarding = false;
+    }
+
+    public void NavigateToScreenshotHistory()
+    {
+        OnViewChanging();
+        ScreenshotHistoryViewModel.LoadScreenshotsCommand.Execute(null);
+        CurrentView = new ScreenshotHistoryView { DataContext = ScreenshotHistoryViewModel };
+        Status = "屏幕记录";
         IsOnboarding = false;
     }
 

@@ -464,6 +464,14 @@
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <icons:Icon Value="fas fa-camera" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="屏幕记录" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarScreenshotHistoryLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                                             <icons:Icon Value="fas fa-user-shield" Width="16" Height="16" Opacity="0.8"/>
                                             <TextBlock Text="安全中心" VerticalAlignment="Center"/>
                                         </StackPanel>
@@ -500,292 +508,316 @@
             <TabItem Header="锁屏中心">
                 <ScrollViewer>
                     <StackPanel Spacing="20" Margin="0,16,0,0">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="锁屏中心" Classes="h2"/>
-                                <TextBlock Text="管理下课锁屏与相关行为" Classes="caption" Opacity="0.6"/>
+                        <Border Classes="card" Padding="24" IsVisible="{Binding !IsAuthenticated}">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <icons:Icon Value="fas fa-lock" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="需要管理员登录" Classes="h3"/>
+                                </StackPanel>
+                                <TextBlock Text="请先在“身份验证”页完成管理员登录后，再管理锁屏中心设置。" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Command="{Binding SaveLockSettingsCommand}" Classes="accent" Padding="16,8" VerticalAlignment="Top">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <icons:Icon Value="fas fa-save" Width="16" Height="16"/>
-                                    <TextBlock Text="保存" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Spacing="20" IsVisible="{Binding IsAuthenticated}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="锁屏中心" Classes="h2"/>
+                                    <TextBlock Text="管理下课锁屏与相关行为" Classes="caption" Opacity="0.6"/>
                                 </StackPanel>
-                            </Button>
-                        </Grid>
-
-                        <Border Classes="card" Padding="20" IsEnabled="{Binding CanEditBreakTimeLock}">
-                            <StackPanel Spacing="20">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <icons:Icon Value="fas fa-lock" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
-                                    <TextBlock Text="下课锁屏" Classes="h3" VerticalAlignment="Center"/>
-                                </StackPanel>
-
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="启用下课锁屏" Classes="subtitle"/>
-                                        <TextBlock Text="在课程结束进入课间时自动显示下课按钮" Classes="caption" Opacity="0.7"/>
+                                <Button Grid.Column="1" Command="{Binding SaveLockSettingsCommand}" Classes="accent" Padding="16,8" VerticalAlignment="Top">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <icons:Icon Value="fas fa-save" Width="16" Height="16"/>
+                                        <TextBlock Text="保存" VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableBreakTimeLock}" OnContent="" OffContent=""/>
-                                </Grid>
+                                </Button>
+                            </Grid>
 
-                                <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
-
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="锁屏模式" Classes="subtitle"/>
-                                        <TextBlock Text="选择点击下课按钮后触发的锁定级别" Classes="caption" Opacity="0.7"/>
-                                    </StackPanel>
-                                    <ComboBox Grid.Column="1" Width="220" SelectedIndex="{Binding BreakTimeLockMode}">
-                                        <ComboBoxItem Content="仅防护（不控屏）"/>
-                                        <ComboBoxItem Content="仅锁屏"/>
-                                        <ComboBoxItem Content="完整锁定（防护+锁屏）"/>
-                                    </ComboBox>
-                                </Grid>
-
-                                <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
-
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="锁屏等待时间" Classes="subtitle"/>
-                                        <TextBlock Text="设置自动进入锁屏前的等待时间" Classes="caption" Opacity="0.7"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
-                                        <NumericUpDown Minimum="5" Maximum="300" Value="{Binding LockTimeout}" Width="120"/>
-                                        <TextBlock Text="秒" VerticalAlignment="Center" Classes="caption"/>
-                                    </StackPanel>
-                                </Grid>
-
-                                <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
-
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="自动解锁" Classes="subtitle"/>
-                                        <TextBlock Text="在即将上课前自动解除锁定" Classes="caption" Opacity="0.7"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
-                                        <TextBlock Text="提前解锁时间 (分钟)" VerticalAlignment="Center" Classes="caption"/>
-                                        <NumericUpDown Value="{Binding AutoUnlockBeforeClassMinutes}" Minimum="1" Maximum="30" Width="120"/>
-                                    </StackPanel>
-                                </Grid>
-
-                                <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
-
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="显示桌面悬浮锁屏按钮" Classes="subtitle"/>
-                                        <TextBlock Text="在桌面上显示一个半透明的可拖动按钮，点击可快速进入下课锁定状态" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding ShowFloatingLockWidget}" OnContent="" OffContent=""/>
-                                </Grid>
-
-                                <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
-
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="提前解锁所需最小账户级别" Classes="subtitle"/>
-                                        <TextBlock Text="低于此级别的账户无法在锁屏界面提前解锁" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <ComboBox Grid.Column="1" Width="220" SelectedIndex="{Binding EarlyUnlockMinAccountTypeIndex}">
-                                        <ComboBoxItem Content="超级管理员"/>
-                                        <ComboBoxItem Content="管理员"/>
-                                        <ComboBoxItem Content="普通用户"/>
-                                    </ComboBox>
-                                </Grid>
-
-                                <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
-
-                                <StackPanel Spacing="12">
+                            <Border Classes="card" Padding="20" IsEnabled="{Binding CanEditBreakTimeLock}">
+                                <StackPanel Spacing="20">
                                     <StackPanel Orientation="Horizontal" Spacing="12">
-                                        <icons:Icon Value="fas fa-font" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
-                                        <TextBlock Text="锁屏文字显示效果" Classes="h2" VerticalAlignment="Center"/>
+                                        <icons:Icon Value="fas fa-lock" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                        <TextBlock Text="下课锁屏" Classes="h3" VerticalAlignment="Center"/>
                                     </StackPanel>
 
-                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
-                                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
-                                            <TextBlock Text="背景遮罩透明度" Classes="subtitle"/>
-                                            <TextBlock Text="调节锁屏时的暗色遮罩强度，数值越小越透明" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="启用下课锁屏" Classes="subtitle"/>
+                                            <TextBlock Text="在课程结束进入课间时自动显示下课按钮" Classes="caption" Opacity="0.7"/>
                                         </StackPanel>
-                                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                            <Slider Minimum="0.1" Maximum="0.8" SmallChange="0.05" LargeChange="0.1" Width="200" Value="{Binding LockBackgroundOpacity}"/>
-                                            <TextBlock Text="{Binding LockBackgroundOpacity, StringFormat=0.00}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
-                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableBreakTimeLock}" OnContent="" OffContent=""/>
+                                    </Grid>
 
-                                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
-                                            <TextBlock Text="文字阴影强度" Classes="subtitle"/>
-                                            <TextBlock Text="提升文字与背景的对比度，避免在浅色背景下看不清" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
-                                        </StackPanel>
-                                        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                            <Slider Minimum="0.3" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" Width="200" Value="{Binding LockTextShadowOpacity}"/>
-                                            <TextBlock Text="{Binding LockTextShadowOpacity, StringFormat=0.00}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
-                                        </StackPanel>
+                                    <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
 
-                                        <StackPanel Grid.Row="2" Grid.Column="0" Spacing="4">
-                                            <TextBlock Text="文字描边/阴影宽度" Classes="subtitle"/>
-                                            <TextBlock Text="控制文字周围发光/描边范围，数值越大越厚重" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="锁屏模式" Classes="subtitle"/>
+                                            <TextBlock Text="选择点击下课按钮后触发的锁定级别" Classes="caption" Opacity="0.7"/>
                                         </StackPanel>
-                                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                            <Slider Minimum="2" Maximum="16" SmallChange="1" LargeChange="2" Width="200" Value="{Binding LockTextShadowBlurRadius}"/>
-                                            <TextBlock Text="{Binding LockTextShadowBlurRadius, StringFormat=0}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
+                                        <ComboBox Grid.Column="1" Width="220" SelectedIndex="{Binding BreakTimeLockMode}">
+                                            <ComboBoxItem Content="仅防护（不控屏）"/>
+                                            <ComboBoxItem Content="仅锁屏"/>
+                                            <ComboBoxItem Content="完整锁定（防护+锁屏）"/>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="锁屏等待时间" Classes="subtitle"/>
+                                            <TextBlock Text="设置自动进入锁屏前的等待时间" Classes="caption" Opacity="0.7"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                            <NumericUpDown Minimum="5" Maximum="300" Value="{Binding LockTimeout}" Width="120"/>
+                                            <TextBlock Text="秒" VerticalAlignment="Center" Classes="caption"/>
                                         </StackPanel>
                                     </Grid>
 
-                                    <Grid Margin="0,8,0,0">
-                                        <Border Background="Black" CornerRadius="12" Opacity="{Binding LockBackgroundOpacity}"/>
-                                        <Border Background="Transparent" CornerRadius="12" Padding="20">
-                                            <StackPanel Spacing="12" HorizontalAlignment="Center">
-                                                <TextBlock Text="锁屏文字效果预览" FontSize="16" Opacity="0.8" HorizontalAlignment="Center"/>
-                                                <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                                    <TextBlock Text="屏幕已锁定" FontSize="32" FontWeight="Light" Foreground="White" HorizontalAlignment="Center">
-                                                        <TextBlock.Effect>
-                                                            <DropShadowEffect Color="#CC000000"
-                                                                              BlurRadius="{Binding LockTextShadowBlurRadius}"
-                                                                              Opacity="{Binding LockTextShadowOpacity}"/>
-                                                        </TextBlock.Effect>
-                                                    </TextBlock>
-                                                    <TextBlock Text="12:34:56" FontSize="56" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center">
-                                                        <TextBlock.Effect>
-                                                            <DropShadowEffect Color="#E6000000"
-                                                                              BlurRadius="{Binding LockTextShadowBlurRadius}"
-                                                                              Opacity="{Binding LockTextShadowOpacity}"/>
-                                                        </TextBlock.Effect>
-                                                    </TextBlock>
-                                                    <TextBlock Text="距离下节课: 10:00" FontSize="18" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
-                                                        <TextBlock.Effect>
-                                                            <DropShadowEffect Color="#CC000000"
-                                                                              BlurRadius="{Binding LockTextShadowBlurRadius}"
-                                                                              Opacity="{Binding LockTextShadowOpacity}"/>
-                                                        </TextBlock.Effect>
-                                                    </TextBlock>
+                                    <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="自动解锁" Classes="subtitle"/>
+                                            <TextBlock Text="在即将上课前自动解除锁定" Classes="caption" Opacity="0.7"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                            <TextBlock Text="提前解锁时间 (分钟)" VerticalAlignment="Center" Classes="caption"/>
+                                            <NumericUpDown Value="{Binding AutoUnlockBeforeClassMinutes}" Minimum="1" Maximum="30" Width="120"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="显示桌面悬浮锁屏按钮" Classes="subtitle"/>
+                                            <TextBlock Text="在桌面上显示一个半透明的可拖动按钮，点击可快速进入下课锁定状态" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding ShowFloatingLockWidget}" OnContent="" OffContent=""/>
+                                    </Grid>
+
+                                    <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="提前解锁所需最小账户级别" Classes="subtitle"/>
+                                            <TextBlock Text="低于此级别的账户无法在锁屏界面提前解锁" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="1" Width="220" SelectedIndex="{Binding EarlyUnlockMinAccountTypeIndex}">
+                                            <ComboBoxItem Content="超级管理员"/>
+                                            <ComboBoxItem Content="管理员"/>
+                                            <ComboBoxItem Content="普通用户"/>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
+
+                                    <StackPanel Spacing="12">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <icons:Icon Value="fas fa-font" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                            <TextBlock Text="锁屏文字显示效果" Classes="h2" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+                                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="背景遮罩透明度" Classes="subtitle"/>
+                                                <TextBlock Text="调节锁屏时的暗色遮罩强度，数值越小越透明" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Slider Minimum="0.1" Maximum="0.8" SmallChange="0.05" LargeChange="0.1" Width="200" Value="{Binding LockBackgroundOpacity}"/>
+                                                <TextBlock Text="{Binding LockBackgroundOpacity, StringFormat=0.00}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="文字阴影强度" Classes="subtitle"/>
+                                                <TextBlock Text="提升文字与背景的对比度，避免在浅色背景下看不清" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Slider Minimum="0.3" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" Width="200" Value="{Binding LockTextShadowOpacity}"/>
+                                                <TextBlock Text="{Binding LockTextShadowOpacity, StringFormat=0.00}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Row="2" Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="文字描边/阴影宽度" Classes="subtitle"/>
+                                                <TextBlock Text="控制文字周围发光/描边范围，数值越大越厚重" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Slider Minimum="2" Maximum="16" SmallChange="1" LargeChange="2" Width="200" Value="{Binding LockTextShadowBlurRadius}"/>
+                                                <TextBlock Text="{Binding LockTextShadowBlurRadius, StringFormat=0}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Grid Margin="0,8,0,0">
+                                            <Border Background="Black" CornerRadius="12" Opacity="{Binding LockBackgroundOpacity}"/>
+                                            <Border Background="Transparent" CornerRadius="12" Padding="20">
+                                                <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                                    <TextBlock Text="锁屏文字效果预览" FontSize="16" Opacity="0.8" HorizontalAlignment="Center"/>
+                                                    <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                                        <TextBlock Text="屏幕已锁定" FontSize="32" FontWeight="Light" Foreground="White" HorizontalAlignment="Center">
+                                                            <TextBlock.Effect>
+                                                                <DropShadowEffect Color="#CC000000"
+                                                                                  BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                                                  Opacity="{Binding LockTextShadowOpacity}"/>
+                                                            </TextBlock.Effect>
+                                                        </TextBlock>
+                                                        <TextBlock Text="12:34:56" FontSize="56" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center">
+                                                            <TextBlock.Effect>
+                                                                <DropShadowEffect Color="#E6000000"
+                                                                                  BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                                                  Opacity="{Binding LockTextShadowOpacity}"/>
+                                                            </TextBlock.Effect>
+                                                        </TextBlock>
+                                                        <TextBlock Text="距离下节课: 10:00" FontSize="18" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
+                                                            <TextBlock.Effect>
+                                                                <DropShadowEffect Color="#CC000000"
+                                                                                  BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                                                  Opacity="{Binding LockTextShadowOpacity}"/>
+                                                            </TextBlock.Effect>
+                                                        </TextBlock>
+                                                    </StackPanel>
                                                 </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </StackPanel>
+                                    
+                                    <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
+
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+                                        <Border Grid.Column="0" Classes="card" Padding="20">
+                                            <StackPanel Spacing="16">
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                    <icons:Icon Value="fas fa-shield" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                    <TextBlock Text="置顶豁免设置" Classes="h3" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Text="当屏幕锁定时，列表中的程序允许保持置顶以便操作（例如视频会议窗口）" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+
+                                                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                                                    <TextBox Text="{Binding NewAllowedApp}" Watermark="输入进程名或窗口标题关键字" Margin="0,0,8,0"/>
+                                                    <Button Grid.Column="1" Command="{Binding AddAllowedAppCommand}" Classes="accent" Width="40" Height="40" Padding="0">
+                                                        <icons:Icon Value="fas fa-plus" Width="16" Height="16"/>
+                                                    </Button>
+                                                </Grid>
+
+                                                <ItemsControl ItemsSource="{Binding AllowedTopmostApps}" Height="200">
+                                                    <ItemsControl.Template>
+                                                        <ControlTemplate>
+                                                            <ScrollViewer>
+                                                                <ItemsPresenter/>
+                                                            </ScrollViewer>
+                                                        </ControlTemplate>
+                                                    </ItemsControl.Template>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                                                                    CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
+                                                                <Grid ColumnDefinitions="*,Auto">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                        <icons:Icon Value="fas fa-window-maximize" Width="14" Height="14" Opacity="0.5"/>
+                                                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="13"/>
+                                                                    </StackPanel>
+                                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveAllowedAppCommand}" 
+                                                                            CommandParameter="{Binding}" Classes="transparent" Width="32" Height="32" Padding="0">
+                                                                        <icons:Icon Value="fas fa-times" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                                                    </Button>
+                                                                </Grid>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Grid.Column="1" Classes="card" Padding="20">
+                                            <StackPanel Spacing="16">
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                    <icons:Icon Value="fas fa-thumbtack" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                    <TextBlock Text="强制置顶设置" Classes="h3" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Text="屏幕锁定时强制将列表中的程序窗口置顶" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+
+                                                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                                                    <TextBox Text="{Binding NewForcedApp}" Watermark="输入进程名或窗口标题关键字" Margin="0,0,8,0"/>
+                                                    <Button Grid.Column="1" Command="{Binding AddForcedAppCommand}" Classes="accent" Width="40" Height="40" Padding="0">
+                                                        <icons:Icon Value="fas fa-plus" Width="16" Height="16"/>
+                                                    </Button>
+                                                </Grid>
+
+                                                <ItemsControl ItemsSource="{Binding ForcedTopmostApps}" Height="200">
+                                                    <ItemsControl.Template>
+                                                        <ControlTemplate>
+                                                            <ScrollViewer>
+                                                                <ItemsPresenter/>
+                                                            </ScrollViewer>
+                                                        </ControlTemplate>
+                                                    </ItemsControl.Template>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                                                                    CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
+                                                                <Grid ColumnDefinitions="*,Auto">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                        <icons:Icon Value="fas fa-arrow-up" Width="14" Height="14" Opacity="0.5"/>
+                                                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="13"/>
+                                                                    </StackPanel>
+                                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveForcedAppCommand}" 
+                                                                            CommandParameter="{Binding}" Classes="transparent" Width="32" Height="32" Padding="0">
+                                                                        <icons:Icon Value="fas fa-times" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                                                    </Button>
+                                                                </Grid>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                             </StackPanel>
                                         </Border>
                                     </Grid>
                                 </StackPanel>
-                                
-                                <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
-
-                                <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
-                                    <Border Grid.Column="0" Classes="card" Padding="20">
-                                        <StackPanel Spacing="16">
-                                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                                <icons:Icon Value="fas fa-shield" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                                <TextBlock Text="置顶豁免设置" Classes="h3" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <TextBlock Text="当屏幕锁定时，列表中的程序允许保持置顶以便操作（例如视频会议窗口）" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
-
-                                            <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-                                                <TextBox Text="{Binding NewAllowedApp}" Watermark="输入进程名或窗口标题关键字" Margin="0,0,8,0"/>
-                                                <Button Grid.Column="1" Command="{Binding AddAllowedAppCommand}" Classes="accent" Width="40" Height="40" Padding="0">
-                                                    <icons:Icon Value="fas fa-plus" Width="16" Height="16"/>
-                                                </Button>
-                                            </Grid>
-
-                                            <ItemsControl ItemsSource="{Binding AllowedTopmostApps}" Height="200">
-                                                <ItemsControl.Template>
-                                                    <ControlTemplate>
-                                                        <ScrollViewer>
-                                                            <ItemsPresenter/>
-                                                        </ScrollViewer>
-                                                    </ControlTemplate>
-                                                </ItemsControl.Template>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
-                                                                CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
-                                                            <Grid ColumnDefinitions="*,Auto">
-                                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                    <icons:Icon Value="fas fa-window-maximize" Width="14" Height="14" Opacity="0.5"/>
-                                                                    <TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="13"/>
-                                                                </StackPanel>
-                                                                <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveAllowedAppCommand}" 
-                                                                        CommandParameter="{Binding}" Classes="transparent" Width="32" Height="32" Padding="0">
-                                                                    <icons:Icon Value="fas fa-times" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
-                                                                </Button>
-                                                            </Grid>
-                                                        </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <Border Grid.Column="1" Classes="card" Padding="20">
-                                        <StackPanel Spacing="16">
-                                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                                <icons:Icon Value="fas fa-thumbtack" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                                <TextBlock Text="强制置顶设置" Classes="h3" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <TextBlock Text="屏幕锁定时强制将列表中的程序窗口置顶" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
-
-                                            <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-                                                <TextBox Text="{Binding NewForcedApp}" Watermark="输入进程名或窗口标题关键字" Margin="0,0,8,0"/>
-                                                <Button Grid.Column="1" Command="{Binding AddForcedAppCommand}" Classes="accent" Width="40" Height="40" Padding="0">
-                                                    <icons:Icon Value="fas fa-plus" Width="16" Height="16"/>
-                                                </Button>
-                                            </Grid>
-
-                                            <ItemsControl ItemsSource="{Binding ForcedTopmostApps}" Height="200">
-                                                <ItemsControl.Template>
-                                                    <ControlTemplate>
-                                                        <ScrollViewer>
-                                                            <ItemsPresenter/>
-                                                        </ScrollViewer>
-                                                    </ControlTemplate>
-                                                </ItemsControl.Template>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
-                                                                CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
-                                                            <Grid ColumnDefinitions="*,Auto">
-                                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                    <icons:Icon Value="fas fa-arrow-up" Width="14" Height="14" Opacity="0.5"/>
-                                                                    <TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="13"/>
-                                                                </StackPanel>
-                                                                <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveForcedAppCommand}" 
-                                                                        CommandParameter="{Binding}" Classes="transparent" Width="32" Height="32" Padding="0">
-                                                                    <icons:Icon Value="fas fa-times" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
-                                                                </Button>
-                                                            </Grid>
-                                                        </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                    </Border>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
+                            </Border>
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
             <!-- 安全报告 -->
             <TabItem Header="安全报告">
-                <Border Classes="card" Padding="24" Margin="0,16,0,0">
-                    <StackPanel Spacing="20">
-                        <Grid ColumnDefinitions="*, Auto">
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="系统安全概览" Classes="h3"/>
-                                <TextBlock Text="最近 30 天的安全事件记录" Classes="caption" Opacity="0.6"/>
+                <StackPanel Margin="0,16,0,0" Spacing="20">
+                    <Border Classes="card" Padding="24" IsVisible="{Binding !IsAuthenticated}">
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                <icons:Icon Value="fas fa-lock" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                <TextBlock Text="需要管理员登录" Classes="h3"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="刷新报告" Command="{Binding RefreshReportCommand}" Classes="FluentIconButton">
-                                <icons:Icon Value="fas fa-sync-alt"/>
-                            </Button>
-                        </Grid>
+                            <TextBlock Text="请先在“身份验证”页完成管理员登录后，再查看密码安全报告。" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
 
-                        <Separator/>
+                    <Border Classes="card" Padding="24" IsVisible="{Binding IsAuthenticated}">
+                        <StackPanel Spacing="20">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="系统安全概览" Classes="h3"/>
+                                    <TextBlock Text="最近 30 天的安全事件记录" Classes="caption" Opacity="0.6"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="刷新报告" Command="{Binding RefreshReportCommand}" Classes="FluentIconButton">
+                                    <icons:Icon Value="fas fa-sync-alt"/>
+                                </Button>
+                            </Grid>
 
-                        <TextBlock Text="{Binding SecurityReportText}" FontSize="16" LineHeight="32" 
-                                   TextWrapping="Wrap" Opacity="0.8"/>
-                        
-                        <Border Background="{DynamicResource SystemAccentColorLightBrush}" CornerRadius="8" Padding="16">
-                            <StackPanel Orientation="Horizontal" Spacing="16">
-                                <icons:Icon Value="fas fa-shield" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
-                                <TextBlock Text="系统当前运行正常，未检测到异常登录尝试。" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
+                            <Separator/>
+
+                            <TextBlock Text="{Binding SecurityReportText}" FontSize="16" LineHeight="32" 
+                                       TextWrapping="Wrap" Opacity="0.8"/>
+                            
+                            <Border Background="{DynamicResource SystemAccentColorLightBrush}" CornerRadius="8" Padding="16">
+                                <StackPanel Orientation="Horizontal" Spacing="16">
+                                    <icons:Icon Value="fas fa-shield" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="系统当前运行正常，未检测到异常登录尝试。" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
             </TabItem>
         </TabControl>
     </Grid>

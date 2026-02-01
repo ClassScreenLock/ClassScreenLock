@@ -16,15 +16,18 @@ public class SettingsService
     private static readonly string DataDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
     private static readonly string GeneralSettingsPath = Path.Combine(DataDirectory, "settings.json");
     private static readonly string LockSettingsPath = Path.Combine(DataDirectory, "locksettings.json");
+    private static readonly string ScreenshotSettingsPath = Path.Combine(DataDirectory, "screenshotsettings.json");
     private static readonly string BlockageSettingsPath = Path.Combine(DataDirectory, "softwareblockage.json");
     private static readonly string OldLockSettingsPath = Path.Combine(DataDirectory, "LockSettings.json");
 
     private static SettingsModel? _general;
     private static LockSettingsModel? _lock;
+    private static ScreenshotSettingsModel? _screenshot;
     private static SoftwareBlockageModel? _blockage;
 
     public static SettingsModel General => _general ??= LoadSettings<SettingsModel>(GeneralSettingsPath);
     public static LockSettingsModel Lock => _lock ??= LoadSettings<LockSettingsModel>(LockSettingsPath);
+    public static ScreenshotSettingsModel Screenshot => _screenshot ??= LoadSettings<ScreenshotSettingsModel>(ScreenshotSettingsPath);
     public static SoftwareBlockageModel Blockage => _blockage ??= LoadSettings<SoftwareBlockageModel>(BlockageSettingsPath);
 
     static SettingsService()
@@ -135,6 +138,7 @@ public class SettingsService
 
     public static void SaveGeneral(SettingsModel settings) => SaveSettingsInternal(GeneralSettingsPath, settings);
     public static void SaveLock(LockSettingsModel settings) => SaveSettingsInternal(LockSettingsPath, settings);
+    public static void SaveScreenshot(ScreenshotSettingsModel settings) => SaveSettingsInternal(ScreenshotSettingsPath, settings);
     public static void SaveBlockage(SoftwareBlockageModel settings) => SaveSettingsInternal(BlockageSettingsPath, settings);
 
     private static void SaveSettingsInternal<T>(string path, T settings)
@@ -158,6 +162,7 @@ public class SettingsService
             // 更新当前内存缓存
             if (path == GeneralSettingsPath) _general = settings as SettingsModel;
             else if (path == LockSettingsPath) _lock = settings as LockSettingsModel;
+            else if (path == ScreenshotSettingsPath) _screenshot = settings as ScreenshotSettingsModel;
             else if (path == BlockageSettingsPath) _blockage = settings as SoftwareBlockageModel;
         }
         catch (Exception ex)

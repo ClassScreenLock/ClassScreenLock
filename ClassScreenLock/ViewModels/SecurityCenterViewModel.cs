@@ -152,6 +152,8 @@ public partial class SecurityCenterViewModel : ViewModelBase
     [ObservableProperty]
     private string _sidebarSecurityLogsLevel = "无";
     [ObservableProperty]
+    private string _sidebarScreenshotHistoryLevel = "无";
+    [ObservableProperty]
     private string _sidebarSecurityCenterLevel = "无";
     [ObservableProperty]
     private string _sidebarSettingsLevel = "无";
@@ -204,6 +206,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         SidebarAppManagementLevel = ToLevelText(lockSettings.SidebarAppManagementMinAccountType);
         SidebarNetworkInterceptionLevel = ToLevelText(lockSettings.SidebarNetworkInterceptionMinAccountType);
         SidebarSecurityLogsLevel = ToLevelText(lockSettings.SidebarSecurityLogsMinAccountType);
+        SidebarScreenshotHistoryLevel = ToLevelText(lockSettings.SidebarScreenshotHistoryMinAccountType);
         SidebarSecurityCenterLevel = ToLevelText(lockSettings.SidebarSecurityCenterMinAccountType);
         SidebarSettingsLevel = ToLevelText(lockSettings.SidebarSettingsMinAccountType);
         SidebarAboutLevel = ToLevelText(lockSettings.SidebarAboutMinAccountType);
@@ -534,6 +537,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         var sbApp = FromLevelText(SidebarAppManagementLevel);
         var sbNet = FromLevelText(SidebarNetworkInterceptionLevel);
         var sbLogs = FromLevelText(SidebarSecurityLogsLevel);
+        var sbHistory = FromLevelText(SidebarScreenshotHistoryLevel);
         var sbSec = FromLevelText(SidebarSecurityCenterLevel);
         var sbSettings = FromLevelText(SidebarSettingsLevel);
         var sbAbout = FromLevelText(SidebarAboutLevel);
@@ -550,6 +554,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
             s.SidebarAppManagementMinAccountType = sbApp;
             s.SidebarNetworkInterceptionMinAccountType = sbNet;
             s.SidebarSecurityLogsMinAccountType = sbLogs;
+            s.SidebarScreenshotHistoryMinAccountType = sbHistory;
             s.SidebarSecurityCenterMinAccountType = sbSec;
             s.SidebarSettingsMinAccountType = sbSettings;
             s.SidebarAboutMinAccountType = sbAbout;
@@ -562,6 +567,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         LogPermissionChange("SidebarAppManagement", before.SidebarAppManagementMinAccountType, sbApp);
         LogPermissionChange("SidebarNetworkInterception", before.SidebarNetworkInterceptionMinAccountType, sbNet);
         LogPermissionChange("SidebarSecurityLogs", before.SidebarSecurityLogsMinAccountType, sbLogs);
+        LogPermissionChange("SidebarScreenshotHistory", before.SidebarScreenshotHistoryMinAccountType, sbHistory);
         LogPermissionChange("SidebarSecurityCenter", before.SidebarSecurityCenterMinAccountType, sbSec);
         LogPermissionChange("SidebarSettings", before.SidebarSettingsMinAccountType, sbSettings);
         LogPermissionChange("SidebarAbout", before.SidebarAboutMinAccountType, sbAbout);
@@ -593,6 +599,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
             SidebarAppManagementLevel = ToLevelText(lockSettings.SidebarAppManagementMinAccountType);
             SidebarNetworkInterceptionLevel = ToLevelText(lockSettings.SidebarNetworkInterceptionMinAccountType);
             SidebarSecurityLogsLevel = ToLevelText(lockSettings.SidebarSecurityLogsMinAccountType);
+            SidebarScreenshotHistoryLevel = ToLevelText(lockSettings.SidebarScreenshotHistoryMinAccountType);
             SidebarSecurityCenterLevel = ToLevelText(lockSettings.SidebarSecurityCenterMinAccountType);
             SidebarSettingsLevel = ToLevelText(lockSettings.SidebarSettingsMinAccountType);
             SidebarAboutLevel = ToLevelText(lockSettings.SidebarAboutMinAccountType);
@@ -607,6 +614,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         var sbApp = FromLevelText(SidebarAppManagementLevel);
         var sbNet = FromLevelText(SidebarNetworkInterceptionLevel);
         var sbLogs = FromLevelText(SidebarSecurityLogsLevel);
+        var sbHistory = FromLevelText(SidebarScreenshotHistoryLevel);
         var sbSec = FromLevelText(SidebarSecurityCenterLevel);
         var sbSettings = FromLevelText(SidebarSettingsLevel);
         var sbAbout = FromLevelText(SidebarAboutLevel);
@@ -620,6 +628,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
             s.SidebarAppManagementMinAccountType = sbApp;
             s.SidebarNetworkInterceptionMinAccountType = sbNet;
             s.SidebarSecurityLogsMinAccountType = sbLogs;
+            s.SidebarScreenshotHistoryMinAccountType = sbHistory;
             s.SidebarSecurityCenterMinAccountType = sbSec;
             s.SidebarSettingsMinAccountType = sbSettings;
             s.SidebarAboutMinAccountType = sbAbout;

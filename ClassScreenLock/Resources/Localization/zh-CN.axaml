@@ -10,7 +10,8 @@
     <x:String x:Key="Sidebar_NetworkInterception">网络拦截</x:String>
     <x:String x:Key="Sidebar_SecurityLogs">安全日志</x:String>
     <x:String x:Key="Sidebar_SecurityCenter">安全中心</x:String>
-    <x:String x:Key="Sidebar_Settings">系统设置</x:String>
+    <x:String x:Key="Sidebar_ScreenshotHistory">屏幕记录</x:String>
+    <x:String x:Key="Sidebar_Settings">设置</x:String>
     <x:String x:Key="Sidebar_About">关于</x:String>
     <x:String x:Key="Sidebar_Collapse">收起侧边栏</x:String>
     <x:String x:Key="Sidebar_Expand">展开侧边栏</x:String>

@@ -10,6 +10,7 @@
     <x:String x:Key="Sidebar_NetworkInterception">Network Interception</x:String>
     <x:String x:Key="Sidebar_SecurityLogs">Security Logs</x:String>
     <x:String x:Key="Sidebar_SecurityCenter">Security Center</x:String>
+    <x:String x:Key="Sidebar_ScreenshotHistory">Screen Records</x:String>
     <x:String x:Key="Sidebar_Settings">System Settings</x:String>
     <x:String x:Key="Sidebar_About">About</x:String>
     <x:String x:Key="Sidebar_Collapse">Collapse Sidebar</x:String>

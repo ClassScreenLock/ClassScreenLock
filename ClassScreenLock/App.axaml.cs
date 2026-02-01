@@ -72,6 +72,7 @@ public partial class App : Application
                     if (!requiresInit)
                     {
                         AppBlockingService.Instance.Start();
+                        ScreenshotService.Instance.Start();
                         _ = Task.Run(async () =>
                         {
                             await Task.Delay(2000);
