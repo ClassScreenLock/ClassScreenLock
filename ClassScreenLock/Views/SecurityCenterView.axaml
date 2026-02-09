@@ -472,6 +472,22 @@
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <icons:Icon Value="fas fa-video" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="摄像头拍照" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarWebcamHistoryLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <icons:Icon Value="fas fa-robot" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="自动化" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarAutomationLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                                             <icons:Icon Value="fas fa-user-shield" Width="16" Height="16" Opacity="0.8"/>
                                             <TextBlock Text="安全中心" VerticalAlignment="Center"/>
                                         </StackPanel>

@@ -11,6 +11,8 @@
     <x:String x:Key="Sidebar_SecurityLogs">安全日志</x:String>
     <x:String x:Key="Sidebar_SecurityCenter">安全中心</x:String>
     <x:String x:Key="Sidebar_ScreenshotHistory">屏幕记录</x:String>
+    <x:String x:Key="Sidebar_WebcamHistory">摄像头记录</x:String>
+    <x:String x:Key="Sidebar_Automation">自动化</x:String>
     <x:String x:Key="Sidebar_Settings">设置</x:String>
     <x:String x:Key="Sidebar_About">关于</x:String>
     <x:String x:Key="Sidebar_Collapse">收起侧边栏</x:String>
@@ -145,7 +147,6 @@
     <!-- 应用管理 -->
     <x:String x:Key="AppManagement_Title">应用管理</x:String>
     <x:String x:Key="AppManagement_RunningApps">运行中的应用</x:String>
-    <x:String x:Key="AppManagement_AllowedApps">允许运行的应用</x:String>
     <x:String x:Key="AppManagement_BlockedApps">阻止运行的应用</x:String>
     <x:String x:Key="AppManagement_AddApp">添加应用</x:String>
     <x:String x:Key="AppManagement_RemoveApp">移除应用</x:String>
@@ -159,7 +160,6 @@
     <x:String x:Key="AppManagement_Actions">操作</x:String>
     <x:String x:Key="AppManagement_BlockedPaths">阻止运行的路径</x:String>
     <x:String x:Key="AppManagement_AddPath">添加路径</x:String>
-    <x:String x:Key="AppManagement_AddToAllowed">添加到允许列表</x:String>
     <x:String x:Key="AppManagement_AddToBlocked">添加到阻止列表</x:String>
     <x:String x:Key="AppManagement_OpenFileLocation">打开文件位置</x:String>
     <x:String x:Key="AppManagement_CopyPath">复制路径</x:String>
@@ -233,19 +233,15 @@
     <x:String x:Key="Network_ApplyChanges">应用更改</x:String>
     <x:String x:Key="Network_RuleExists">该规则已存在</x:String>
     <x:String x:Key="Network_InvalidDomain">域名格式无效</x:String>
-    <x:String x:Key="Network_InterceptionMethod">拦截方式</x:String>
-    <x:String x:Key="Network_Method_App">本应用 (高频)</x:String>
-    <x:String x:Key="Network_Method_Hosts">Hosts 文件</x:String>
-    <x:String x:Key="Network_Method_Both">两者同时</x:String>
     <x:String x:Key="Network_DoHTip">提示：如果拦截不生效，请尝试：&#x0a;1. 点击“应用更改”并允许管理员权限。&#x0a;2. 关闭浏览器的“安全 DNS”(DNS-over-HTTPS) 设置。&#x0a;3. 重启浏览器或清理浏览器缓存。</x:String>
     
     <!-- 系统托盘 -->
-    <x:String x:Key="Tray_Show">显示主界面</x:String>
-    <x:String x:Key="Tray_Exit">退出</x:String>
-    <x:String x:Key="Tray_QuickLock">快速锁定</x:String>
-    <x:String x:Key="Tray_QuickUnlock">快速解锁</x:String>
-    <x:String x:Key="Tray_OpenLockSettings">锁屏设置</x:String>
-    <x:String x:Key="Tray_OpenSchedule">时间计划</x:String>
+    <x:String x:Key="Tray_Show">🖥️ 显示主界面</x:String>
+    <x:String x:Key="Tray_Exit">❌ 退出</x:String>
+    <x:String x:Key="Tray_QuickLock">🔒 快速锁定</x:String>
+    <x:String x:Key="Tray_QuickUnlock">🔓 快速解锁</x:String>
+    <x:String x:Key="Tray_OpenLockSettings">⚙️ 锁屏设置</x:String>
+    <x:String x:Key="Tray_OpenSchedule">📅 时间计划</x:String>
     <x:String x:Key="Initialization_Title">首次启动引导</x:String>
     <x:String x:Key="Initialization_Subtitle">完成基本配置后即可开始使用</x:String>
     <x:String x:Key="Initialization_Steps">步骤</x:String>
@@ -286,8 +282,6 @@
     <x:String x:Key="Init_AppBlocking_Subtitle">可在应用管理中继续配置</x:String>
     <x:String x:Key="Init_EnableBasicProtection">开启基础防护</x:String>
     <x:String x:Key="Init_EnableAppBlocking">开启应用拦截</x:String>
-    <x:String x:Key="Init_AllowedApps_Label">允许应用 (逗号分隔)</x:String>
-    <x:String x:Key="Init_AllowedApps_Watermark">例如：notepad,calc</x:String>
     <x:String x:Key="Init_BlockedRules_Label">拦截规则 (逗号分隔)</x:String>
     <x:String x:Key="Init_BlockedRules_Watermark">例如：cmd,taskmgr</x:String>
     <x:String x:Key="Init_NetworkBlocking_Title">网络拦截</x:String>
@@ -308,4 +302,58 @@
     <x:String x:Key="NotificationPosition_BottomRight">右下角</x:String>
     <x:String x:Key="About_Repository">开源仓库</x:String>
     <x:String x:Key="About_UserAgreement">服务协议(注意链接可能打不开)</x:String>
+    <x:String x:Key="About_PrivacyPolicy">隐私政策</x:String>
+    
+    <!-- 自动化 -->
+    <x:String x:Key="Automation_Title">自动化扩展</x:String>
+    <x:String x:Key="Automation_Description">在这里配置定时任务和自动操作，扩展系统功能。</x:String>
+    <x:String x:Key="Automation_Shutdown_Title">定时关机</x:String>
+    <x:String x:Key="Automation_Shutdown_Enable">启用定时关机</x:String>
+    <x:String x:Key="Automation_Shutdown_Time">关机时间</x:String>
+    <x:String x:Key="Automation_Shutdown_Desc">在每天的指定时间自动关闭计算机</x:String>
+    <x:String x:Key="Automation_Restart_Title">定时重启</x:String>
+    <x:String x:Key="Automation_Restart_Enable">启用定时重启</x:String>
+    <x:String x:Key="Automation_Restart_Time">重启时间</x:String>
+    <x:String x:Key="Automation_Restart_Desc">在每天的指定时间自动重启计算机</x:String>
+    <x:String x:Key="Automation_Lock_Title">定时锁屏</x:String>
+    <x:String x:Key="Automation_Lock_Enable">启用定时锁屏</x:String>
+    <x:String x:Key="Automation_Lock_Time">锁屏时间</x:String>
+    <x:String x:Key="Automation_Lock_Desc">在每天的指定时间自动进入完整锁定</x:String>
+    <x:String x:Key="Automation_NetworkOn_Title">定时开启网络拦截</x:String>
+    <x:String x:Key="Automation_NetworkOn_Enable">启用定时开启网络拦截</x:String>
+    <x:String x:Key="Automation_NetworkOn_Time">开启时间</x:String>
+    <x:String x:Key="Automation_NetworkOn_Desc">在指定时间打开网络拦截主开关并应用规则</x:String>
+    <x:String x:Key="Automation_NetworkOff_Title">定时关闭网络拦截</x:String>
+    <x:String x:Key="Automation_NetworkOff_Enable">启用定时关闭网络拦截</x:String>
+    <x:String x:Key="Automation_NetworkOff_Time">关闭时间</x:String>
+    <x:String x:Key="Automation_NetworkOff_Desc">在指定时间关闭网络拦截主开关并清理规则</x:String>
+    <x:String x:Key="Automation_AppBlockOn_Title">定时开启应用拦截</x:String>
+    <x:String x:Key="Automation_AppBlockOn_Enable">启用定时开启应用拦截</x:String>
+    <x:String x:Key="Automation_AppBlockOn_Time">开启时间</x:String>
+    <x:String x:Key="Automation_AppBlockOn_Desc">在指定时间开启应用拦截以阻止指定进程</x:String>
+    <x:String x:Key="Automation_AppBlockOff_Title">定时关闭应用拦截</x:String>
+    <x:String x:Key="Automation_AppBlockOff_Enable">启用定时关闭应用拦截</x:String>
+    <x:String x:Key="Automation_AppBlockOff_Time">关闭时间</x:String>
+    <x:String x:Key="Automation_AppBlockOff_Desc">在指定时间关闭应用拦截，恢复正常使用</x:String>
+    <x:String x:Key="Automation_Enable">启用自动化</x:String>
+    <x:String x:Key="Automation_Enable_Desc">自动化是一种在自定义规则满足时做出行动的功能</x:String>
+    <x:String x:Key="Automation_AddWorkflow">添加自动化</x:String>
+    <x:String x:Key="Automation_Duplicate">复制</x:String>
+    <x:String x:Key="Automation_Delete">删除</x:String>
+    <x:String x:Key="Automation_Name">名称</x:String>
+    <x:String x:Key="Automation_Scheme">配置方案</x:String>
+    <x:String x:Key="Automation_TriggerSection">当以下事件触发时</x:String>
+    <x:String x:Key="Automation_AddTrigger">添加触发器</x:String>
+    <x:String x:Key="Automation_AddTrigger_Interval">添加间隔触发器</x:String>
+    <x:String x:Key="Automation_AddTrigger_Startup">添加启动触发器</x:String>
+    <x:String x:Key="Automation_ConditionsSection">并且满足以下规则时</x:String>
+    <x:String x:Key="Automation_AddCondition">添加规则</x:String>
+    <x:String x:Key="Automation_AddCondition_TimeRange">时间范围</x:String>
+    <x:String x:Key="Automation_AddCondition_DayOfWeek">星期条件</x:String>
+    <x:String x:Key="Automation_ActionsSection">触发行动</x:String>
+    <x:String x:Key="Automation_AddAction">添加行动</x:String>
+    <x:String x:Key="Automation_RecoverySection">当规则不再满足时，将自动恢复行动</x:String>
+    <x:String x:Key="Automation_RecoveryTip">工作流运行时不会考虑感知则集。</x:String>
+    <x:String x:Key="Automation_Remove">移除
+</x:String>
 </ResourceDictionary>

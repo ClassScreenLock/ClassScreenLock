@@ -46,26 +46,18 @@
                         CornerRadius="8" Padding="20">
                     <StackPanel Spacing="16">
                         <TextBlock Text="{DynamicResource Network_AddRule}" FontWeight="SemiBold" FontSize="16"/>
-                        <Grid ColumnDefinitions="*,*,Auto,Auto">
+                        <Grid ColumnDefinitions="*,*,Auto">
                             <TextBox Grid.Column="0" Text="{Binding NewDomain}" 
                                      Watermark="{DynamicResource Network_Domain}" 
+                                     VerticalAlignment="Center"
                                      Margin="0,0,12,0"/>
                             <TextBox Grid.Column="1" Text="{Binding NewDescription}" 
                                      Watermark="{DynamicResource Network_Description}" 
+                                     VerticalAlignment="Center"
                                      Margin="0,0,12,0"/>
-                            <ComboBox Grid.Column="2" 
-                                      ItemsSource="{Binding InterceptionMethods}"
-                                      SelectedItem="{Binding SelectedMethod}"
-                                      Width="150"
-                                      Margin="0,0,12,0">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Converter={StaticResource InterceptionMethodConverter}}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <Button Grid.Column="3" Command="{Binding AddRuleCommand}" Classes="accent">
-                                <icons:Icon Value="fas fa-plus"/>
+                            <Button Grid.Column="2" Command="{Binding AddRuleCommand}" 
+                                    Classes="accent" MinWidth="0" Width="40" Padding="0">
+                                <icons:Icon Value="fas fa-plus" Width="14" Height="14"/>
                             </Button>
                         </Grid>
                         
@@ -97,22 +89,23 @@
                           RowHeight="60">
                     <DataGrid.Columns>
                         <!-- 域名 -->
-                        <DataGridTextColumn Header="{DynamicResource Network_Domain}" 
-                                            Binding="{Binding Domain}" 
-                                            Width="*"/>
+                        <DataGridTemplateColumn Header="{DynamicResource Network_Domain}" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Domain}" 
+                                               VerticalAlignment="Center"
+                                               Margin="12,0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         
                         <!-- 描述 -->
-                        <DataGridTextColumn Header="{DynamicResource Network_Description}" 
-                                            Binding="{Binding Description}" 
-                                            Width="*"/>
-
-                        <!-- 拦截方式 -->
-                        <DataGridTemplateColumn Header="{DynamicResource Network_InterceptionMethod}" Width="150">
+                        <DataGridTemplateColumn Header="{DynamicResource Network_Description}" Width="*">
                             <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate x:DataType="models:NetworkRule">
-                                    <TextBlock Text="{Binding Method, Converter={StaticResource InterceptionMethodConverter}}" 
-                                               VerticalAlignment="Center" 
-                                               HorizontalAlignment="Center"/>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Description}" 
+                                               VerticalAlignment="Center"
+                                               Margin="12,0"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -124,6 +117,7 @@
                                     <ToggleSwitch IsChecked="{Binding IsEnabled}" 
                                                   OnContent="{DynamicResource Network_Enabled}" 
                                                   OffContent="{DynamicResource Network_Disabled}"
+                                                  VerticalAlignment="Center"
                                                   HorizontalAlignment="Center"
                                                   Margin="0,0,0,0"/>
                                 </DataTemplate>
@@ -136,9 +130,10 @@
                                 <DataTemplate x:DataType="models:NetworkRule">
                                     <Button Command="{Binding $parent[UserControl].((vm:NetworkManagementViewModel)DataContext).RemoveRuleCommand}"
                                             CommandParameter="{Binding}"
-                                            Classes="danger" Padding="8"
+                                            Classes="danger" Width="32" Height="32" Padding="0"
+                                            VerticalAlignment="Center"
                                             HorizontalAlignment="Center">
-                                        <icons:Icon Value="fas fa-trash"/>
+                                        <icons:Icon Value="fas fa-trash" Width="14" Height="14"/>
                                     </Button>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

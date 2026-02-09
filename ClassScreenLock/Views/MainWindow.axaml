@@ -43,6 +43,18 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="ClassScreenLock" Classes="badge"/>
+                <Border Grid.Column="1" Padding="8,4" CornerRadius="16" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource SystemControlBackgroundListLowBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <icons:Icon Value="{Binding SidebarViewModel.AccountIcon}" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="{Binding SidebarViewModel.AccountName}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" Opacity="{Binding SidebarViewModel.IsLoggedIn, Converter={x:Static Converters:BoolToOpacityConverter.Instance}}"/>
+                            <TextBlock Text="{Binding SidebarViewModel.AccountStatusText}" FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" IsVisible="{Binding !SidebarViewModel.IsLoggedIn}"/>
+                            
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </Grid>
         </Border>
         
@@ -96,7 +108,10 @@
         <Border Grid.Row="2" Classes="chrome" 
                 Padding="16,8"
                 IsVisible="{Binding !IsOnboarding}">
-            <TextBlock Text="{Binding Status}" Classes="status"/>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding Status}" Classes="status"/>
+                <TextBlock Grid.Column="1" Text="{Binding AppVersion, StringFormat='v {0}'}" Classes="caption"/>
+            </Grid>
         </Border>
         <!-- 点击反馈覆盖层：不参与命中测试，承载扩散动画 -->
         <Canvas x:Name="RippleOverlay"

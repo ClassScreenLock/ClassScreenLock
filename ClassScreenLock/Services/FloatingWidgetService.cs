@@ -192,7 +192,7 @@ public class FloatingWidgetService
                 _lastClickTime = now;
                 UpdateButtonStyle(true);
 
-                _ = Task.Run(async () =>
+                LogService.Observe(Task.Run(async () =>
                 {
                     await Task.Delay(3000);
                     Dispatcher.UIThread.Post(() =>
@@ -203,7 +203,7 @@ public class FloatingWidgetService
                             UpdateButtonStyle(false);
                         }
                     });
-                });
+                }), "FloatingWidget.ConfirmTimeout");
             }
             else
             {

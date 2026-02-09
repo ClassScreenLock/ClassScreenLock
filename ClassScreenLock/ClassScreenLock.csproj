@@ -4,13 +4,14 @@
         <TargetFramework>net9.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <NuGetAudit>false</NuGetAudit>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>ClassScreenLock.ico</ApplicationIcon>
         <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
-    <Version>1.4.18.1361</Version>
-    <AssemblyVersion>1.4.18.1361</AssemblyVersion>
-    <FileVersion>1.4.18.1361</FileVersion>
-    <InformationalVersion>1.4.18.1361</InformationalVersion>
+    <Version>1.8.28.2855</Version>
+    <AssemblyVersion>1.8.28.2855</AssemblyVersion>
+    <FileVersion>1.8.28.2855</FileVersion>
+    <InformationalVersion>1.8.28.2855</InformationalVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -32,6 +33,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="AForge" Version="2.2.5" NoWarn="NU1701" />
+        <PackageReference Include="AForge.Video" Version="2.2.5" NoWarn="NU1701" />
+        <PackageReference Include="AForge.Video.DirectShow" Version="2.2.5" NoWarn="NU1701" />
         <PackageReference Include="Avalonia" Version="11.3.10" />
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
         <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />

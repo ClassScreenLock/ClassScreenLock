@@ -112,13 +112,13 @@ sealed class Program
     {
         if (ex == null) return;
         
-        var message = $"[CRASH][{source}] {ex.Message}\nStack: {ex.StackTrace}";
+        var message = $"[CRASH][{source}] {ex}";
         System.Diagnostics.Debug.WriteLine(message);
         
         try 
         {
             // 尝试写入日志文件
-            Services.LogService.Instance.Log("Error", "Crash", source, ex.Message);
+            Services.LogService.Instance.Log("Error", "Crash", source, ex.ToString());
         }
         catch { /* 忽略日志写入失败 */ }
     }

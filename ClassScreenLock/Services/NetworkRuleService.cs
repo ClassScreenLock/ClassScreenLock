@@ -49,8 +49,8 @@ public class NetworkRuleService
                 // 如果文件不存在，初始化默认规则
                 var defaultRules = new List<NetworkRule>
                 {
-                    new NetworkRule { Domain = "douyin.com", Description = "抖音", IsEnabled = true, Method = InterceptionMethod.Both },
-                    new NetworkRule { Domain = "bilibili.com", Description = "B站", IsEnabled = true, Method = InterceptionMethod.Both }
+                    new NetworkRule { Domain = "douyin.com", Description = "抖音", IsEnabled = true },
+                    new NetworkRule { Domain = "bilibili.com", Description = "B站", IsEnabled = true }
                 };
                 SaveRules(defaultRules);
                 return defaultRules;

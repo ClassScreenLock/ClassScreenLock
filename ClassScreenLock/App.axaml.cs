@@ -27,7 +27,6 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         SplashWindow? splashWindow = null;
-        var splashShownAt = DateTime.UtcNow;
 
         // 全局异常处理
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
@@ -40,7 +39,7 @@ public partial class App : Application
         Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (s, e) =>
         {
             e.Handled = true;
-            LogService.Instance.Log("Error", "UIException", "Dispatcher", e.Exception.Message);
+            LogService.Instance.Log("Error", "UIException", "Dispatcher", e.Exception.ToString());
             NotificationService.Instance.ShowError($"程序遇到非预期错误: {e.Exception.Message}");
         };
 
@@ -51,72 +50,97 @@ public partial class App : Application
                 var settings = SettingsService.General;
                 RequestedThemeVariant = settings.DarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
             }
-            catch
+            catch { }
+
+            // 初始化本地化资源，避免资源键闪现
+            try
             {
+                LocalizationService.Instance.Initialize();
+                ApplySavedLanguageSettings();
             }
+            catch { }
 
             splashWindow = new SplashWindow();
             splashWindow.Show();
-            splashShownAt = DateTime.UtcNow;
+            splashWindow.SetProgress(null, "正在启动…");
 
-            Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+            var isMinimized = desktop.Args?.Any(a => string.Equals(a, "--minimized", StringComparison.OrdinalIgnoreCase)) ?? false;
+
+            Services.LogService.Observe(Task.Run(async () =>
             {
                 try
                 {
-                    await Task.Yield();
-
-                    _ = NotificationService.Instance;
-                    LocalizationService.Instance.Initialize();
+                    splashWindow?.SetProgress(25, "正在准备通知系统…");
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        _ = NotificationService.Instance;
+                    });
 
                     var requiresInit = InitializationService.Instance.RequiresInitialization;
                     if (!requiresInit)
                     {
+                        splashWindow?.SetProgress(55, "正在启动后台服务…");
                         AppBlockingService.Instance.Start();
                         ScreenshotService.Instance.Start();
-                        _ = Task.Run(async () =>
-                        {
-                            await Task.Delay(2000);
-                            await NetworkBlockingService.Instance.ApplyRulesAsync();
-                        });
+                        WebcamService.Instance.Start();
+                        AutomationService.Instance.Start();
+
+                        splashWindow?.SetProgress(75, "正在应用网络规则…");
+                        await NetworkBlockingService.Instance.ApplyRulesAsync("AppStartup");
                     }
 
-                    ApplySavedLanguageSettings();
-                    ApplySavedFontSettings();
-                    ApplySavedAccentColorSettings();
+                    splashWindow?.SetProgress(90, "正在应用界面设置…");
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        ApplySavedFontSettings();
+                        ApplySavedAccentColorSettings();
+                    });
+
+                    if (SettingsService.General.AutoStart)
+                    {
+                        ClassScreenLock.Helpers.AutoStartHelper.UpdateAutoStartPath();
+                    }
+
+                    splashWindow?.SetProgress(100, "启动完成");
+
+                    // 初始化完成后再显示主界面
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        var mainWindow = new MainWindow
+                        {
+                            DataContext = new MainWindowViewModel(),
+                        };
+
+                        desktop.MainWindow = mainWindow;
+                        desktop.Exit += OnApplicationExit;
+
+                        // Ripple 特效与 IPC 在主窗口创建后启用，避免启动阶段卡顿
+                        RippleEffectService.Instance.Attach(desktop.MainWindow);
+                        IpcService.Instance.Start();
+
+                        if (isMinimized)
+                        {
+                            mainWindow.Opacity = 0;
+                            mainWindow.Show();
+                            mainWindow.Hide();
+                            mainWindow.Opacity = 1;
+                        }
+                        else
+                        {
+                            mainWindow.Show();
+                            mainWindow.Activate();
+                        }
+
+                        splashWindow?.Close();
+                    }, Avalonia.Threading.DispatcherPriority.Background);
                 }
                 catch (Exception ex)
                 {
                     LogService.Instance.Log("Error", "Initialization", "App", ex.Message);
                 }
+            }), "App.StartupInit");
 
-                DisableAvaloniaDataAnnotationValidation();
-
-                var mainWindow = new MainWindow
-                {
-                    DataContext = new MainWindowViewModel(),
-                };
-                if (splashWindow != null)
-                {
-                    mainWindow.Opened += async (_, _) =>
-                    {
-                        var elapsed = DateTime.UtcNow - splashShownAt;
-                        var remaining = TimeSpan.FromMilliseconds(800) - elapsed;
-                        if (remaining > TimeSpan.Zero)
-                        {
-                            await Task.Delay(remaining);
-                        }
-                        splashWindow.Close();
-                    };
-                }
-
-                desktop.MainWindow = mainWindow;
-                RippleEffectService.Instance.Attach(desktop.MainWindow);
-                IpcService.Instance.Start();
-                desktop.Exit += OnApplicationExit;
-
-                mainWindow.Show();
-                mainWindow.Activate();
-            }, Avalonia.Threading.DispatcherPriority.Background);
+            DisableAvaloniaDataAnnotationValidation();
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -336,11 +360,8 @@ public partial class App : Application
             System.Globalization.CultureInfo.CurrentCulture = cultureInfo;
             System.Globalization.CultureInfo.CurrentUICulture = cultureInfo;
             
-            // 在UI线程上应用语言设置
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                localizationService.CurrentLanguage = settings.Language;
-            });
+            // 直接设置当前语言，不通过 Post，确保后续代码能立即获取到正确资源
+            localizationService.CurrentLanguage = settings.Language;
         }
         catch (Exception ex)
         {

@@ -25,11 +25,6 @@ public partial class NetworkManagementViewModel : ViewModelBase
     [ObservableProperty]
     private string _newDescription = string.Empty;
 
-    [ObservableProperty]
-    private InterceptionMethod _selectedMethod = InterceptionMethod.App;
-
-    public List<InterceptionMethod> InterceptionMethods => Enum.GetValues(typeof(InterceptionMethod)).Cast<InterceptionMethod>().ToList();
-
     public NetworkManagementViewModel()
     {
         LoadSettings();
@@ -89,8 +84,7 @@ public partial class NetworkManagementViewModel : ViewModelBase
             Domain = domain,
             Description = string.IsNullOrWhiteSpace(NewDescription) ? domain : NewDescription.Trim(),
             IsEnabled = true,
-            Type = "Domain",
-            Method = SelectedMethod
+            Type = "Domain"
         };
 
         NetworkRules.Add(newRule);
@@ -126,7 +120,7 @@ public partial class NetworkManagementViewModel : ViewModelBase
     private async Task ApplyChanges()
     {
         SaveSettings();
-        await NetworkBlockingService.Instance.ApplyRulesAsync();
+        await NetworkBlockingService.Instance.ApplyRulesAsync("UserManualApply");
         NotificationService.Instance.ShowSuccess(LocalizationService.Instance.GetString("Notify_SettingsSaved"));
     }
 

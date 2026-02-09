@@ -3,6 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
              xmlns:services="clr-namespace:ClassScreenLock.Services"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ClassScreenLock.Views.LogManagementView"
@@ -12,43 +14,134 @@
         <vm:LogManagementViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*">
-        <!-- 标题和操作按钮 -->
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="24,24,24,16">
-            <TextBlock Text="安全日志" Classes="h1" VerticalAlignment="Center"/>
-            
-            <Button Grid.Column="1" Command="{Binding RefreshLogsCommand}" Classes="accent" Margin="0,0,12,0" Padding="12,8">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <TextBlock Grid.Row="0" Text="安全日志" Classes="h1" Margin="24,24,24,8"/>
+        
+        <!-- 第一行：搜索与筛选 -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" Margin="24,0,24,8">
+            <TextBox Grid.Column="0" Text="{Binding SearchText}" Watermark="搜索操作、来源或详情..." Margin="0,0,8,0"/>
+            <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableTypes}" SelectedItem="{Binding SelectedType}" Width="140" Margin="0,0,8,0"/>
+            <ComboBox Grid.Column="2" ItemsSource="{Binding AvailableSources}" SelectedItem="{Binding SelectedSource}" Width="160" Margin="0,0,8,0"/>
+            <Button Grid.Column="3" Command="{Binding RefreshLogsCommand}" Classes="outline" Width="100">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <PathIcon Data="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" Width="16" Height="16"/>
+                    <PathIcon Data="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" Width="14" Height="14"/>
                     <TextBlock Text="刷新"/>
-                </StackPanel>
-            </Button>
-
-            <Button Grid.Column="2" Command="{Binding ClearLogsCommand}" Classes="danger" Padding="12,8">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <PathIcon Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" Width="16" Height="16"/>
-                    <TextBlock Text="清除日志"/>
                 </StackPanel>
             </Button>
         </Grid>
 
-        <!-- 日志列表 -->
-        <DataGrid Grid.Row="1" 
-                  ItemsSource="{Binding Logs}"
+        <!-- 第二行：操作按钮 -->
+        <WrapPanel Grid.Row="2" Margin="24,0,24,12" ItemSpacing="8">
+            <Button Command="{Binding ExportCsvAskPathCommand}" Classes="accent">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="M3 3H21V7H3V3M3 9H21V13H3V9M3 15H21V19H3V15Z" Width="14" Height="14"/>
+                    <TextBlock Text="导出 CSV"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding ExportJsonAskPathCommand}" Classes="accent">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="M5,3L19,3A2,2 0 0,1 21,5L21,19A2,2 0 0,1 19,21L5,21A2,2 0 0,1 3,19L3,5A2,2 0 0,1 5,3M7,7V17H9V7H7M11,7V17H13V7H11M15,7V17H17V7H15Z" Width="14" Height="14"/>
+                    <TextBlock Text="导出 JSON"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding ExportCsvBySourceCommand}" Classes="accent">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="M3,3H21V9H3V3M3,11H21V21H3V11Z" Width="14" Height="14"/>
+                    <TextBlock Text="按来源分包 CSV"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding ExportJsonBySourceCommand}" Classes="accent">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="M12,3A9,9 0 1,0 21,12A9,9 0 0,0 12,3M7,17V7H9V17H7M11,17V7H13V17H11M15,17V7H17V17H15Z" Width="14" Height="14"/>
+                    <TextBlock Text="按来源分包 JSON"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding ClearLogsCommand}" Classes="danger">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" Width="14" Height="14"/>
+                    <TextBlock Text="清除"/>
+                </StackPanel>
+            </Button>
+        </WrapPanel>
+
+        <DataGrid Grid.Row="3" 
+                  ItemsSource="{Binding DisplayLogs}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   CanUserSortColumns="True"
                   GridLinesVisibility="Horizontal"
                   SelectionMode="Single"
                   Background="Transparent"
-                  RowHeight="42"
+                  RowHeight="38"
+                  HorizontalScrollBarVisibility="Auto"
                   Margin="24,0,24,24">
+            <DataGrid.Styles>
+                <Style Selector="DataGridRow" x:DataType="services:LogEntry">
+                    <Setter Property="Background" Value="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}, ConverterParameter=0.06}"/>
+                </Style>
+                <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle" x:DataType="services:LogEntry">
+                    <Setter Property="Fill" Value="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}, ConverterParameter=0.12}"/>
+                </Style>
+                <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle" x:DataType="services:LogEntry">
+                    <Setter Property="Fill" Value="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}, ConverterParameter=0.20}"/>
+                </Style>
+            </DataGrid.Styles>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="时间" Binding="{Binding Timestamp, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="180"/>
-                <DataGridTextColumn Header="类型" Binding="{Binding Type}" Width="100"/>
-                <DataGridTextColumn Header="操作" Binding="{Binding Action}" Width="100"/>
-                <DataGridTextColumn Header="目标" Binding="{Binding Target}" Width="200"/>
-                <DataGridTextColumn Header="详情" Binding="{Binding Details}" Width="*"/>
+                <DataGridTemplateColumn Header="" Width="42">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <icons:Icon Value="{Binding Type, Converter={x:Static Converters:LogTypeToIconConverter.Instance}}" 
+                                        Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        Foreground="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="时间" Width="160">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Timestamp, StringFormat={}{0:MM-dd HH:mm:ss}}" 
+                                       Foreground="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}}"
+                                       VerticalAlignment="Center" Margin="8,0" FontSize="13"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="类型" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Type}" 
+                                       Foreground="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}}"
+                                       VerticalAlignment="Center" Margin="8,0" FontWeight="SemiBold" FontSize="13"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="操作" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Action}" 
+                                       Foreground="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}}"
+                                       VerticalAlignment="Center" Margin="8,0" TextTrimming="CharacterEllipsis" FontSize="13"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="来源" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Target}" 
+                                       Foreground="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}}"
+                                       VerticalAlignment="Center" Margin="8,0" TextTrimming="CharacterEllipsis" FontSize="13"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="详情" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Details}" 
+                                       Foreground="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}}"
+                                       VerticalAlignment="Center" Margin="8,0" TextTrimming="CharacterEllipsis" FontSize="13"
+                                       ToolTip.Tip="{Binding Details}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

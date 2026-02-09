@@ -18,17 +18,97 @@ public class SettingsService
     private static readonly string LockSettingsPath = Path.Combine(DataDirectory, "locksettings.json");
     private static readonly string ScreenshotSettingsPath = Path.Combine(DataDirectory, "screenshotsettings.json");
     private static readonly string BlockageSettingsPath = Path.Combine(DataDirectory, "softwareblockage.json");
+    private static readonly string AutomationSettingsDir = Path.Combine(DataDirectory, "automation");
     private static readonly string OldLockSettingsPath = Path.Combine(DataDirectory, "LockSettings.json");
 
     private static SettingsModel? _general;
     private static LockSettingsModel? _lock;
     private static ScreenshotSettingsModel? _screenshot;
     private static SoftwareBlockageModel? _blockage;
+    private static AutomationSettingsModel? _automation;
+    private static readonly object _lockObj = new();
+    public static event Action? GeneralChanged;
 
-    public static SettingsModel General => _general ??= LoadSettings<SettingsModel>(GeneralSettingsPath);
-    public static LockSettingsModel Lock => _lock ??= LoadSettings<LockSettingsModel>(LockSettingsPath);
-    public static ScreenshotSettingsModel Screenshot => _screenshot ??= LoadSettings<ScreenshotSettingsModel>(ScreenshotSettingsPath);
-    public static SoftwareBlockageModel Blockage => _blockage ??= LoadSettings<SoftwareBlockageModel>(BlockageSettingsPath);
+    public static SettingsModel General
+    {
+        get
+        {
+            if (_general != null) return _general;
+            lock (_lockObj)
+            {
+                if (_general != null) return _general;
+                
+                // 设置临时方案名，防止 LoadSettings 过程中访问 Automation 导致递归
+                _loadingGeneralScheme = "Default";
+                try
+                {
+                    _general = LoadSettings<SettingsModel>(GeneralSettingsPath);
+                    return _general;
+                }
+                finally
+                {
+                    _loadingGeneralScheme = null;
+                }
+            }
+        }
+    }
+
+    public static LockSettingsModel Lock
+    {
+        get
+        {
+            if (_lock != null) return _lock;
+            lock (_lockObj)
+            {
+                return _lock ??= LoadSettings<LockSettingsModel>(LockSettingsPath);
+            }
+        }
+    }
+
+    public static ScreenshotSettingsModel Screenshot
+    {
+        get
+        {
+            if (_screenshot != null) return _screenshot;
+            lock (_lockObj)
+            {
+                return _screenshot ??= LoadSettings<ScreenshotSettingsModel>(ScreenshotSettingsPath);
+            }
+        }
+    }
+
+    public static SoftwareBlockageModel Blockage
+    {
+        get
+        {
+            if (_blockage != null) return _blockage;
+            lock (_lockObj)
+            {
+                return _blockage ??= LoadSettings<SoftwareBlockageModel>(BlockageSettingsPath);
+            }
+        }
+    }
+
+    private static string? _loadingGeneralScheme;
+
+    public static AutomationSettingsModel Automation
+    {
+        get
+        {
+            lock (_lockObj)
+            {
+                // 如果正在加载 General，为了避免循环调用，使用一个临时的方案名
+                var scheme = _loadingGeneralScheme ?? _general?.CurrentAutomationScheme ?? "Default";
+                var path = GetAutomationPathForScheme(scheme);
+                if (_automation == null || !_lastAutomationPath.Equals(path, StringComparison.OrdinalIgnoreCase))
+                {
+                    _automation = LoadSettings<AutomationSettingsModel>(path);
+                    _lastAutomationPath = path;
+                }
+                return _automation;
+            }
+        }
+    }
 
     static SettingsService()
     {
@@ -80,7 +160,6 @@ public class SettingsService
 
                 // 迁移到 Blockage
                 var blockage = new SoftwareBlockageModel();
-                if (oldSettings.TryGetProperty("allowedApps", out var allowedApps)) blockage.AllowedApps = JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(allowedApps.GetRawText()) ?? blockage.AllowedApps;
                 if (oldSettings.TryGetProperty("blockedRules", out var blockedRules)) blockage.BlockedRules = JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(blockedRules.GetRawText()) ?? blockage.BlockedRules;
                 if (oldSettings.TryGetProperty("isNetworkLockEnabled", out var netLock)) blockage.IsNetworkLockEnabled = netLock.GetBoolean();
                 if (oldSettings.TryGetProperty("isAppBlockingEnabled", out var appBlock)) blockage.IsAppBlockingEnabled = appBlock.GetBoolean();
@@ -100,39 +179,42 @@ public class SettingsService
 
     private static T LoadSettings<T>(string path) where T : new()
     {
-        try
+        lock (_lockObj)
         {
-            if (!File.Exists(path))
+            try
             {
-                var defaultVal = new T();
-                if (defaultVal is SettingsModel general)
+                if (!File.Exists(path))
                 {
-                    general.Language = ResolveDefaultLanguage();
+                    var defaultVal = new T();
+                    if (defaultVal is SettingsModel general)
+                    {
+                        general.Language = ResolveDefaultLanguage();
+                    }
+                    SaveSettingsInternal(path, defaultVal);
+                    return defaultVal;
                 }
-                SaveSettingsInternal(path, defaultVal);
-                return defaultVal;
-            }
 
-            if (!VerifyIntegrity(path))
+                if (!VerifyIntegrity(path))
+                {
+                    System.Diagnostics.Debug.WriteLine($"文件完整性校验失败: {path}，尝试加载备份...");
+                    var backupPath = path + ".bak";
+                    if (File.Exists(backupPath))
+                    {
+                        var backupJson = File.ReadAllText(backupPath);
+                        var backupVal = JsonSerializer.Deserialize<T>(backupJson);
+                        if (backupVal != null) return backupVal;
+                    }
+                }
+
+                var json = File.ReadAllText(path);
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<T>(json, options) ?? new T();
+            }
+            catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"文件完整性校验失败: {path}，尝试加载备份...");
-                var backupPath = path + ".bak";
-                if (File.Exists(backupPath))
-                {
-                    var backupJson = File.ReadAllText(backupPath);
-                    var backupVal = JsonSerializer.Deserialize<T>(backupJson);
-                    if (backupVal != null) return backupVal;
-                }
+                System.Diagnostics.Debug.WriteLine($"加载设置失败 ({path}): {ex.Message}");
+                return new T();
             }
-
-            var json = File.ReadAllText(path);
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            return JsonSerializer.Deserialize<T>(json, options) ?? new T();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"加载设置失败 ({path}): {ex.Message}");
-            return new T();
         }
     }
 
@@ -140,34 +222,80 @@ public class SettingsService
     public static void SaveLock(LockSettingsModel settings) => SaveSettingsInternal(LockSettingsPath, settings);
     public static void SaveScreenshot(ScreenshotSettingsModel settings) => SaveSettingsInternal(ScreenshotSettingsPath, settings);
     public static void SaveBlockage(SoftwareBlockageModel settings) => SaveSettingsInternal(BlockageSettingsPath, settings);
+    public static void SaveAutomation(AutomationSettingsModel settings)
+    {
+        lock (_lockObj)
+        {
+            var scheme = _general?.CurrentAutomationScheme ?? "Default";
+            var path = GetAutomationPathForScheme(scheme);
+            if (settings.Workflows != null)
+            {
+                settings.CurrentScheme = scheme;
+                settings.Workflows = settings.Workflows.Where(w => string.Equals(w.Scheme ?? "Default", scheme, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+            SaveSettingsInternal(path, settings);
+            _automation = settings;
+            _lastAutomationPath = path;
+        }
+    }
+
+    private static string _lastAutomationPath = string.Empty;
+
+    private static string GetAutomationPathForScheme(string scheme)
+    {
+        EnsureDirectoryExists();
+        if (!Directory.Exists(AutomationSettingsDir)) Directory.CreateDirectory(AutomationSettingsDir);
+        var safeScheme = string.IsNullOrWhiteSpace(scheme) ? "Default" : scheme.Trim();
+        var fileName = $"automation-{safeScheme}.json";
+        return Path.Combine(AutomationSettingsDir, fileName);
+    }
+
+    public static void EnsureAutomationSchemeFile(string scheme)
+    {
+        var path = GetAutomationPathForScheme(scheme);
+        if (!File.Exists(path))
+        {
+            var defaultVal = new AutomationSettingsModel();
+            SaveSettingsInternal(path, defaultVal);
+        }
+    }
+
+    public static void EnsureAutomationConfigFile(string config)
+    {
+        EnsureAutomationSchemeFile(config);
+    }
 
     private static void SaveSettingsInternal<T>(string path, T settings)
     {
-        try
+        lock (_lockObj)
         {
-            var options = new JsonSerializerOptions
+            try
             {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-            };
-            var json = JsonSerializer.Serialize(settings, options);
-            
-            // 原子写入
-            AtomicWrite(path, json);
-            
-            // 更新哈希校验文件
-            UpdateIntegrityHash(path, json);
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                };
+                var json = JsonSerializer.Serialize(settings, options);
+                
+                // 原子写入
+                AtomicWrite(path, json);
+                
+                // 更新哈希校验文件
+                UpdateIntegrityHash(path, json);
 
-            // 更新当前内存缓存
-            if (path == GeneralSettingsPath) _general = settings as SettingsModel;
-            else if (path == LockSettingsPath) _lock = settings as LockSettingsModel;
-            else if (path == ScreenshotSettingsPath) _screenshot = settings as ScreenshotSettingsModel;
-            else if (path == BlockageSettingsPath) _blockage = settings as SoftwareBlockageModel;
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"保存设置失败 ({path}): {ex.Message}");
+                // 更新当前内存缓存
+                if (path == GeneralSettingsPath) _general = settings as SettingsModel;
+                else if (path == LockSettingsPath) _lock = settings as LockSettingsModel;
+                else if (path == ScreenshotSettingsPath) _screenshot = settings as ScreenshotSettingsModel;
+                else if (path == BlockageSettingsPath) _blockage = settings as SoftwareBlockageModel;
+                else if (path.StartsWith(AutomationSettingsDir, StringComparison.OrdinalIgnoreCase)) { _automation = settings as AutomationSettingsModel; _lastAutomationPath = path; }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"保存设置失败 ({path}): {ex.Message}");
+            }
         }
     }
 
@@ -214,9 +342,18 @@ public class SettingsService
         catch { return false; }
     }
 
-    public static void UpdateGeneral(Action<SettingsModel> action) { action(General); SaveGeneral(General); }
+    public static void UpdateGeneral(Action<SettingsModel> action) { action(General); SaveGeneral(General); try { GeneralChanged?.Invoke(); } catch { } }
     public static void UpdateLock(Action<LockSettingsModel> action) { action(Lock); SaveLock(Lock); }
+    public static void UpdateScreenshot(Action<ScreenshotSettingsModel> action) { action(Screenshot); SaveScreenshot(Screenshot); }
     public static void UpdateBlockage(Action<SoftwareBlockageModel> action) { action(Blockage); SaveBlockage(Blockage); }
+    public static void UpdateAutomation(Action<AutomationSettingsModel> action)
+    {
+        lock (_lockObj)
+        {
+            action(Automation);
+            SaveAutomation(Automation);
+        }
+    }
 
     private static string ResolveDefaultLanguage()
     {

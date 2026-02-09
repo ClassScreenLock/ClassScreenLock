@@ -79,13 +79,6 @@
                                                IsVisible="{Binding IsSidebarExpanded}"/>
                                 </StackPanel>
                             </ListBoxItem>
-                            <ListBoxItem ToolTip.Tip="{DynamicResource AppManagement_AllowedApps}">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <icons:Icon Value="fas fa-check-circle" Width="16" Height="16" Opacity="0.7"/>
-                                    <TextBlock Text="{DynamicResource AppManagement_AllowedApps}" 
-                                               IsVisible="{Binding IsSidebarExpanded}"/>
-                                </StackPanel>
-                            </ListBoxItem>
                             <ListBoxItem ToolTip.Tip="{DynamicResource AppManagement_BlockedApps}">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <icons:Icon Value="fas fa-ban" Width="16" Height="16" Opacity="0.7"/>
@@ -143,9 +136,6 @@
                                 <Style Selector="DataGridRow">
                                     <Setter Property="ContextMenu">
                                         <ContextMenu>
-                                            <MenuItem Header="{DynamicResource AppManagement_AddToAllowed}"
-                                                      Command="{Binding $parent[DataGrid].((vm:AppManagementViewModel)DataContext).AddToAllowedCommand}"
-                                                      CommandParameter="{Binding}"/>
                                             <MenuItem Header="{DynamicResource AppManagement_AddToBlocked}"
                                                       Command="{Binding $parent[DataGrid].((vm:AppManagementViewModel)DataContext).AddToBlockedCommand}"
                                                       CommandParameter="{Binding}"/>
@@ -193,25 +183,7 @@
                         <TextBlock IsVisible="{Binding !HasRunningApps}" Text="没有匹配的应用" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.5"/>
                     </Grid>
 
-                    <!-- 2. 允许列表 -->
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding AllowedApps}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="system:String">
-                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="6" Padding="16,12" Margin="0,0,0,8">
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <TextBlock Text="{Binding}" VerticalAlignment="Center" FontWeight="Medium"/>
-                                            <Button Grid.Column="1" Command="{Binding $parent[UserControl].((vm:AppManagementViewModel)DataContext).RemoveFromAllowedCommand}" CommandParameter="{Binding}" Classes="danger" Width="32" Height="32" Padding="0">
-                                                <icons:Icon Value="fas fa-trash" Width="12" Height="12"/>
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-
-                    <!-- 3. 阻止列表 -->
+                    <!-- 2. 阻止列表 -->
                     <Grid RowDefinitions="Auto,Auto,*">
                         <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="16" Margin="0,0,0,16">
                             <Grid ColumnDefinitions="*,Auto">
@@ -250,7 +222,7 @@
                         </ScrollViewer>
                     </Grid>
 
-                    <!-- 4. 基础防护 -->
+                    <!-- 3. 基础防护 -->
                     <Grid RowDefinitions="Auto,Auto,*">
                         <StackPanel Grid.Row="0" Spacing="16" Margin="0,0,0,16">
                             <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="20">

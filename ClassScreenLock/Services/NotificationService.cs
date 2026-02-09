@@ -63,8 +63,15 @@ public class NotificationService : IDisposable
         _localizationService = LocalizationService.Instance;
         
         // 从设置中初始化通知状态
-        var settings = SettingsService.General;
-        _notificationsEnabled = settings.ShowNotifications;
+        try
+        {
+            var settings = SettingsService.General;
+            _notificationsEnabled = settings?.ShowNotifications ?? true;
+        }
+        catch
+        {
+            _notificationsEnabled = true;
+        }
     }
 
     /// <summary>

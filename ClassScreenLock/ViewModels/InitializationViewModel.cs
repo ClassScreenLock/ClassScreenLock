@@ -50,6 +50,12 @@ public partial class InitializationViewModel : ViewModelBase
     private string _agreementContent = string.Empty;
 
     [ObservableProperty]
+    private string _agreementConnectionStatus = "未连接";
+
+    [ObservableProperty]
+    private bool _isAgreementConnectionSuccessful;
+
+    [ObservableProperty]
     private string _username = string.Empty;
 
     [ObservableProperty]
@@ -98,9 +104,6 @@ public partial class InitializationViewModel : ViewModelBase
     private bool _basicProtectionEnabled;
 
     [ObservableProperty]
-    private string _allowedAppsText = string.Empty;
-
-    [ObservableProperty]
     private string _blockedRulesText = string.Empty;
 
     [ObservableProperty]
@@ -127,6 +130,36 @@ public partial class InitializationViewModel : ViewModelBase
     [ObservableProperty]
     private string _networkDomainsText = string.Empty;
 
+    [ObservableProperty]
+    private bool _enableClassScreenshot;
+    [ObservableProperty]
+    private int _classScreenshotInterval;
+    [ObservableProperty]
+    private bool _enableBreakScreenshot;
+    [ObservableProperty]
+    private int _breakScreenshotInterval;
+    [ObservableProperty]
+    private bool _enableClassWebcam;
+    [ObservableProperty]
+    private int _classWebcamInterval;
+    [ObservableProperty]
+    private bool _enableBreakWebcam;
+    [ObservableProperty]
+    private int _breakWebcamInterval;
+
+    [ObservableProperty]
+    private List<CameraItem> _cameraOptions = new();
+
+    [ObservableProperty]
+    private string? _selectedCamera;
+
+    public record CameraItem(string Name, string Moniker)
+    {
+        public override string ToString() => Name;
+    }
+
+    public List<int> ScreenshotIntervalOptions { get; } = new() { 1, 2, 5, 10, 15, 30, 60 };
+
     public List<string> LanguageOptions { get; } = new() { "zh-CN", "en-US" };
     public List<string> AccentColorOptions { get; } = new()
     {
@@ -140,10 +173,29 @@ public partial class InitializationViewModel : ViewModelBase
         [ObservableProperty]
         private string _userAgreementUrl = "https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/UserAgreement.html";
 
+        [ObservableProperty]
+        private string _privacyPolicyUrl = "https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/PrivacyPolicy.html";
+
+    [ObservableProperty]
+    private bool _isWelcomeVisible = true;
+
+    [ObservableProperty]
+    private double _welcomeOpacity = 1.0;
+
     public InitializationViewModel(MainWindowViewModel mainWindowViewModel)
     {
         _mainWindowViewModel = mainWindowViewModel;
         LoadInitialState();
+        _ = ShowWelcomeAnimationAsync();
+    }
+
+    private async Task ShowWelcomeAnimationAsync()
+    {
+        // 欢迎动画展示时间
+        await Task.Delay(2500);
+        WelcomeOpacity = 0;
+        await Task.Delay(500); // 等待淡出动画完成
+        IsWelcomeVisible = false;
     }
 
     partial void OnStepIndexChanged(int value)
@@ -164,35 +216,9 @@ public partial class InitializationViewModel : ViewModelBase
 
     private void LoadInitialState()
     {
-        try
-        {
-            // 优先尝试从 Avalonia 资源中加载 (Assets/README.md 已在 csproj 中标记为 AvaloniaResource)
-            try
-            {
-                var uri = new Uri("avares://ClassScreenLock/Assets/README.md");
-                using var stream = AssetLoader.Open(uri);
-                using var reader = new StreamReader(stream);
-                AgreementContent = reader.ReadToEnd();
-            }
-            catch
-            {
-                // 如果资源加载失败，尝试从文件系统读取
-                var readmePath = Path.Combine(AppContext.BaseDirectory, "Assets", "README.md");
-                if (File.Exists(readmePath))
-                {
-                    AgreementContent = File.ReadAllText(readmePath);
-                }
-                else
-                {
-                    AgreementContent = "无法加载用户协议，请访问 GitHub 查看。";
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            LogService.Instance.Log("Init", "LoadAgreementError", ex.Message);
-            AgreementContent = "加载用户协议时出错。";
-        }
+        UserAgreementUrl = "https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/UserAgreement.html";
+        AgreementConnectionStatus = $"协议地址：{UserAgreementUrl}";
+        IsAgreementConnectionSuccessful = true;
 
         var general = SettingsService.General;
         AutoStart = general.AutoStart;
@@ -204,6 +230,26 @@ public partial class InitializationViewModel : ViewModelBase
         FontSize = general.FontSize;
         FontFamily = general.FontFamily;
         ShowNotifications = general.ShowNotifications;
+
+        var screenshot = SettingsService.Screenshot;
+        EnableClassScreenshot = screenshot.EnableClassScreenshot;
+        ClassScreenshotInterval = screenshot.ClassScreenshotInterval;
+        EnableBreakScreenshot = screenshot.EnableBreakScreenshot;
+        BreakScreenshotInterval = screenshot.BreakScreenshotInterval;
+        EnableClassWebcam = screenshot.EnableClassWebcam;
+        ClassWebcamInterval = screenshot.ClassWebcamInterval;
+        EnableBreakWebcam = screenshot.EnableBreakWebcam;
+        BreakWebcamInterval = screenshot.BreakWebcamInterval;
+        SelectedCamera = screenshot.SelectedCameraMoniker;
+
+        // Load cameras
+        var cameras = WebcamService.Instance.GetAvailableCamerasWithNames();
+        CameraOptions = cameras.Select(kvp => new CameraItem(kvp.Value, kvp.Key)).ToList();
+        
+        if (string.IsNullOrEmpty(SelectedCamera) && CameraOptions.Any())
+        {
+            SelectedCamera = CameraOptions.First().Moniker;
+        }
 
         LoginVerificationModeIndex = (int)SecurityService.Instance.Settings.LoginVerificationMode;
 
@@ -219,7 +265,6 @@ public partial class InitializationViewModel : ViewModelBase
         AppBlockingEnabled = blockage.IsAppBlockingEnabled;
         BasicProtectionEnabled = blockage.IsBasicProtectionEnabled;
         NetworkLockEnabled = blockage.IsNetworkLockEnabled;
-        AllowedAppsText = string.Join(",", blockage.AllowedApps ?? new System.Collections.Generic.List<string>());
         BlockedRulesText = string.Join(",", blockage.BlockedRules ?? new System.Collections.Generic.List<string>());
         var rules = NetworkRuleService.LoadRules();
         NetworkDomainsText = string.Join(",", rules?.Where(r => r.IsEnabled && r.Type == "Domain").Select(r => r.Domain) ?? Enumerable.Empty<string>());
@@ -229,6 +274,7 @@ public partial class InitializationViewModel : ViewModelBase
             PrepareTwoFactorSetup();
         }
     }
+
 
     [RelayCommand]
     private void OpenRepository()
@@ -246,6 +292,16 @@ public partial class InitializationViewModel : ViewModelBase
         try
         {
             Process.Start(new ProcessStartInfo(UserAgreementUrl) { UseShellExecute = true });
+        }
+        catch { }
+    }
+
+    [RelayCommand]
+    private void OpenPrivacyPolicy()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(PrivacyPolicyUrl) { UseShellExecute = true });
         }
         catch { }
     }
@@ -381,15 +437,28 @@ public partial class InitializationViewModel : ViewModelBase
                 });
                 InitializationService.Instance.MarkStepComplete(InitStep.UserPreferences);
                 StepIndex++;
-                if ((InitStep)StepIndex == InitStep.TwoFactorBinding && !ShouldIncludeTwoFactorBinding())
+                RefreshStepUi(StepIndex);
+                break;
+            case InitStep.MonitoringConfig:
+                SettingsService.UpdateScreenshot(s =>
                 {
-                    StepIndex++;
-                }
+                    s.EnableClassScreenshot = EnableClassScreenshot;
+                    s.ClassScreenshotInterval = ClassScreenshotInterval;
+                    s.EnableBreakScreenshot = EnableBreakScreenshot;
+                    s.BreakScreenshotInterval = BreakScreenshotInterval;
+                    s.EnableClassWebcam = EnableClassWebcam;
+                    s.ClassWebcamInterval = ClassWebcamInterval;
+                    s.EnableBreakWebcam = EnableBreakWebcam;
+                    s.BreakWebcamInterval = BreakWebcamInterval;
+                    s.SelectedCameraMoniker = SelectedCamera ?? string.Empty;
+                });
+                InitializationService.Instance.MarkStepComplete(InitStep.MonitoringConfig);
+                StepIndex++;
                 RefreshStepUi(StepIndex);
                 break;
             case InitStep.PermissionSetup:
                 SecurityService.Instance.SetLoginVerificationMode((AdminLoginVerificationMode)LoginVerificationModeIndex);
-                StepTotal = ShouldIncludeTwoFactorBinding() ? 7 : 6;
+                StepTotal = ShouldIncludeTwoFactorBinding() ? 9 : 8;
                 InitializationService.Instance.MarkStepComplete(InitStep.PermissionSetup);
                 StepIndex++;
                 if ((InitStep)StepIndex == InitStep.TwoFactorBinding && !ShouldIncludeTwoFactorBinding())
@@ -440,7 +509,7 @@ public partial class InitializationViewModel : ViewModelBase
                     InitializationService.Instance.MarkStepComplete(InitStep.TwoFactorBinding);
                     NotificationService.Instance.ShowSuccess("双重验证已启用");
                     StepIndex++;
-                    StepTotal = ShouldIncludeTwoFactorBinding() ? 7 : 6;
+                    StepTotal = ShouldIncludeTwoFactorBinding() ? 9 : 8;
                     RefreshStepUi(StepIndex);
                 }
                 else
@@ -461,6 +530,8 @@ public partial class InitializationViewModel : ViewModelBase
                 _mainWindowViewModel.IsInitialized = true;
                 // 初始化完成后再启动应用拦截服务，以免在引导阶段误拦截
                 AppBlockingService.Instance.Start();
+                ScreenshotService.Instance.Start();
+                WebcamService.Instance.Start();
                 _mainWindowViewModel.NavigateToHome();
                 break;
         }
@@ -654,11 +725,6 @@ public partial class InitializationViewModel : ViewModelBase
 
     private void ApplyAppBlocking()
     {
-        var allowed = (AllowedAppsText ?? string.Empty)
-            .Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim())
-            .Where(s => s.Length > 0)
-            .ToList();
         var blocked = (BlockedRulesText ?? string.Empty)
             .Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
@@ -668,7 +734,6 @@ public partial class InitializationViewModel : ViewModelBase
         {
             b.IsAppBlockingEnabled = AppBlockingEnabled;
             b.IsBasicProtectionEnabled = BasicProtectionEnabled;
-            b.AllowedApps = allowed;
             b.BlockedRules = blocked;
         });
     }
@@ -691,11 +756,10 @@ public partial class InitializationViewModel : ViewModelBase
             Domain = d,
             Description = d,
             IsEnabled = true,
-            Method = InterceptionMethod.Both,
             Type = "Domain"
         }).ToList();
         NetworkRuleService.SaveRules(newRules);
-        await NetworkBlockingService.Instance.ApplyRulesAsync();
+        await NetworkBlockingService.Instance.ApplyRulesAsync("InitializationComplete");
     }
 
     private void ApplyFontSizeChange(double fontSize)
@@ -746,32 +810,7 @@ public partial class InitializationViewModel : ViewModelBase
 
     private void SetAutoStart(bool enable)
     {
-        try
-        {
-            if (OperatingSystem.IsWindows())
-            {
-#if WINDOWS
-                var appPath = Environment.ProcessPath;
-                if (string.IsNullOrWhiteSpace(appPath))
-                {
-                    appPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-                }
-                var appName = "ClassScreenLock";
-                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-                if (enable)
-                {
-                    key?.SetValue(appName, $"\"{appPath}\"");
-                }
-                else
-                {
-                    key?.DeleteValue(appName, false);
-                }
-#endif
-            }
-        }
-        catch
-        {
-        }
+        ClassScreenLock.Helpers.AutoStartHelper.SetAutoStart(enable);
     }
 
     [ObservableProperty]
@@ -798,7 +837,7 @@ public partial class InitializationViewModel : ViewModelBase
     private void RefreshStepUi(int stepIndex)
     {
         var include2fa = ShouldIncludeTwoFactorBinding();
-        StepTotal = include2fa ? 8 : 7;
+        StepTotal = include2fa ? 9 : 8;
         StepProgressMax = Math.Max(0, StepTotal - 1);
 
         var display = stepIndex + 1;

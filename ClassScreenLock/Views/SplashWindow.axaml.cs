@@ -12,22 +12,13 @@ namespace ClassScreenLock.Views;
 
 public partial class SplashWindow : Window
 {
-    private readonly DispatcherTimer _timer;
-    private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
-    private RotateTransform? _rotate;
-    private Canvas? _dotRingCanvas;
     private TextBlock? _versionText;
+    private ProgressBar? _loadingProgressBar;
+    private TextBlock? _statusText;
 
     public SplashWindow()
     {
         InitializeComponent();
-
-        _timer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(16)
-        };
-        _timer.Tick += (_, _) => Tick();
-
         Opened += (_, _) => Start();
         Closed += (_, _) => Stop();
     }
@@ -39,16 +30,11 @@ public partial class SplashWindow : Window
 
     private void Start()
     {
-        _dotRingCanvas ??= this.FindControl<Canvas>("DotRingCanvas");
         _versionText ??= this.FindControl<TextBlock>("VersionText");
+        _loadingProgressBar ??= this.FindControl<ProgressBar>("LoadingProgressBar");
+        _statusText ??= this.FindControl<TextBlock>("StatusText");
 
-        if (_dotRingCanvas?.RenderTransform is RotateTransform rotate)
-        {
-            _rotate = rotate;
-        }
-
-        _stopwatch.Restart();
-        _timer.Start();
+        SetProgress(null, "正在启动…");
 
         if (_versionText != null)
         {
@@ -61,22 +47,34 @@ public partial class SplashWindow : Window
 
     private void Stop()
     {
-        _timer.Stop();
-        _rotate = null;
-        _dotRingCanvas = null;
         _versionText = null;
+        _loadingProgressBar = null;
+        _statusText = null;
     }
 
-    private void Tick()
+    public void SetProgress(double? percent, string? statusText)
     {
-        var rotate = _rotate;
-        if (rotate == null)
+        if (!Dispatcher.UIThread.CheckAccess())
         {
+            Dispatcher.UIThread.Post(() => SetProgress(percent, statusText));
             return;
         }
 
-        var elapsed = _stopwatch.Elapsed.TotalMilliseconds;
-        var t = (elapsed % 1200.0) / 1200.0;
-        rotate.Angle = t * 360.0;
+        if (_statusText != null && !string.IsNullOrWhiteSpace(statusText))
+        {
+            _statusText.Text = statusText;
+        }
+
+        if (_loadingProgressBar == null) return;
+
+        if (percent.HasValue)
+        {
+            _loadingProgressBar.IsIndeterminate = false;
+            _loadingProgressBar.Value = Math.Clamp(percent.Value, 0, 100);
+        }
+        else
+        {
+            _loadingProgressBar.IsIndeterminate = true;
+        }
     }
 }

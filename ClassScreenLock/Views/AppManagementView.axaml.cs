@@ -22,13 +22,13 @@ public partial class AppManagementView : UserControl
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "选择要阻止的可执行文件",
+            Title = "选择要阻止的文件",
             AllowMultiple = false,
             FileTypeFilter = new[]
             {
-                new FilePickerFileType("可执行文件")
+                new FilePickerFileType("所有文件")
                 {
-                    Patterns = new[] { "*.exe" }
+                    Patterns = new[] { "*.*" }
                 }
             }
         });

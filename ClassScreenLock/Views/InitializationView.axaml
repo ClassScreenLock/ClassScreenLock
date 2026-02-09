@@ -13,78 +13,124 @@
              x:Class="ClassScreenLock.Views.InitializationView"
              x:DataType="vm:InitializationViewModel">
 
-    <Border Padding="32" Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="12">
-        <Grid RowDefinitions="Auto,* ,Auto" ColumnDefinitions="*">
-            <Grid ColumnDefinitions="* , Auto, Auto">
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="{DynamicResource Initialization_Title}" FontSize="26" FontWeight="SemiBold"/>
-                    <TextBlock Text="{DynamicResource Initialization_Subtitle}" FontSize="14" Opacity="0.7"/>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                    <TextBlock Text="{DynamicResource Initialization_Steps}"/>
-                    <TextBlock Text="{Binding StepDisplay}"/>
-                    <TextBlock Text="/"/>
-                    <TextBlock Text="{Binding StepTotal}"/>
-                </StackPanel>
-                <!-- 右侧仅显示步骤进度，不再放置链接按钮 -->
-            </Grid>
+    <UserControl.Resources>
+        <Converters:ServiceStatusBrushConverter x:Key="ServiceStatusBrushConverter"/>
+    </UserControl.Resources>
 
-            <Grid Grid.Row="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+    <Panel>
+        <!-- 主初始化界面 -->
+        <Border Padding="32" Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="12">
+            <Grid RowDefinitions="Auto,* ,Auto" ColumnDefinitions="*">
+                <Grid ColumnDefinitions="* , Auto, Auto">
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="{DynamicResource Initialization_Title}" FontSize="26" FontWeight="SemiBold"/>
+                        <TextBlock Text="{DynamicResource Initialization_Subtitle}" FontSize="14" Opacity="0.7"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <TextBlock Text="{DynamicResource Initialization_Steps}"/>
+                        <TextBlock Text="{Binding StepDisplay}"/>
+                        <TextBlock Text="/"/>
+                        <TextBlock Text="{Binding StepTotal}"/>
+                    </StackPanel>
+                    <!-- 右侧仅显示步骤进度，不再放置链接按钮 -->
+                </Grid>
 
-                <ProgressBar Grid.Row="0" Minimum="0" Maximum="{Binding StepProgressMax}" Value="{Binding StepProgressValue}" Height="6"/>
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                <Carousel x:Name="InitCarousel" Grid.Row="1" SelectedIndex="{Binding StepIndex}">
-                    <Carousel.Items>
+                    <ProgressBar Grid.Row="0" Minimum="0" Maximum="{Binding StepProgressMax}" Value="{Binding StepProgressValue}" Height="6"/>
+
+                    <Carousel x:Name="InitCarousel" Grid.Row="1" SelectedIndex="{Binding StepIndex}">
+                        <Carousel.Items>
+                            <ScrollViewer>
+                                <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Center" Margin="0,20">
+                                    <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="12" Padding="20">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                            <Border Width="44" Height="44" CornerRadius="8" Background="{DynamicResource SystemControlBackgroundAccentBrush}">
+                                                <icons:Icon Value="fa-solid fa-handshake" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Spacing="4">
+                                                <TextBlock Text="欢迎使用 ClassScreenLock" FontSize="20" FontWeight="SemiBold"/>
+                                                <TextBlock Text="感谢您选择我们的课堂监控与安全防护系统" Classes="caption" Opacity="0.8"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <StackPanel Spacing="16">
+                                        <TextBlock Text="在开始之前，我们需要引导您完成一些基础配置，包括管理员账户、监控策略以及安全设置。这些步骤将确保软件能够按照您的需求正常运行。" 
+                                                   TextWrapping="Wrap" Opacity="0.7" LineHeight="20"/>
+                                        
+                                        <Border Background="{DynamicResource SystemControlBackgroundListLowBrush}" CornerRadius="8" Padding="16" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1">
+                                            <StackPanel Spacing="12">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                                    <icons:Icon Value="fa-solid fa-circle-info" Foreground="{DynamicResource SystemControlBackgroundAccentBrush}" Width="16" Height="16" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="请阅读并同意用户协议与隐私政策以继续：" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                </Grid>
+                                                
+                                                <Button Command="{Binding OpenUserAgreementCommand}" 
+                                                        Classes="link"
+                                                        Padding="0"
+                                                        HorizontalAlignment="Left"
+                                                        Background="Transparent"
+                                                        BorderThickness="0">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <TextBlock Text="查看用户协议" Foreground="{DynamicResource SystemControlBackgroundAccentBrush}" TextDecorations="Underline"/>
+                                                        <icons:Icon Value="fa-solid fa-arrow-up-right-from-square" FontSize="10" Foreground="{DynamicResource SystemControlBackgroundAccentBrush}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <Button Command="{Binding OpenPrivacyPolicyCommand}"
+                                                        Classes="link"
+                                                        Padding="0"
+                                                        HorizontalAlignment="Left"
+                                                        Background="Transparent"
+                                                        BorderThickness="0">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <TextBlock Text="查看隐私政策" Foreground="{DynamicResource SystemControlBackgroundAccentBrush}" TextDecorations="Underline"/>
+                                                        <icons:Icon Value="fa-solid fa-arrow-up-right-from-square" FontSize="10" Foreground="{DynamicResource SystemControlBackgroundAccentBrush}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <CheckBox IsChecked="{Binding IsAgreementAccepted}" Content="我已阅读并同意上述用户协议与隐私政策" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </ScrollViewer>
+
                         <ScrollViewer>
-                            <StackPanel Spacing="16" MaxWidth="900" HorizontalAlignment="Stretch">
-                                <TextBlock Text="用户协议" Classes="h3"/>
-                                <TextBlock Text="在使用本软件前，请详细阅读以下协议内容" Classes="caption" Opacity="0.7"/>
-                                <Border Classes="card" Padding="16" Height="350">
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                        <md:MarkdownScrollViewer Markdown="{Binding AgreementContent}">
-                                            <md:MarkdownScrollViewer.Styles>
-                                                <Style Selector="TextBlock">
-                                                    <Setter Property="FontSize" Value="13"/>
-                                                    <Setter Property="LineHeight" Value="1.6"/>
-                                                </Style>
-                                            </md:MarkdownScrollViewer.Styles>
-                                        </md:MarkdownScrollViewer>
-                                    </ScrollViewer>
-                                </Border>
-                                <CheckBox IsChecked="{Binding IsAgreementAccepted}" Content="我已阅读并同意上述用户协议全部内容"/>
-                            </StackPanel>
-                        </ScrollViewer>
-
-                        <ScrollViewer>
-                            <StackPanel Spacing="16" MaxWidth="900" HorizontalAlignment="Stretch">
-                                <TextBlock Text="{DynamicResource Init_SystemConfig_Title}" Classes="h3"/>
-                                <TextBlock Text="{DynamicResource Init_AvailableInSettings}" Classes="caption" Opacity="0.7"/>
-                                <Border Classes="card" Padding="16" Margin="0,0,0,8">
-                                    <StackPanel Orientation="Horizontal" Spacing="24">
+                            <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Center" Margin="0,20">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Init_SystemConfig_Title}" Classes="h3" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource Init_AvailableInSettings}" Classes="caption" Opacity="0.7" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Classes="card" Padding="24" Margin="0,0,0,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="32" HorizontalAlignment="Center">
                                         <ToggleSwitch Content="{DynamicResource Settings_Startup}" IsChecked="{Binding AutoStart}"/>
                                         <ToggleSwitch Content="{DynamicResource Settings_DarkMode}" IsChecked="{Binding DarkMode}"/>
                                         <ToggleSwitch Content="{DynamicResource Settings_UseSystemAccentColor}" IsChecked="{Binding UseSystemAccentColor}"/>
                                     </StackPanel>
                                 </Border>
-                                <Border Classes="card" Padding="16">
-                                    <StackPanel Orientation="Horizontal" Spacing="24">
-                                        <StackPanel Width="280">
+                                <Border Classes="card" Padding="24">
+                                    <StackPanel Orientation="Horizontal" Spacing="32" HorizontalAlignment="Center">
+                                        <StackPanel Width="300" Spacing="8">
                                             <TextBlock Text="{DynamicResource Settings_InterfaceLanguage}"/>
                                             <ComboBox ItemsSource="{Binding LanguageOptions}"
-                                                      SelectedItem="{Binding Language}"/>
+                                                      SelectedItem="{Binding Language}" HorizontalAlignment="Stretch"/>
                                         </StackPanel>
-                                        <StackPanel Width="280" Spacing="8">
+                                        <StackPanel Width="300" Spacing="8">
                                             <TextBlock Text="{DynamicResource Settings_AccentColor}"/>
-                                            <ComboBox ItemsSource="{Binding AccentColorOptions}"
-                                                      SelectedItem="{Binding AccentColor}"/>
-                                            <Border Width="40" Height="24" CornerRadius="6"
-                                                    Background="{Binding AccentColor, Converter={x:Static Converters:StringToBrushConverter.Instance}}"
-                                                    BorderBrush="{Binding AccentColor, Converter={x:Static Converters:StringToBrushConverter.Instance}}"
-                                                    BorderThickness="1"/>
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <ComboBox ItemsSource="{Binding AccentColorOptions}"
+                                                          SelectedItem="{Binding AccentColor}" HorizontalAlignment="Stretch"/>
+                                                <Border Grid.Column="1" Width="32" Height="32" CornerRadius="4" Margin="8,0,0,0"
+                                                        Background="{Binding AccentColor, Converter={x:Static Converters:StringToBrushConverter.Instance}}"
+                                                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                                        BorderThickness="1"/>
+                                            </Grid>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -92,103 +138,207 @@
                         </ScrollViewer>
 
                         <ScrollViewer>
-                            <StackPanel Spacing="16" MaxWidth="900">
-                                <TextBlock Text="{DynamicResource Init_UserPreferences_Title}" Classes="h3"/>
-                                <TextBlock Text="{DynamicResource Init_AvailableInSettings}" Classes="caption" Opacity="0.7"/>
-                                <Border Classes="card" Padding="16">
-                                    <StackPanel Orientation="Horizontal" Spacing="24">
-                                        <StackPanel Width="280">
+                            <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Center" Margin="0,20">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Init_UserPreferences_Title}" Classes="h3" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource Init_AvailableInSettings}" Classes="caption" Opacity="0.7" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Classes="card" Padding="24">
+                                    <StackPanel Orientation="Horizontal" Spacing="32" HorizontalAlignment="Center">
+                                        <StackPanel Width="300" Spacing="8">
                                             <TextBlock Text="{DynamicResource Settings_FontSize}"/>
-                                            <NumericUpDown Minimum="10" Maximum="32" Value="{Binding FontSize}"/>
+                                            <NumericUpDown Minimum="10" Maximum="32" Value="{Binding FontSize}" HorizontalAlignment="Stretch"/>
                                         </StackPanel>
-                                        <StackPanel Width="280">
+                                        <StackPanel Width="300" Spacing="8">
                                             <TextBlock Text="{DynamicResource Settings_FontFamily}"/>
                                             <TextBox Text="{Binding FontFamily}" Watermark="{DynamicResource Init_FontFamily_Watermark}"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
-                                <Border Classes="card" Padding="16">
-                                    <ToggleSwitch Content="{DynamicResource Settings_ShowNotifications}" IsChecked="{Binding ShowNotifications}"/>
+                                <Border Classes="card" Padding="24">
+                                    <ToggleSwitch Content="{DynamicResource Settings_ShowNotifications}" IsChecked="{Binding ShowNotifications}" HorizontalAlignment="Center"/>
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>
 
                         <ScrollViewer>
-                            <StackPanel Spacing="16" MaxWidth="900">
-                                <TextBlock Text="{DynamicResource Init_PermissionSetup_Title}" Classes="h3"/>
-                                <TextBlock Text="{DynamicResource Init_AvailableInSecurityCenter}" Classes="caption" Opacity="0.7"/>
-                                <Border Classes="card" Padding="16">
-                                    <StackPanel Spacing="8">
-                                        <TextBlock Text="{DynamicResource Init_AdminLoginVerificationMode}"/>
-                                        <ComboBox SelectedIndex="{Binding LoginVerificationModeIndex, Mode=TwoWay}">
-                                            <ComboBoxItem Content="{DynamicResource AdminLoginVerification_PasswordPlusTwoFactor}"/>
-                                            <ComboBoxItem Content="{DynamicResource AdminLoginVerification_PasswordOnly}"/>
-                                            <ComboBoxItem Content="{DynamicResource AdminLoginVerification_TwoFactorOnly}"/>
-                                            <ComboBoxItem Content="{DynamicResource AdminLoginVerification_PasswordOrTwoFactor}"/>
-                                        </ComboBox>
-                                        <TextBlock Text="{DynamicResource Init_2FA_BindingTip}" FontSize="12" Opacity="0.7"/>
+                            <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Center" Margin="0,20">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Text="监控配置" Classes="h3" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="配置屏幕截图与摄像头拍照策略" Classes="caption" Opacity="0.7" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                
+                                <Border Classes="card" Padding="24">
+                                    <StackPanel Spacing="16">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <icons:Icon Value="fa-solid fa-desktop" FontSize="20"/>
+                                            <TextBlock Text="屏幕截图设置" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,8,0,0">
+                                            <ToggleSwitch Grid.Row="0" Grid.Column="0" Content="上课期间启用屏幕截图" IsChecked="{Binding EnableClassScreenshot}"/>
+                                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" IsVisible="{Binding EnableClassScreenshot}">
+                                                <TextBlock Text="间隔(分钟):" VerticalAlignment="Center"/>
+                                                <ComboBox ItemsSource="{Binding ScreenshotIntervalOptions}" SelectedItem="{Binding ClassScreenshotInterval}" Width="100"/>
+                                            </StackPanel>
+                                            
+                                            <ToggleSwitch Grid.Row="1" Grid.Column="0" Content="课间休息启用屏幕截图" IsChecked="{Binding EnableBreakScreenshot}" Margin="0,12,0,0"/>
+                                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" IsVisible="{Binding EnableBreakScreenshot}" Margin="0,12,0,0">
+                                                <TextBlock Text="间隔(分钟):" VerticalAlignment="Center"/>
+                                                <ComboBox ItemsSource="{Binding ScreenshotIntervalOptions}" SelectedItem="{Binding BreakScreenshotInterval}" Width="100"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Classes="card" Padding="24">
+                                    <StackPanel Spacing="16">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <icons:Icon Value="fa-solid fa-camera" FontSize="20"/>
+                                            <TextBlock Text="摄像头拍照设置" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="选择摄像头"/>
+                                            <ComboBox ItemsSource="{Binding CameraOptions}" 
+                                                      SelectedValue="{Binding SelectedCamera}"
+                                                      SelectedValueBinding="{Binding Moniker}"
+                                                      DisplayMemberBinding="{Binding Name}"
+                                                      HorizontalAlignment="Stretch" 
+                                                      PlaceholderText="未检测到摄像头或请选择"/>
+                                        </StackPanel>
+                                        
+                                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,8,0,0">
+                                            <ToggleSwitch Grid.Row="0" Grid.Column="0" Content="上课期间启用拍照" IsChecked="{Binding EnableClassWebcam}"/>
+                                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" IsVisible="{Binding EnableClassWebcam}">
+                                                <TextBlock Text="间隔(分钟):" VerticalAlignment="Center"/>
+                                                <ComboBox ItemsSource="{Binding ScreenshotIntervalOptions}" SelectedItem="{Binding ClassWebcamInterval}" Width="100"/>
+                                            </StackPanel>
+                                            
+                                            <ToggleSwitch Grid.Row="1" Grid.Column="0" Content="课间休息启用拍照" IsChecked="{Binding EnableBreakWebcam}" Margin="0,12,0,0"/>
+                                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" IsVisible="{Binding EnableBreakWebcam}" Margin="0,12,0,0">
+                                                <TextBlock Text="间隔(分钟):" VerticalAlignment="Center"/>
+                                                <ComboBox ItemsSource="{Binding ScreenshotIntervalOptions}" SelectedItem="{Binding BreakWebcamInterval}" Width="100"/>
+                                            </StackPanel>
+                                        </Grid>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>
 
                         <ScrollViewer>
-                            <StackPanel Spacing="16" MaxWidth="700">
-                                <TextBlock Text="{DynamicResource Init_AdminAccount_Title}" Classes="h3"/>
-                                <TextBlock Text="{DynamicResource Init_AdminAccount_Subtitle}" Classes="caption" Opacity="0.7"/>
-                                <Border Classes="card" Padding="16" IsVisible="{Binding !HasSuperAdminAccount}">
-                                    <StackPanel Spacing="12">
+                            <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Center" Margin="0,20">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Init_PermissionSetup_Title}" Classes="h3" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource Init_AvailableInSecurityCenter}" Classes="caption" Opacity="0.7" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Classes="card" Padding="24">
+                                    <StackPanel Spacing="16">
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="{DynamicResource Init_AdminLoginVerificationMode}" FontWeight="SemiBold"/>
+                                            <ComboBox SelectedIndex="{Binding LoginVerificationModeIndex, Mode=TwoWay}" HorizontalAlignment="Left" Width="400">
+                                                <ComboBoxItem Content="{DynamicResource AdminLoginVerification_PasswordPlusTwoFactor}"/>
+                                                <ComboBoxItem Content="{DynamicResource AdminLoginVerification_PasswordOnly}"/>
+                                                <ComboBoxItem Content="{DynamicResource AdminLoginVerification_TwoFactorOnly}"/>
+                                                <ComboBoxItem Content="{DynamicResource AdminLoginVerification_PasswordOrTwoFactor}"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" CornerRadius="4" Padding="12">
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <icons:Icon Value="fa-solid fa-circle-info" VerticalAlignment="Center" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                                <TextBlock Text="{DynamicResource Init_2FA_BindingTip}" FontSize="12" Opacity="0.8" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <ScrollViewer>
+                            <StackPanel Spacing="24" MaxWidth="600" HorizontalAlignment="Center" Margin="0,20">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Init_AdminAccount_Title}" Classes="h3" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource Init_AdminAccount_Subtitle}" Classes="caption" Opacity="0.7" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                
+                                <Border Classes="card" Padding="32" IsVisible="{Binding !HasSuperAdminAccount}">
+                                    <StackPanel Spacing="20">
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="{DynamicResource SecurityCenter_Username}"/>
-                                            <TextBox Text="{Binding Username}" Watermark="{DynamicResource Init_Username_Watermark}"/>
+                                            <TextBox Text="{Binding Username}" Watermark="{DynamicResource Init_Username_Watermark}" Classes="clear" Width="400" HorizontalAlignment="Left"/>
                                         </StackPanel>
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="{DynamicResource SecurityCenter_Password}"/>
-                                            <TextBox Text="{Binding Password}" PasswordChar="●" Watermark="{DynamicResource Init_Password_Watermark}"/>
-                                            <ProgressBar Value="{Binding PasswordStrength}" Height="4" MinHeight="4" Margin="0,4,0,0"/>
+                                            <TextBox Text="{Binding Password}" PasswordChar="●" Watermark="{DynamicResource Init_Password_Watermark}" Classes="clear" Width="400" HorizontalAlignment="Left"/>
+                                            <ProgressBar Value="{Binding PasswordStrength}" Height="4" MinHeight="4" Margin="0,4,0,0" Width="400" HorizontalAlignment="Left"/>
                                         </StackPanel>
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="{DynamicResource Account_ConfirmPassword}"/>
-                                            <TextBox Text="{Binding ConfirmPassword}" PasswordChar="●" Watermark="{DynamicResource Init_ConfirmPassword_Watermark}"/>
+                                            <TextBox Text="{Binding ConfirmPassword}" PasswordChar="●" Watermark="{DynamicResource Init_ConfirmPassword_Watermark}" Classes="clear"/>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding ValidationMessage}" FontSize="12" Foreground="Red" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding ValidationMessage}" FontSize="12" Foreground="#E81123" TextWrapping="Wrap" IsVisible="{Binding !!ValidationMessage}"/>
                                     </StackPanel>
                                 </Border>
-                                <Border Classes="card" Padding="16" IsVisible="{Binding CanResetAdminPassword}">
-                                    <StackPanel Spacing="12">
-                                        <TextBlock Text="{DynamicResource Init_ResetAdminPassword_Title}" Classes="h3"/>
+                                
+                                <Border Classes="card" Padding="32" IsVisible="{Binding CanResetAdminPassword}">
+                                    <StackPanel Spacing="20">
+                                        <TextBlock Text="{DynamicResource Init_ResetAdminPassword_Title}" Classes="h3" HorizontalAlignment="Center"/>
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="{DynamicResource SecurityCenter_NewPassword}"/>
-                                            <TextBox Text="{Binding NewAdminPassword}" PasswordChar="●" Watermark="输入新密码"/>
+                                            <TextBox Text="{Binding NewAdminPassword}" PasswordChar="●" Watermark="输入新密码" Classes="clear"/>
                                         </StackPanel>
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="{DynamicResource SecurityCenter_ConfirmPassword}"/>
-                                            <TextBox Text="{Binding ConfirmAdminPassword}" PasswordChar="●" Watermark="再次输入新密码"/>
+                                            <TextBox Text="{Binding ConfirmAdminPassword}" PasswordChar="●" Watermark="再次输入新密码" Classes="clear"/>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
                                             <Button Content="{DynamicResource Btn_ResetPassword}" Command="{Binding ResetAdminPasswordCommand}" Classes="accent"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
+                                
+                                <!-- Admin Configured State -->
+                                <Border Classes="card" Padding="32">
+                                     <Border.IsVisible>
+                                         <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                             <Binding Path="HasSuperAdminAccount"/>
+                                             <Binding Path="!CanResetAdminPassword"/>
+                                         </MultiBinding>
+                                     </Border.IsVisible>
+                                    <StackPanel Spacing="16" HorizontalAlignment="Center">
+                                        <icons:Icon Value="fa-solid fa-check-circle" FontSize="48" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="管理员账户已配置" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="您已完成管理员账户设置，可以继续下一步。" Opacity="0.7" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </ScrollViewer>
 
                         <ScrollViewer>
-                            <StackPanel Spacing="16" MaxWidth="700">
-                                <TextBlock Text="{DynamicResource Init_TwoFactorBinding_Title}" Classes="h3"/>
-                                <TextBlock Text="{DynamicResource Init_TwoFactorBinding_Subtitle}" Classes="caption" Opacity="0.7"/>
-                                <Border Classes="card" Padding="16">
-                                    <StackPanel Spacing="12">
-                                        <Image Source="{Binding QrCodeBitmap}" Width="220" Height="220"/>
-                                        <StackPanel Spacing="8">
-                                            <TextBlock Text="{DynamicResource Init_ManualSecret}"/>
-                                            <ToggleSwitch Content="{DynamicResource Init_ManualSecret_Toggle}" IsChecked="{Binding UseManualSecret}"/>
-                                            <TextBox Text="{Binding TwoFactorSecret}" IsReadOnly="True" Watermark="{DynamicResource Init_SystemSecret_Watermark}"/>
-                                            <TextBox Text="{Binding ManualSecretInput}" Watermark="{DynamicResource Init_ManualSecret_Watermark}"/>
+                            <StackPanel Spacing="24" MaxWidth="600" HorizontalAlignment="Center" Margin="0,20">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Init_TwoFactorBinding_Title}" Classes="h3" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource Init_TwoFactorBinding_Subtitle}" Classes="caption" Opacity="0.7" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Classes="card" Padding="32">
+                                    <StackPanel Spacing="24">
+                                        <Border CornerRadius="8" Background="White" Padding="16" HorizontalAlignment="Center" BoxShadow="0 4 12 0 #20000000">
+                                            <Image Source="{Binding QrCodeBitmap}" Width="200" Height="200"/>
+                                        </Border>
+                                        
+                                        <StackPanel Spacing="12">
+                                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <TextBlock Text="{DynamicResource Init_ManualSecret}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                <ToggleSwitch IsChecked="{Binding UseManualSecret}" OnContent="手动输入" OffContent="自动" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            
+                                            <TextBox Text="{Binding TwoFactorSecret}" IsReadOnly="True" Watermark="{DynamicResource Init_SystemSecret_Watermark}" Classes="clear" IsVisible="{Binding !UseManualSecret}"/>
+                                            <TextBox Text="{Binding ManualSecretInput}" Watermark="{DynamicResource Init_ManualSecret_Watermark}" Classes="clear" IsVisible="{Binding UseManualSecret}"/>
                                         </StackPanel>
+                                        
+                                        <Separator Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.5"/>
+                                        
                                         <StackPanel Spacing="8">
-                                            <TextBlock Text="{DynamicResource Init_TwoFactorCode}"/>
-                                            <TextBox Text="{Binding TwoFactorInputCode}" Watermark="{DynamicResource Init_TwoFactorCode_Watermark}"/>
+                                            <TextBlock Text="{DynamicResource Init_TwoFactorCode}" FontWeight="SemiBold"/>
+                                            <TextBox Text="{Binding TwoFactorInputCode}" Watermark="{DynamicResource Init_TwoFactorCode_Watermark}" Classes="clear" FontSize="18" HorizontalContentAlignment="Center"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -196,32 +346,40 @@
                         </ScrollViewer>
 
                         <ScrollViewer>
-                            <StackPanel Spacing="16" MaxWidth="900">
-                                <TextBlock Text="{DynamicResource Init_AppBlocking_Title}" Classes="h3"/>
-                                <TextBlock Text="{DynamicResource Init_AppBlocking_Subtitle}" Classes="caption" Opacity="0.7"/>
-                                <Border Classes="card" Padding="16">
-                                    <StackPanel Spacing="12">
-                                        <ToggleSwitch Content="{DynamicResource Init_EnableBasicProtection}" IsChecked="{Binding BasicProtectionEnabled}"/>
-                                        <ToggleSwitch Content="{DynamicResource Init_EnableAppBlocking}" IsChecked="{Binding AppBlockingEnabled}"/>
-                                        <TextBlock Text="{DynamicResource Init_AllowedApps_Label}"/>
-                                        <TextBox Text="{Binding AllowedAppsText}" Watermark="{DynamicResource Init_AllowedApps_Watermark}"/>
-                                        <TextBlock Text="{DynamicResource Init_BlockedRules_Label}"/>
-                                        <TextBox Text="{Binding BlockedRulesText}" Watermark="{DynamicResource Init_BlockedRules_Watermark}"/>
+                            <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Center" Margin="0,20">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Init_AppBlocking_Title}" Classes="h3" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource Init_AppBlocking_Subtitle}" Classes="caption" Opacity="0.7" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Classes="card" Padding="24">
+                                    <StackPanel Spacing="16">
+                                        <StackPanel Orientation="Horizontal" Spacing="32" HorizontalAlignment="Center">
+                                            <ToggleSwitch Content="{DynamicResource Init_EnableBasicProtection}" IsChecked="{Binding BasicProtectionEnabled}"/>
+                                            <ToggleSwitch Content="{DynamicResource Init_EnableAppBlocking}" IsChecked="{Binding AppBlockingEnabled}"/>
+                                        </StackPanel>
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="{DynamicResource Init_BlockedRules_Label}" FontWeight="SemiBold"/>
+                                            <TextBox Text="{Binding BlockedRulesText}" Watermark="{DynamicResource Init_BlockedRules_Watermark}" Height="100" AcceptsReturn="True" TextWrapping="Wrap"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>
 
                         <ScrollViewer>
-                            <StackPanel Spacing="16" MaxWidth="900">
-                                <TextBlock Text="{DynamicResource Init_NetworkBlocking_Title}" Classes="h3"/>
-                                <TextBlock Text="{DynamicResource Init_NetworkBlocking_Subtitle}" Classes="caption" Opacity="0.7"/>
-                                <Border Classes="card" Padding="16">
-                                    <StackPanel Spacing="12">
-                                        <ToggleSwitch Content="{DynamicResource Init_EnableNetworkLock}" IsChecked="{Binding NetworkLockEnabled}"/>
-                                        <TextBlock Text="{DynamicResource Init_BlockDomains_Label}"/>
-                                        <TextBox Text="{Binding NetworkDomainsText}" Watermark="{DynamicResource Init_BlockDomains_Watermark}"/>
-                                        <TextBlock Text="{DynamicResource Init_ApplyRulesNextStep_Tip}" FontSize="12" Opacity="0.7"/>
+                            <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Center" Margin="0,20">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Init_NetworkBlocking_Title}" Classes="h3" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource Init_NetworkBlocking_Subtitle}" Classes="caption" Opacity="0.7" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Classes="card" Padding="24">
+                                    <StackPanel Spacing="16">
+                                        <ToggleSwitch Content="{DynamicResource Init_EnableNetworkLock}" IsChecked="{Binding NetworkLockEnabled}" HorizontalAlignment="Center"/>
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="{DynamicResource Init_BlockDomains_Label}" FontWeight="SemiBold"/>
+                                            <TextBox Text="{Binding NetworkDomainsText}" Watermark="{DynamicResource Init_BlockDomains_Watermark}" Height="100" AcceptsReturn="True" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{DynamicResource Init_ApplyRulesNextStep_Tip}" FontSize="12" Opacity="0.7"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
@@ -230,27 +388,106 @@
                 </Carousel>
             </Grid>
 
-            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,16,0,0">
-                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
-                    <Button Command="{Binding OpenRepositoryCommand}" Classes="outline">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <icons:Icon Value="fab fa-github" Width="16" Height="16"/>
-                            <TextBlock Text="{DynamicResource About_Repository}"/>
+                <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,16,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
+                        <Button Command="{Binding OpenRepositoryCommand}" Classes="outline">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fab fa-github" Width="16" Height="16"/>
+                                <TextBlock Text="{DynamicResource About_Repository}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding OpenUserAgreementCommand}" Classes="outline">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fas fa-file-contract" Width="16" Height="16"/>
+                                <TextBlock Text="{DynamicResource About_UserAgreement}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                    <Button Content="{DynamicResource Btn_Back}" Command="{Binding BackCommand}" Classes="outline"/>
+                    <Button Content="{DynamicResource Btn_Skip}" Command="{Binding SkipCommand}" Classes="outline" IsEnabled="{Binding CanSkip}"/>
+                    <Button Content="{DynamicResource Btn_Next}" Command="{Binding NextCommand}" Classes="accent"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- 欢迎动画层 -->
+        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                IsVisible="{Binding IsWelcomeVisible}"
+                Opacity="{Binding WelcomeOpacity}"
+                CornerRadius="12">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.5"/>
+                </Transitions>
+            </Border.Transitions>
+            <Grid>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,100">
+                    <Grid Width="600" Height="600">
+                        <Border Width="600" Height="600" Background="Transparent"
+                                ClipToBounds="False">
+                            <Border.Styles>
+                                <Style Selector="Border">
+                                    <Style.Animations>
+                                        <Animation Duration="0:0:2.0" IterationCount="1" Easing="CubicEaseOut">
+                                            <KeyFrame Cue="0%">
+                                                <Setter Property="ScaleTransform.ScaleX" Value="0.8"/>
+                                                <Setter Property="ScaleTransform.ScaleY" Value="0.8"/>
+                                                <Setter Property="Opacity" Value="0"/>
+                                            </KeyFrame>
+                                            <KeyFrame Cue="100%">
+                                                <Setter Property="ScaleTransform.ScaleX" Value="1.0"/>
+                                                <Setter Property="ScaleTransform.ScaleY" Value="1.0"/>
+                                                <Setter Property="Opacity" Value="1"/>
+                                            </KeyFrame>
+                                        </Animation>
+                                    </Style.Animations>
+                                </Style>
+                            </Border.Styles>
+                            <Image Source="/Assets/CSL.png" Width="600" Height="600" Stretch="Uniform"/>
+                        </Border>
+                        
+                        <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,60" Spacing="12">
+                            <TextBlock Text="ClassScreenLock" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource SystemAccentColor}">
+                                <TextBlock.Styles>
+                                    <Style Selector="TextBlock">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1.5" Delay="0:0:0.4" IterationCount="1" Easing="CubicEaseOut">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="TranslateTransform.Y" Value="20"/>
+                                                    <Setter Property="Opacity" Value="0"/>
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="TranslateTransform.Y" Value="0"/>
+                                                    <Setter Property="Opacity" Value="1"/>
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </TextBlock.Styles>
+                            </TextBlock>
+                            <TextBlock Text="正在准备配置引导，请稍后..." FontSize="18" Opacity="0.8" HorizontalAlignment="Center">
+                                <TextBlock.Styles>
+                                    <Style Selector="TextBlock">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1.5" Delay="0:0:0.8" IterationCount="1" Easing="CubicEaseOut">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="Opacity" Value="0"/>
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="Opacity" Value="0.8"/>
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </TextBlock.Styles>
+                            </TextBlock>
                         </StackPanel>
-                    </Button>
-                    <Button Command="{Binding OpenUserAgreementCommand}" Classes="outline">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <icons:Icon Value="fas fa-file-contract" Width="16" Height="16"/>
-                            <TextBlock Text="{DynamicResource About_UserAgreement}"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                <Button Content="{DynamicResource Btn_Back}" Command="{Binding BackCommand}" Classes="outline"/>
-                <Button Content="{DynamicResource Btn_Skip}" Command="{Binding SkipCommand}" Classes="outline" IsEnabled="{Binding CanSkip}"/>
-                <Button Content="{DynamicResource Btn_Next}" Command="{Binding NextCommand}" Classes="accent"/>
+                    </Grid>
                 </StackPanel>
             </Grid>
-        </Grid>
-    </Border>
+        </Border>
+    </Panel>
 </UserControl>

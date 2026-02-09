@@ -18,7 +18,7 @@ public class IpcService
     {
         if (_cts != null) return;
         _cts = new CancellationTokenSource();
-        _ = Task.Run(() => RunServer(_cts.Token));
+        LogService.Observe(Task.Run(() => RunServer(_cts.Token)), "IPC.RunServer");
     }
 
     public void Stop()
@@ -36,7 +36,7 @@ public class IpcService
                 // 注意：不要在这里使用 using，由 HandleClient 负责释放
                 var server = new NamedPipeServerStream("ClassScreenLock_IPC", PipeDirection.InOut, 50, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
                 await server.WaitForConnectionAsync(token);
-                _ = Task.Run(() => HandleClient(server), token);
+                LogService.Observe(Task.Run(() => HandleClient(server)), "IPC.HandleClient");
             }
             catch (OperationCanceledException)
             {

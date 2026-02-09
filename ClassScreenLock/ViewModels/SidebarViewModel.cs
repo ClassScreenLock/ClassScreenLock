@@ -13,7 +13,7 @@ namespace ClassScreenLock.ViewModels;
 public partial class SidebarViewModel : ViewModelBase
     {
         [ObservableProperty]
-        private double _sidebarWidth = 250;
+        private double _sidebarWidth = 190;
         
         [ObservableProperty]
         private bool _isExpanded = true;
@@ -65,28 +65,40 @@ public partial class SidebarViewModel : ViewModelBase
 
     public ObservableCollection<MenuItemViewModel> MenuItems { get; } = new ObservableCollection<MenuItemViewModel>();
         
+        [ObservableProperty]
+        private string _versionInfo = string.Empty;
+
         public SidebarViewModel()
         {
+            // 获取版本号
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            _versionInfo = version != null ? $"v{version.Major}.{version.Minor}.{version.Build}.{version.Revision}" : "v1.0.0.0";
+
             // 初始化本地化文本
             _toggleText = IsExpanded ? 
                 LocalizationService.Instance.GetString("Sidebar_Collapse") : 
                 LocalizationService.Instance.GetString("Sidebar_Expand");
             _toggleIcon = IsExpanded ? "fas fa-chevron-left" : "fas fa-chevron-right";
-            _sidebarWidth = IsExpanded ? 250 : 50;
+            _sidebarWidth = IsExpanded ? 190 : 50;
 
             // 订阅语言变化事件
             LocalizationService.Instance.LanguageChanged += OnLanguageChanged;
             
-            // 延迟初始化菜单项，确保Application.Current已经完全初始化
-            System.Threading.Tasks.Task.Run(async () =>
+            // 延迟初始化菜单项，确保 LocalizationService 已完成初始化且 Application.Current 资源已应用
+            ClassScreenLock.Services.LogService.Observe(System.Threading.Tasks.Task.Run(async () =>
             {
-                await System.Threading.Tasks.Task.Delay(100);
+                await System.Threading.Tasks.Task.Delay(300);
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     RefreshMenuItems();
                     RefreshAccountInfo();
+                    
+                    // 更新折叠/展开文本
+                    ToggleText = IsExpanded ? 
+                        LocalizationService.Instance.GetString("Sidebar_Collapse") : 
+                        LocalizationService.Instance.GetString("Sidebar_Expand");
                 });
-            });
+            }), "Sidebar.DelayedInit");
         }
         
         // 语言变化时刷新侧边栏菜单项
@@ -104,15 +116,21 @@ public partial class SidebarViewModel : ViewModelBase
     {
         MenuItems.Clear();
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_Home"), "fa-home", NavigateCommand, "Home"));
-        MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_Schedule"), "fa-calendar-alt", NavigateCommand, "Schedule"));
+        MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_Schedule"), "fa-calendar-days", NavigateCommand, "Schedule"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_AppManagement"), "fa-th-large", NavigateCommand, "AppManagement"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_NetworkInterception"), "fa-network-wired", NavigateCommand, "NetworkInterception"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_SecurityLogs"), "fa-clipboard-list", NavigateCommand, "SecurityLogs"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_SecurityCenter"), "fas fa-user-shield", NavigateCommand, "SecurityCenter"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_ScreenshotHistory"), "fas fa-camera", NavigateCommand, "ScreenshotHistory"));
-        MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_Settings"), "fa-cog", NavigateCommand, "Settings"));
-        MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_About"), "fa-info-circle", NavigateCommand, "About"));
+        MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_WebcamHistory"), "fas fa-video", NavigateCommand, "WebcamHistory"));
+        MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_Automation"), "fas fa-robot", NavigateCommand, "Automation"));
+        
+        OnPropertyChanged(nameof(SettingsMenuItem));
+        OnPropertyChanged(nameof(AboutMenuItem));
     }
+
+    public MenuItemViewModel SettingsMenuItem => new(LocalizationService.Instance.GetString("Sidebar_Settings"), "fa-cog", NavigateCommand, "Settings");
+    public MenuItemViewModel AboutMenuItem => new(LocalizationService.Instance.GetString("Sidebar_About"), "fa-info-circle", NavigateCommand, "About");
 
         [ObservableProperty]
         private bool _isLoggedIn;
@@ -222,7 +240,7 @@ public partial class SidebarViewModel : ViewModelBase
         ToggleText = value ? LocalizationService.Instance.GetString("Sidebar_Collapse") : LocalizationService.Instance.GetString("Sidebar_Expand");
         
         // 立即更新宽度，Avalonia 的 DoubleTransition 会处理动画
-        SidebarWidth = value ? 250 : 50;
+        SidebarWidth = value ? 190 : 50;
     }
     
     [RelayCommand]
@@ -303,6 +321,12 @@ public partial class SidebarViewModel : ViewModelBase
             case "ScreenshotHistory":
                 _mainWindowViewModel?.NavigateToScreenshotHistory();
                 break;
+            case "WebcamHistory":
+                _mainWindowViewModel?.NavigateToWebcamHistory();
+                break;
+            case "Automation":
+                _mainWindowViewModel?.NavigateToAutomation();
+                break;
             case "SecurityLogs":
                 _mainWindowViewModel?.NavigateToSecurityLogs();
                 break;
@@ -327,6 +351,8 @@ public partial class SidebarViewModel : ViewModelBase
             "NetworkInterception" => s.SidebarNetworkInterceptionMinAccountType,
             "SecurityLogs" => s.SidebarSecurityLogsMinAccountType,
             "ScreenshotHistory" => s.SidebarScreenshotHistoryMinAccountType,
+            "WebcamHistory" => s.SidebarWebcamHistoryMinAccountType,
+            "Automation" => s.SidebarAutomationMinAccountType,
             "SecurityCenter" => s.SidebarSecurityCenterMinAccountType,
             "Settings" => s.SidebarSettingsMinAccountType,
             "About" => s.SidebarAboutMinAccountType,

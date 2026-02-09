@@ -85,6 +85,15 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
+    [ObservableProperty]
+    private ObservableCollection<string> _automationSchemes = new();
+
+    [ObservableProperty]
+    private string _currentAutomationScheme = "Default";
+
+    [ObservableProperty]
+    private string _newAutomationSchemeName = string.Empty;
+
     private void OnSystemColorValuesChanged(object? sender, Avalonia.Platform.PlatformColorValues e)
     {
         if (UseSystemAccentColor)
@@ -175,6 +184,9 @@ public partial class SettingsViewModel : ViewModelBase
         NotificationPositionIndex = (int)Settings.NotificationPosition;
         WeeklyCycleCount = Settings.WeeklyCycleCount;
         TermStartDate = Settings.TermStartDate;
+
+        AutomationSchemes = new ObservableCollection<string>(Settings.AutomationSchemes ?? new System.Collections.Generic.List<string> { "Default" });
+        CurrentAutomationScheme = string.IsNullOrWhiteSpace(Settings.CurrentAutomationScheme) ? "Default" : Settings.CurrentAutomationScheme;
         
         // 如果使用系统强调色，则获取系统强调色
         if (UseSystemAccentColor)
@@ -202,6 +214,53 @@ public partial class SettingsViewModel : ViewModelBase
             "#FFB900", // 亮黄色
             "#E3008C"  // 亮粉色
         };
+    }
+
+    [RelayCommand]
+    private void AddAutomationScheme()
+    {
+        var name = (NewAutomationSchemeName ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(name)) return;
+        if (!AutomationSchemes.Contains(name))
+        {
+            AutomationSchemes.Add(name);
+            UpdateSetting(s =>
+            {
+                if (s.AutomationSchemes == null) s.AutomationSchemes = new System.Collections.Generic.List<string>();
+                if (!s.AutomationSchemes.Contains(name)) s.AutomationSchemes.Add(name);
+            });
+            SettingsService.EnsureAutomationSchemeFile(name);
+        }
+        NewAutomationSchemeName = string.Empty;
+    }
+
+    [RelayCommand]
+    private void RemoveAutomationScheme(string? name)
+    {
+        var target = (name ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(target)) return;
+        if (string.Equals(target, CurrentAutomationScheme, StringComparison.OrdinalIgnoreCase)) return;
+        if (AutomationSchemes.Contains(target))
+        {
+            AutomationSchemes.Remove(target);
+            UpdateSetting(s =>
+            {
+                s.AutomationSchemes = (s.AutomationSchemes ?? new System.Collections.Generic.List<string>()).Where(x => !string.Equals(x, target, StringComparison.OrdinalIgnoreCase)).ToList();
+            });
+        }
+    }
+
+    [RelayCommand]
+    private void SetCurrentAutomationScheme(string? name)
+    {
+        var target = (name ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(target)) return;
+        if (!AutomationSchemes.Contains(target)) return;
+        CurrentAutomationScheme = target;
+        UpdateSetting(s => s.CurrentAutomationScheme = target);
+        SettingsService.EnsureAutomationSchemeFile(target);
+        // 切换方案后清空缓存以便重新加载自动化配置
+        ClassScreenLock.Services.AutomationService.Instance.ForceCheck();
     }
     
     partial void OnFontSizeChanged(double value)
@@ -632,41 +691,7 @@ public partial class SettingsViewModel : ViewModelBase
     
     private void SetAutoStart(bool enable)
     {
-        try
-        {
-            // 仅在Windows平台上设置开机自启动
-            if (OperatingSystem.IsWindows())
-            {
-#if WINDOWS
-                // 获取应用程序路径
-                var appPath = Environment.ProcessPath;
-                if (string.IsNullOrWhiteSpace(appPath))
-                {
-                    appPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-                }
-                var appName = "ClassScreenLock";
-                
-                // 获取注册表路径
-                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
-                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-                
-                if (enable)
-                {
-                    // 添加到启动项
-                    key?.SetValue(appName, $"\"{appPath}\"");
-                }
-                else
-                {
-                    // 从启动项移除
-                    key?.DeleteValue(appName, false);
-                }
-#endif
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"设置开机自启动失败: {ex.Message}");
-        }
+        ClassScreenLock.Helpers.AutoStartHelper.SetAutoStart(enable);
     }
     
     private bool _disposed = false;

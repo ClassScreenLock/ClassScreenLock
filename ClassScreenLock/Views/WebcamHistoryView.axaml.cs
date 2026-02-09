@@ -8,21 +8,19 @@ using System.ComponentModel;
 
 namespace ClassScreenLock.Views;
 
-public partial class ScreenshotHistoryView : UserControl
+public partial class WebcamHistoryView : UserControl
 {
-    private ScreenshotHistoryViewModel? _vm;
+    private WebcamHistoryViewModel? _vm;
 
-    public ScreenshotHistoryView()
+    public WebcamHistoryView()
     {
         InitializeComponent();
     }
 
     private void OnRootKeyDown(object? sender, KeyEventArgs e)
     {
-        if (DataContext is not ScreenshotHistoryViewModel vm) return;
+        if (DataContext is not WebcamHistoryViewModel vm) return;
 
-        // Image Viewer keys are now handled by the ImageViewerWindow
-        
         if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.A)
         {
             if (!vm.IsSelectionMode)
@@ -55,7 +53,7 @@ public partial class ScreenshotHistoryView : UserControl
 
     private void OnScreenshotItemPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (DataContext is not ScreenshotHistoryViewModel vm) return;
+        if (DataContext is not WebcamHistoryViewModel vm) return;
         if (!vm.IsSelectionMode) return;
         if (sender is not Control control) return;
 
@@ -73,7 +71,7 @@ public partial class ScreenshotHistoryView : UserControl
     {
         base.OnAttachedToVisualTree(e);
         DataContextChanged += OnDataContextChanged;
-        AttachViewModel(DataContext as ScreenshotHistoryViewModel);
+        AttachViewModel(DataContext as WebcamHistoryViewModel);
 
         Focus();
     }
@@ -88,10 +86,10 @@ public partial class ScreenshotHistoryView : UserControl
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        AttachViewModel(DataContext as ScreenshotHistoryViewModel);
+        AttachViewModel(DataContext as WebcamHistoryViewModel);
     }
 
-    private void AttachViewModel(ScreenshotHistoryViewModel? vm)
+    private void AttachViewModel(WebcamHistoryViewModel? vm)
     {
         if (_vm != null)
         {
@@ -108,7 +106,7 @@ public partial class ScreenshotHistoryView : UserControl
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ScreenshotHistoryViewModel.IsImageViewerOpen))
+        if (e.PropertyName == nameof(WebcamHistoryViewModel.IsImageViewerOpen))
         {
             if (_vm != null && _vm.IsImageViewerOpen)
             {

@@ -13,11 +13,13 @@
     </Application.DataTemplates>
   
     <Application.Resources>
-        <converters:InterceptionMethodConverter x:Key="InterceptionMethodConverter"/>
         <converters:BooleanToStatusTextConverter x:Key="BooleanToStatusTextConverter"/>
         <converters:BooleanToStatusBrushConverter x:Key="BooleanToStatusBrushConverter"/>
         <converters:ServiceStatusBrushConverter x:Key="ServiceStatusBrushConverter"/>
         <converters:AccountTypeToStringConverter x:Key="AccountTypeToStringConverter"/>
+        <converters:StringEqualsConverter x:Key="StringEqualsConverter"/>
+        <converters:IsNullConverter x:Key="IsNullConverter"/>
+        <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
         <!-- 鸿蒙字体定义 -->
         <FontFamily x:Key="HarmonyOSFont">avares://ClassScreenLock/Assets/Fonts#HarmonyOS Sans SC</FontFamily>
         

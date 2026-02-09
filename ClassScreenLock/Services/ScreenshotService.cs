@@ -41,6 +41,13 @@ public class ScreenshotService
         _timer = null;
     }
 
+    public void CaptureOnce()
+    {
+        var isClass = ResolveIsClassTime();
+        TakeScreenshot(isClass);
+        _lastScreenshotTime = DateTime.Now;
+    }
+
     private void OnTimerTick(object? state)
     {
         try
@@ -166,13 +173,24 @@ public class ScreenshotService
                 var filePath = Path.Combine(dayFolder, fileName);
 
                 bitmap.Save(filePath, imageFormat);
+                LogService.Instance.Log("自动化", "截屏成功", "屏幕", $"文件保存至: {filePath}");
+
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to take screenshot: {ex.Message}");
+                LogService.Instance.Log("自动化", "截屏失败", "错误", ex.Message);
             }
         });
     }
+
+    private bool ResolveIsClassTime()
+    {
+        var now = DateTime.Now.TimeOfDay;
+        var (current, _) = ScheduleService.Instance.GetCurrentAndNextTimePoint(now);
+        return current != null && current.Type == TimePointType.Class;
+    }
+
 
     private void CleanUpOldScreenshots()
     {

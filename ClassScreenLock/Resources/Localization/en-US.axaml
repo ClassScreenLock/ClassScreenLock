@@ -11,6 +11,8 @@
     <x:String x:Key="Sidebar_SecurityLogs">Security Logs</x:String>
     <x:String x:Key="Sidebar_SecurityCenter">Security Center</x:String>
     <x:String x:Key="Sidebar_ScreenshotHistory">Screen Records</x:String>
+    <x:String x:Key="Sidebar_WebcamHistory">Webcam Records</x:String>
+    <x:String x:Key="Sidebar_Automation">Automation</x:String>
     <x:String x:Key="Sidebar_Settings">System Settings</x:String>
     <x:String x:Key="Sidebar_About">About</x:String>
     <x:String x:Key="Sidebar_Collapse">Collapse Sidebar</x:String>
@@ -145,7 +147,6 @@
     <!-- App Management -->
     <x:String x:Key="AppManagement_Title">App Management</x:String>
     <x:String x:Key="AppManagement_RunningApps">Running Apps</x:String>
-    <x:String x:Key="AppManagement_AllowedApps">Allowed Apps</x:String>
     <x:String x:Key="AppManagement_BlockedApps">Blocked Apps</x:String>
     <x:String x:Key="AppManagement_AddApp">Add App</x:String>
     <x:String x:Key="AppManagement_RemoveApp">Remove App</x:String>
@@ -159,7 +160,6 @@
     <x:String x:Key="AppManagement_Actions">Actions</x:String>
     <x:String x:Key="AppManagement_BlockedPaths">Blocked Paths</x:String>
     <x:String x:Key="AppManagement_AddPath">Add Path</x:String>
-    <x:String x:Key="AppManagement_AddToAllowed">Add to allowed list</x:String>
     <x:String x:Key="AppManagement_AddToBlocked">Add to blocked list</x:String>
     <x:String x:Key="AppManagement_OpenFileLocation">Open file location</x:String>
     <x:String x:Key="AppManagement_CopyPath">Copy path</x:String>
@@ -231,19 +231,15 @@
     <x:String x:Key="Network_ApplyChanges">Apply Changes</x:String>
     <x:String x:Key="Network_RuleExists">Rule already exists</x:String>
     <x:String x:Key="Network_InvalidDomain">Invalid domain format</x:String>
-    <x:String x:Key="Network_InterceptionMethod">Interception Method</x:String>
-    <x:String x:Key="Network_Method_App">This App (High Freq)</x:String>
-    <x:String x:Key="Network_Method_Hosts">Hosts File</x:String>
-    <x:String x:Key="Network_Method_Both">Both Methods</x:String>
     <x:String x:Key="Network_DoHTip">Tip: If interception fails, please try:&#x0a;1. Click "Apply Changes" and allow admin rights.&#x0a;2. Disable "Secure DNS" (DNS-over-HTTPS) in browser settings.&#x0a;3. Restart browser or clear browser cache.</x:String>
     
     <!-- System Tray -->
-    <x:String x:Key="Tray_Show">Show Main Window</x:String>
-    <x:String x:Key="Tray_Exit">Exit</x:String>
-    <x:String x:Key="Tray_QuickLock">Quick Lock</x:String>
-    <x:String x:Key="Tray_QuickUnlock">Quick Unlock</x:String>
-    <x:String x:Key="Tray_OpenLockSettings">Lock Settings</x:String>
-    <x:String x:Key="Tray_OpenSchedule">Schedule</x:String>
+    <x:String x:Key="Tray_Show">🖥️ Show Main Window</x:String>
+    <x:String x:Key="Tray_Exit">❌ Exit</x:String>
+    <x:String x:Key="Tray_QuickLock">🔒 Quick Lock</x:String>
+    <x:String x:Key="Tray_QuickUnlock">🔓 Quick Unlock</x:String>
+    <x:String x:Key="Tray_OpenLockSettings">⚙️ Lock Settings</x:String>
+    <x:String x:Key="Tray_OpenSchedule">📅 Schedule</x:String>
     <x:String x:Key="Initialization_Title">First-Time Setup</x:String>
     <x:String x:Key="Initialization_Subtitle">Complete basic settings to start using</x:String>
     <x:String x:Key="Initialization_Steps">Steps</x:String>
@@ -284,8 +280,6 @@
     <x:String x:Key="Init_AppBlocking_Subtitle">You can continue in App Management</x:String>
     <x:String x:Key="Init_EnableBasicProtection">Enable basic protection</x:String>
     <x:String x:Key="Init_EnableAppBlocking">Enable app blocking</x:String>
-    <x:String x:Key="Init_AllowedApps_Label">Allowed apps (comma separated)</x:String>
-    <x:String x:Key="Init_AllowedApps_Watermark">e.g.: notepad,calc</x:String>
     <x:String x:Key="Init_BlockedRules_Label">Blocked rules (comma separated)</x:String>
     <x:String x:Key="Init_BlockedRules_Watermark">e.g.: cmd,taskmgr</x:String>
     <x:String x:Key="Init_NetworkBlocking_Title">Network Interception</x:String>
@@ -301,9 +295,62 @@
     <x:String x:Key="Settings_NotificationPosition_Description">Choose where notifications appear</x:String>
     <x:String x:Key="About_Repository">Repository</x:String>
     <x:String x:Key="About_UserAgreement">User Agreement</x:String>
+    <x:String x:Key="About_PrivacyPolicy">Privacy Policy</x:String>
     <x:String x:Key="NotificationPosition_Center">Center</x:String>
     <x:String x:Key="NotificationPosition_TopLeft">Top Left</x:String>
     <x:String x:Key="NotificationPosition_TopRight">Top Right</x:String>
     <x:String x:Key="NotificationPosition_BottomLeft">Bottom Left</x:String>
     <x:String x:Key="NotificationPosition_BottomRight">Bottom Right</x:String>
+    
+    <!-- Automation -->
+    <x:String x:Key="Automation_Title">Automation Extensions</x:String>
+    <x:String x:Key="Automation_Description">Configure scheduled tasks and automated actions to extend system functionality.</x:String>
+    <x:String x:Key="Automation_Shutdown_Title">Scheduled Shutdown</x:String>
+    <x:String x:Key="Automation_Shutdown_Enable">Enable Scheduled Shutdown</x:String>
+    <x:String x:Key="Automation_Shutdown_Time">Shutdown Time</x:String>
+    <x:String x:Key="Automation_Shutdown_Desc">Automatically shut down the computer at the specified time every day</x:String>
+    <x:String x:Key="Automation_Restart_Title">Scheduled Restart</x:String>
+    <x:String x:Key="Automation_Restart_Enable">Enable Scheduled Restart</x:String>
+    <x:String x:Key="Automation_Restart_Time">Restart Time</x:String>
+    <x:String x:Key="Automation_Restart_Desc">Automatically restart the computer at the specified time every day</x:String>
+    <x:String x:Key="Automation_Lock_Title">Scheduled Lock Screen</x:String>
+    <x:String x:Key="Automation_Lock_Enable">Enable Scheduled Lock</x:String>
+    <x:String x:Key="Automation_Lock_Time">Lock Time</x:String>
+    <x:String x:Key="Automation_Lock_Desc">Enter full lock mode at the specified time every day</x:String>
+    <x:String x:Key="Automation_NetworkOn_Title">Scheduled Enable Network Interception</x:String>
+    <x:String x:Key="Automation_NetworkOn_Enable">Enable scheduled network interception</x:String>
+    <x:String x:Key="Automation_NetworkOn_Time">Enable Time</x:String>
+    <x:String x:Key="Automation_NetworkOn_Desc">Turn on the master switch and apply rules at the specified time</x:String>
+    <x:String x:Key="Automation_NetworkOff_Title">Scheduled Disable Network Interception</x:String>
+    <x:String x:Key="Automation_NetworkOff_Enable">Enable scheduled disable</x:String>
+    <x:String x:Key="Automation_NetworkOff_Time">Disable Time</x:String>
+    <x:String x:Key="Automation_NetworkOff_Desc">Turn off the master switch and clean up rules at the specified time</x:String>
+    <x:String x:Key="Automation_AppBlockOn_Title">Scheduled Enable App Blocking</x:String>
+    <x:String x:Key="Automation_AppBlockOn_Enable">Enable scheduled app blocking</x:String>
+    <x:String x:Key="Automation_AppBlockOn_Time">Enable Time</x:String>
+    <x:String x:Key="Automation_AppBlockOn_Desc">Enable app blocking to stop configured processes at the specified time</x:String>
+    <x:String x:Key="Automation_AppBlockOff_Title">Scheduled Disable App Blocking</x:String>
+    <x:String x:Key="Automation_AppBlockOff_Enable">Enable scheduled disable of app blocking</x:String>
+    <x:String x:Key="Automation_AppBlockOff_Time">Disable Time</x:String>
+    <x:String x:Key="Automation_AppBlockOff_Desc">Disable app blocking at the specified time</x:String>
+    <x:String x:Key="Automation_Enable">Enable Automation</x:String>
+    <x:String x:Key="Automation_Enable_Desc">Automation runs actions when custom rules are satisfied</x:String>
+    <x:String x:Key="Automation_AddWorkflow">Add Automation</x:String>
+    <x:String x:Key="Automation_Duplicate">Duplicate</x:String>
+    <x:String x:Key="Automation_Delete">Delete</x:String>
+    <x:String x:Key="Automation_Name">Name</x:String>
+    <x:String x:Key="Automation_Scheme">Plan</x:String>
+    <x:String x:Key="Automation_TriggerSection">When the following events trigger</x:String>
+    <x:String x:Key="Automation_AddTrigger">Add Trigger</x:String>
+    <x:String x:Key="Automation_AddTrigger_Interval">Add Interval Trigger</x:String>
+    <x:String x:Key="Automation_AddTrigger_Startup">Add Startup Trigger</x:String>
+    <x:String x:Key="Automation_ConditionsSection">And the following rules are satisfied</x:String>
+    <x:String x:Key="Automation_AddCondition">Add Rule</x:String>
+    <x:String x:Key="Automation_AddCondition_TimeRange">Time Range</x:String>
+    <x:String x:Key="Automation_AddCondition_DayOfWeek">Day Of Week</x:String>
+    <x:String x:Key="Automation_ActionsSection">Trigger Actions</x:String>
+    <x:String x:Key="Automation_AddAction">Add Action</x:String>
+    <x:String x:Key="Automation_RecoverySection">When rules are no longer satisfied, automatically recover actions</x:String>
+    <x:String x:Key="Automation_RecoveryTip">Workflow runs without considering perception sets.</x:String>
+    <x:String x:Key="Automation_Remove">Remove</x:String>
 </ResourceDictionary>

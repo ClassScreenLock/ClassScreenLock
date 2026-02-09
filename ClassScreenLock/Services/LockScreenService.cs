@@ -221,7 +221,7 @@ public class LockScreenService : INotifyPropertyChanged
         StopScreenLock();
         CloseProtectionInfoWindow();
         // 解锁后刷新网络拦截规则，确保在关闭总开关时清理远端规则
-        _ = NetworkBlockingService.Instance.ApplyRulesAsync();
+        _ = NetworkBlockingService.Instance.ApplyRulesAsync("DeactivateLock");
     }
 
     public void ManualDeactivateLock()
@@ -312,7 +312,7 @@ public class LockScreenService : INotifyPropertyChanged
         // 仅在用户已开启网络拦截时，应用一次规则（确保锁定期间规则已生效）。
         if (SettingsService.Blockage.IsNetworkLockEnabled)
         {
-            _ = NetworkBlockingService.Instance.ApplyRulesAsync();
+            _ = NetworkBlockingService.Instance.ApplyRulesAsync("EnableProtections");
         }
         // 应用拦截服务在应用启动或初始化完成后已启动，这里不再强制开启或修改设置。
     }

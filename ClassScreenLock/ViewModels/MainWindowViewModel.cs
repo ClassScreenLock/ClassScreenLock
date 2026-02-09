@@ -52,6 +52,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private ScreenshotHistoryViewModel _screenshotHistoryViewModel;
 
     [ObservableProperty]
+    private WebcamHistoryViewModel _webcamHistoryViewModel;
+
+    [ObservableProperty]
+    private AutomationViewModel _automationViewModel;
+
+    [ObservableProperty]
     private bool _isInitialized;
     
     private bool _disposed = false;
@@ -70,6 +76,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isOnboarding;
 
     public string Greeting { get; } = "欢迎使用 ClassScreenLock!";
+    public string AppVersion { get; } = new AboutViewModel().AppVersion;
     
     public MainWindowViewModel()
     {
@@ -102,6 +109,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // 创建截图历史视图模型实例
         ScreenshotHistoryViewModel = new ScreenshotHistoryViewModel();
+
+        WebcamHistoryViewModel = new WebcamHistoryViewModel();
+
+        AutomationViewModel = new AutomationViewModel();
         
         // 监听锁定状态
         IsLocked = LockScreenService.Instance.IsLocked;
@@ -213,6 +224,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         LogService.Instance.Log("Navigation", "AppManagement", "MainWindowViewModel", "正在跳转到应用管理页面");
         OnViewChanging();
+        AppManagementViewModel.RefreshAppsCommand.Execute(null);
         AppManagementViewModel.StartRefreshTimer();
         CurrentView = new AppManagementView { DataContext = AppManagementViewModel };
         Status = "应用管理";
@@ -250,6 +262,23 @@ public partial class MainWindowViewModel : ViewModelBase
         ScreenshotHistoryViewModel.LoadScreenshotsCommand.Execute(null);
         CurrentView = new ScreenshotHistoryView { DataContext = ScreenshotHistoryViewModel };
         Status = "屏幕记录";
+        IsOnboarding = false;
+    }
+
+    public void NavigateToWebcamHistory()
+    {
+        OnViewChanging();
+        WebcamHistoryViewModel.LoadScreenshotsCommand.Execute(null);
+        CurrentView = new WebcamHistoryView { DataContext = WebcamHistoryViewModel };
+        Status = "摄像头记录";
+        IsOnboarding = false;
+    }
+
+    public void NavigateToAutomation()
+    {
+        OnViewChanging();
+        CurrentView = new AutomationView { DataContext = AutomationViewModel };
+        Status = "自动化扩展";
         IsOnboarding = false;
     }
 

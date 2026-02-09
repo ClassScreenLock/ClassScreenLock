@@ -6,86 +6,97 @@
              xmlns:converters="clr-namespace:ClassScreenLock.Converters"
              xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-             x:Class="ClassScreenLock.Views.ScreenshotHistoryView"
-             x:DataType="vm:ScreenshotHistoryViewModel"
+             x:Class="ClassScreenLock.Views.WebcamHistoryView"
+             x:DataType="vm:WebcamHistoryViewModel"
              Focusable="True"
              KeyDown="OnRootKeyDown">
-    
+
     <UserControl.Resources>
         <converters:StringToBitmapConverter x:Key="StringToBitmapConverter"/>
         <converters:BoolToThicknessConverter x:Key="BoolToThicknessConverter"/>
         <converters:BoolToResourceBrushConverter x:Key="BoolToResourceBrushConverter"/>
         <converters:MBToGBConverter x:Key="MBToGBConverter"/>
         <converters:StringEqualsConverter x:Key="StringEqualsConverter"/>
+        <converters:IsNullConverter x:Key="IsNullConverter"/>
     </UserControl.Resources>
 
     <Grid RowDefinitions="Auto, *">
-        <!-- 标题部分 -->
         <StackPanel Grid.Row="0" Spacing="8" Margin="32,32,32,24">
             <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                <Border Background="{DynamicResource SystemAccentColorLightBrush}" 
+                <Border Background="{DynamicResource SystemAccentColorLightBrush}"
                         Width="48" Height="48" CornerRadius="8">
-                    <icons:Icon Value="fas fa-camera" Width="24" Height="24" 
+                    <icons:Icon Value="fas fa-video" Width="24" Height="24"
                                 Foreground="{DynamicResource SystemAccentColor}"/>
                 </Border>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="屏幕记录" Classes="h1" Margin="0"/>
-                    <TextBlock Text="查看并管理自动屏幕截图记录" Classes="caption" Opacity="0.6"/>
+                    <TextBlock Text="摄像头记录" Classes="h1" Margin="0"/>
+                    <TextBlock Text="查看并管理自动摄像头拍照记录" Classes="caption" Opacity="0.6"/>
                 </StackPanel>
             </StackPanel>
         </StackPanel>
 
-        <!-- Main Content -->
         <ScrollViewer Grid.Row="1">
             <StackPanel Spacing="20" Margin="32,0,32,32">
-                <!-- Settings Section -->
                 <Border Classes="card" Padding="24">
                     <StackPanel Spacing="16">
                         <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
                             <icons:Icon Value="fas fa-cog" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                            <TextBlock Text="截屏设置" Classes="h3"/>
+                            <TextBlock Text="拍照设置" Classes="h3"/>
                         </StackPanel>
 
-                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
-                            <!-- Class Screenshot -->
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
                             <StackPanel Grid.Row="0" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock Text="上课截图" Classes="subtitle"/>
-                                <TextBlock Text="在课程进行期间自动记录屏幕" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="上课拍照" Classes="subtitle"/>
+                                <TextBlock Text="在课程进行期间自动拍照" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
                             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Settings.EnableClassScreenshot}">
+                                <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Settings.EnableClassWebcam}">
                                     <TextBlock Text="间隔" VerticalAlignment="Center" Classes="caption"/>
-                                    <ComboBox ItemsSource="{Binding ClassIntervalOptions}" SelectedItem="{Binding Settings.ClassScreenshotInterval}" Width="100"/>
+                                    <ComboBox ItemsSource="{Binding ClassIntervalOptions}" SelectedItem="{Binding Settings.ClassWebcamInterval}" Width="100"/>
                                     <TextBlock Text="分钟" VerticalAlignment="Center" Classes="caption"/>
                                 </StackPanel>
-                                <ToggleSwitch IsChecked="{Binding Settings.EnableClassScreenshot}" OnContent="" OffContent="" VerticalAlignment="Center"/>
+                                <ToggleSwitch IsChecked="{Binding Settings.EnableClassWebcam}" OnContent="" OffContent="" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <Separator Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12"/>
 
-                            <!-- Break Screenshot -->
                             <StackPanel Grid.Row="2" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock Text="课间截图" Classes="subtitle"/>
-                                <TextBlock Text="在课间休息期间自动记录屏幕" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="课间拍照" Classes="subtitle"/>
+                                <TextBlock Text="在课间休息期间自动拍照" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
                             <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Settings.EnableBreakScreenshot}">
+                                <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Settings.EnableBreakWebcam}">
                                     <TextBlock Text="间隔" VerticalAlignment="Center" Classes="caption"/>
-                                    <ComboBox ItemsSource="{Binding BreakIntervalOptions}" SelectedItem="{Binding Settings.BreakScreenshotInterval}" Width="100"/>
+                                    <ComboBox ItemsSource="{Binding BreakIntervalOptions}" SelectedItem="{Binding Settings.BreakWebcamInterval}" Width="100"/>
                                     <TextBlock Text="分钟" VerticalAlignment="Center" Classes="caption"/>
                                 </StackPanel>
-                                <ToggleSwitch IsChecked="{Binding Settings.EnableBreakScreenshot}" OnContent="" OffContent="" VerticalAlignment="Center"/>
+                                <ToggleSwitch IsChecked="{Binding Settings.EnableBreakWebcam}" OnContent="" OffContent="" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <Separator Grid.Row="3" Grid.ColumnSpan="2" Margin="0,12"/>
 
-                            <Grid Grid.Row="4" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Row="4" Spacing="4" VerticalAlignment="Center">
+                                <TextBlock Text="摄像头选择" Classes="subtitle"/>
+                                <TextBlock Text="选择用于自动拍照的摄像头" Classes="caption" Opacity="0.7"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                                <ComboBox ItemsSource="{Binding CameraOptions}"
+                                          SelectedValue="{Binding SelectedCameraMoniker}"
+                                          SelectedValueBinding="{Binding Moniker}"
+                                          DisplayMemberBinding="{Binding Name}"
+                                          Width="260"
+                                          PlaceholderText="未检测到摄像头或请选择"/>
+                            </StackPanel>
+
+                            <Separator Grid.Row="5" Grid.ColumnSpan="2" Margin="0,12"/>
+
+                            <Grid Grid.Row="6" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto">
                                 <WrapPanel Grid.Column="0" Orientation="Horizontal">
                                     <StackPanel Spacing="4" Margin="0,0,32,12" VerticalAlignment="Center" Width="180">
                                         <TextBlock Text="自动清理" Classes="subtitle"/>
                                         <TextBlock Text="自动删除旧的记录以释放空间" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                                     </StackPanel>
-                                    
+
                                     <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center" Margin="0,0,24,12">
                                         <StackPanel Spacing="4">
                                             <TextBlock Text="保留时长" Classes="caption" Opacity="0.6"/>
@@ -97,7 +108,7 @@
                                                 </ComboBox.ItemTemplate>
                                             </ComboBox>
                                         </StackPanel>
-                                        
+
                                         <StackPanel Spacing="4">
                                             <TextBlock Text="存储上限" Classes="caption" Opacity="0.6"/>
                                             <ComboBox ItemsSource="{Binding MaxStorageMBOptions}" SelectedItem="{Binding Settings.MaxStorageMB}" Width="110">
@@ -112,8 +123,8 @@
                                         <StackPanel Spacing="4">
                                             <TextBlock Text="图片格式" Classes="caption" Opacity="0.6"/>
                                             <ComboBox ItemsSource="{Binding AvailableFormats}"
-                                                      SelectedValue="{Binding Settings.ImageFormat}" 
-                                                      SelectedValueBinding="{Binding Value}" 
+                                                      SelectedValue="{Binding Settings.ImageFormat}"
+                                                      SelectedValueBinding="{Binding Value}"
                                                       Width="110">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
@@ -123,18 +134,66 @@
                                             </ComboBox>
                                         </StackPanel>
 
+                                        <StackPanel Spacing="4" Width="200">
+                                            <TextBlock Text="拍照亮度" Classes="caption" Opacity="0.6"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Slider Minimum="0.1" Maximum="1.0" SmallChange="0.01" LargeChange="0.1" Width="120"
+                                                        Value="{Binding WebcamBrightness}"/>
+                                                <TextBlock Text="{Binding WebcamBrightness, StringFormat=P0}" Classes="caption" Width="40"/>
+                                            </StackPanel>
+                                        </StackPanel>
                                     </StackPanel>
                                 </WrapPanel>
 
-                                <Button Grid.Column="1" Content="保存设置" Command="{Binding SaveSettingsCommand}" 
+                                <Button Grid.Column="1" Content="保存设置" Command="{Binding SaveSettingsCommand}"
                                         Classes="accent" VerticalAlignment="Center" Height="36" Padding="24,0" Margin="0,0,0,12"/>
                             </Grid>
 
+                            <Separator Grid.Row="7" Grid.ColumnSpan="2" Margin="0,12"/>
+
+                            <Grid Grid.Row="8" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="调试模式" Classes="subtitle"/>
+                                    <TextBlock Text="开启后记录拍照日志并允许手动触发" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <ToggleSwitch IsChecked="{Binding IsDebugEnabled}" OnContent="" OffContent=""/>
+                                    <Button Content="立即拍照" Command="{Binding DebugCaptureCommand}" IsEnabled="{Binding IsDebugEnabled}"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <!-- Filter & Actions -->
+                <Border Classes="card" Padding="24" IsVisible="{Binding IsDebugEnabled}">
+                    <StackPanel Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,4">
+                            <icons:Icon Value="fas fa-video" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                            <StackPanel>
+                                <TextBlock Text="调试预览" Classes="h3"/>
+                                <TextBlock Text="{Binding PreviewStatus}" Classes="caption" Opacity="0.7"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" BorderBrush="{DynamicResource SystemControlBackgroundAltMediumBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="8">
+                            <Grid>
+                                <Image Source="{Binding PreviewImage}" Stretch="Uniform" Height="240"/>
+                                <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            IsVisible="{Binding PreviewImage, Converter={StaticResource IsNullConverter}}">
+                                    <icons:Icon Value="fas fa-video-slash" Width="20" Height="20" Opacity="0.6"/>
+                                    <TextBlock Text="未开启预览" Classes="caption" Opacity="0.6"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Button Content="打开预览" Command="{Binding StartPreviewCommand}"/>
+                            <Button Content="停止预览" Command="{Binding StopPreviewCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
                 <Border Classes="card" Padding="12">
                     <Grid ColumnDefinitions="Auto,Auto,*,Auto">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
@@ -142,7 +201,7 @@
                             <TextBlock Text="日期" VerticalAlignment="Center"/>
                             <ComboBox ItemsSource="{Binding AvailableDates}" SelectedItem="{Binding SelectedDate}" Width="150"/>
                         </StackPanel>
-                        
+
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="20,0,0,0" VerticalAlignment="Center">
                             <icons:Icon Value="fas fa-filter" Width="16" Height="16"/>
                             <TextBlock Text="类型" VerticalAlignment="Center"/>
@@ -170,7 +229,6 @@
                     </Grid>
                 </Border>
 
-                <!-- Bulk Actions -->
                 <Border Classes="card" Padding="12">
                     <WrapPanel VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="0,0,10,10">
@@ -203,7 +261,6 @@
                     </WrapPanel>
                 </Border>
 
-                <!-- Screenshots Grid -->
                 <ItemsControl ItemsSource="{Binding PagedScreenshots}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -212,8 +269,8 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Margin="6" Padding="0" Background="Transparent" BorderThickness="0" 
-                                    Command="{Binding $parent[UserControl].((vm:ScreenshotHistoryViewModel)DataContext).OpenOrToggleSelectCommand}" 
+                            <Button Margin="6" Padding="0" Background="Transparent" BorderThickness="0"
+                                    Command="{Binding $parent[UserControl].((vm:WebcamHistoryViewModel)DataContext).OpenOrToggleSelectCommand}"
                                     CommandParameter="{Binding}"
                                     PointerPressed="OnScreenshotItemPointerPressed">
                                 <Border Width="240" Height="180" CornerRadius="8" ClipToBounds="True"
@@ -225,7 +282,7 @@
                                         <Image Grid.Row="0" Source="{Binding FilePath, Converter={StaticResource StringToBitmapConverter}, ConverterParameter=thumb}" Stretch="UniformToFill"/>
 
                                         <Border Grid.Row="0" Background="#66000000" CornerRadius="6" Padding="6" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
-                                                IsVisible="{Binding $parent[UserControl].((vm:ScreenshotHistoryViewModel)DataContext).IsSelectionMode}">
+                                                IsVisible="{Binding $parent[UserControl].((vm:WebcamHistoryViewModel)DataContext).IsSelectionMode}">
                                             <CheckBox IsChecked="{Binding IsSelected}"/>
                                         </Border>
 
@@ -236,12 +293,11 @@
                                                 <TextBlock Text="课间休息" IsVisible="{Binding !IsClassTime}" Foreground="LightBlue" HorizontalAlignment="Center" FontSize="11"/>
                                             </StackPanel>
                                         </Border>
-                                        
-                                        <!-- Hover/Context Actions Overlay could go here, but context menu is simpler -->
+
                                         <Grid.ContextMenu>
                                             <ContextMenu>
-                                                <MenuItem Header="打开" Command="{Binding $parent[UserControl].((vm:ScreenshotHistoryViewModel)DataContext).OpenScreenshotCommand}" CommandParameter="{Binding}"/>
-                                                <MenuItem Header="删除" Command="{Binding $parent[UserControl].((vm:ScreenshotHistoryViewModel)DataContext).DeleteScreenshotCommand}" CommandParameter="{Binding}"/>
+                                                <MenuItem Header="打开" Command="{Binding $parent[UserControl].((vm:WebcamHistoryViewModel)DataContext).OpenScreenshotCommand}" CommandParameter="{Binding}"/>
+                                                <MenuItem Header="删除" Command="{Binding $parent[UserControl].((vm:WebcamHistoryViewModel)DataContext).DeleteScreenshotCommand}" CommandParameter="{Binding}"/>
                                             </ContextMenu>
                                         </Grid.ContextMenu>
                                     </Grid>
@@ -250,10 +306,9 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                
-                <TextBlock Text="暂无截图" IsVisible="{Binding IsEmpty}" HorizontalAlignment="Center" Opacity="0.5" Margin="0,20,0,0"/>
 
-                <!-- Pager -->
+                <TextBlock Text="暂无拍照" IsVisible="{Binding IsEmpty}" HorizontalAlignment="Center" Opacity="0.5" Margin="0,20,0,0"/>
+
                 <Border Classes="card" Padding="12" IsVisible="{Binding HasScreenshots}">
                     <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto">
                         <TextBlock Grid.Column="0" Text="{Binding TotalItems, StringFormat='共 {0} 张'}" VerticalAlignment="Center" Opacity="0.8"/>
@@ -288,6 +343,6 @@
                 </Border>
             </StackPanel>
         </ScrollViewer>
-        
+
     </Grid>
 </UserControl>

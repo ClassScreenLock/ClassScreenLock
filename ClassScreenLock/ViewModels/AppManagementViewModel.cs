@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -24,9 +26,6 @@ public partial class AppManagementViewModel : ViewModelBase
 {
     [ObservableProperty]
     private ObservableCollection<AppInfo> _runningApps = new();
-
-    [ObservableProperty]
-    private ObservableCollection<string> _allowedApps = new();
 
     [ObservableProperty]
     private ObservableCollection<string> _blockedRules = new();
@@ -65,7 +64,7 @@ public partial class AppManagementViewModel : ViewModelBase
     private ObservableCollection<ProtectionRule> _protectionRules = new();
 
     [ObservableProperty]
-    private int _selectedSubTabIndex = 0; // 0: 运行中, 1: 允许列表, 2: 阻止列表, 3: 基础防护
+    private int _selectedSubTabIndex = 0; // 0: 运行中, 1: 阻止列表, 2: 基础防护
 
     [ObservableProperty]
     private bool _isSidebarExpanded = true;
@@ -96,7 +95,6 @@ public partial class AppManagementViewModel : ViewModelBase
     public AppManagementViewModel()
     {
         LoadSettings();
-        RefreshAppsCommand.Execute(null);
         // 不再在构造函数中自动启动，由 MainWindowViewModel 控制
     }
 
@@ -384,7 +382,6 @@ public partial class AppManagementViewModel : ViewModelBase
     private void LoadSettings()
     {
         var settings = SettingsService.Blockage;
-        AllowedApps = new ObservableCollection<string>(settings.AllowedApps ?? new List<string>());
         IsBasicProtectionEnabled = settings.IsBasicProtectionEnabled;
         IsAppBlockingEnabled = settings.IsAppBlockingEnabled;
         
@@ -416,6 +413,12 @@ public partial class AppManagementViewModel : ViewModelBase
         else
         {
             ProtectionRules = new ObservableCollection<ProtectionRule>(settings.ProtectionRules);
+        }
+
+        if (IsAppBlockingEnabled)
+        {
+            ApplyBlockedFilePermissions();
+            SaveSettings();
         }
     }
 
@@ -458,7 +461,6 @@ public partial class AppManagementViewModel : ViewModelBase
     {
         SettingsService.UpdateBlockage(settings =>
         {
-            settings.AllowedApps = AllowedApps.ToList();
             settings.BlockedRules = BlockedRules.ToList();
             settings.IsBasicProtectionEnabled = IsBasicProtectionEnabled;
             settings.IsAppBlockingEnabled = IsAppBlockingEnabled;
@@ -466,10 +468,190 @@ public partial class AppManagementViewModel : ViewModelBase
         });
     }
 
+    private static bool ShouldApplyFileAcl(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return false;
+        try
+        {
+            var ext = Path.GetExtension(path);
+            if (string.IsNullOrWhiteSpace(ext)) return true;
+            return !ext.Equals(".exe", StringComparison.OrdinalIgnoreCase) &&
+                   !ext.Equals(".com", StringComparison.OrdinalIgnoreCase) &&
+                   !ext.Equals(".msi", StringComparison.OrdinalIgnoreCase) &&
+                   !ext.Equals(".cmd", StringComparison.OrdinalIgnoreCase) &&
+                   !ext.Equals(".bat", StringComparison.OrdinalIgnoreCase) &&
+                   !ext.Equals(".ps1", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool LooksLikePathRule(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        if (value.IndexOf(Path.DirectorySeparatorChar) >= 0) return true;
+        if (value.IndexOf(Path.AltDirectorySeparatorChar) >= 0) return true;
+        if (value.Contains(":\\", StringComparison.Ordinal)) return true;
+        return false;
+    }
+
+    private static string? NormalizeRulePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return null;
+        try
+        {
+            var trimmed = path.Trim().Trim('"');
+            if (string.IsNullOrWhiteSpace(trimmed)) return null;
+            return Path.GetFullPath(trimmed);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void ApplyBlockedFilePermissions()
+    {
+        try
+        {
+            var settings = SettingsService.Blockage;
+            if (settings == null) return;
+            settings.BlockedFileAclBackup ??= new Dictionary<string, string>();
+
+            foreach (var rule in BlockedRules.ToList())
+            {
+                if (!LooksLikePathRule(rule)) continue;
+                var normalized = NormalizeRulePath(rule);
+                if (string.IsNullOrWhiteSpace(normalized) || !ShouldApplyFileAcl(normalized)) continue;
+                ApplyBlockedFilePermissionForPath(rule, settings);
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    private void ApplyBlockedFilePermissionForPath(string rule, SoftwareBlockageModel settings)
+    {
+        if (!LooksLikePathRule(rule)) return;
+        var path = NormalizeRulePath(rule);
+        if (string.IsNullOrWhiteSpace(path)) return;
+        if (!ShouldApplyFileAcl(path)) return;
+        if (!File.Exists(path)) return;
+
+        if (!settings.BlockedFileAclBackup.ContainsKey(path))
+        {
+            try
+            {
+                var current = new FileInfo(path).GetAccessControl(AccessControlSections.All);
+                settings.BlockedFileAclBackup[path] = current.GetSecurityDescriptorSddlForm(AccessControlSections.All);
+            }
+            catch
+            {
+                return;
+            }
+        }
+
+        try
+        {
+            var fileSecurity = new FileSecurity();
+            fileSecurity.SetAccessRuleProtection(true, false);
+
+            var adminSid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
+            var systemSid = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
+            fileSecurity.AddAccessRule(new FileSystemAccessRule(adminSid, FileSystemRights.FullControl, AccessControlType.Allow));
+            fileSecurity.AddAccessRule(new FileSystemAccessRule(systemSid, FileSystemRights.FullControl, AccessControlType.Allow));
+
+            new FileInfo(path).SetAccessControl(fileSecurity);
+        }
+        catch
+        {
+        }
+    }
+
+    private void RestoreBlockedFilePermissions()
+    {
+        try
+        {
+            var settings = SettingsService.Blockage;
+            if (settings?.BlockedFileAclBackup == null || settings.BlockedFileAclBackup.Count == 0) return;
+
+            foreach (var kv in settings.BlockedFileAclBackup.ToList())
+            {
+                var path = kv.Key;
+                var sddl = kv.Value;
+
+                if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(sddl))
+                {
+                    settings.BlockedFileAclBackup.Remove(path);
+                    continue;
+                }
+
+                try
+                {
+                    if (File.Exists(path))
+                    {
+                        var original = new FileSecurity();
+                        original.SetSecurityDescriptorSddlForm(sddl);
+                        new FileInfo(path).SetAccessControl(original);
+                    }
+                }
+                catch
+                {
+                }
+
+                settings.BlockedFileAclBackup.Remove(path);
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    private void RestoreBlockedFilePermissionForPath(string rule)
+    {
+        try
+        {
+            var settings = SettingsService.Blockage;
+            if (settings?.BlockedFileAclBackup == null || settings.BlockedFileAclBackup.Count == 0) return;
+
+            var path = NormalizeRulePath(rule);
+            if (string.IsNullOrWhiteSpace(path)) return;
+            if (!settings.BlockedFileAclBackup.TryGetValue(path, out var sddl) || string.IsNullOrWhiteSpace(sddl)) return;
+
+            try
+            {
+                if (File.Exists(path))
+                {
+                    var original = new FileSecurity();
+                    original.SetSecurityDescriptorSddlForm(sddl);
+                    new FileInfo(path).SetAccessControl(original);
+                }
+            }
+            catch
+            {
+            }
+
+            settings.BlockedFileAclBackup.Remove(path);
+        }
+        catch
+        {
+        }
+    }
+
     [RelayCommand]
     private void ToggleAppBlocking()
     {
-        // IsAppBlockingEnabled 已经通过绑定自动更新了，所以我们只需要保存
+        if (IsAppBlockingEnabled)
+        {
+            ApplyBlockedFilePermissions();
+        }
+        else
+        {
+            RestoreBlockedFilePermissions();
+        }
         SaveSettings();
         NotificationService.Instance.ShowSuccess(IsAppBlockingEnabled ? "阻止列表已启用" : "阻止列表已禁用");
     }
@@ -564,29 +746,6 @@ public partial class AppManagementViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void AddToAllowed(AppInfo app)
-    {
-        var required = SettingsService.Lock.SidebarAppManagementMinAccountType;
-        if (required != null && !(SecurityService.Instance.IsAuthenticated || AccountService.Instance.HasPermission(required.Value)))
-        {
-            NotificationService.Instance.ShowWarning("权限不足：访问应用管理需要更高权限");
-            return;
-        }
-
-        if (app != null && !AllowedApps.Contains(app.ProcessName))
-        {
-            AllowedApps.Add(app.ProcessName);
-            BlockedRules.Remove(app.ProcessName);
-            if (!string.IsNullOrEmpty(app.ExecutablePath))
-            {
-                BlockedRules.Remove(app.ExecutablePath);
-            }
-            SaveSettings();
-            NotificationService.Instance.ShowSuccess($"已添加 {app.ProcessName} 到允许列表");
-        }
-    }
-
-    [RelayCommand]
     private void AddToBlocked(AppInfo app)
     {
         var required = SettingsService.Lock.SidebarAppManagementMinAccountType;
@@ -599,7 +758,6 @@ public partial class AppManagementViewModel : ViewModelBase
         if (app != null && !BlockedRules.Contains(app.ProcessName))
         {
             BlockedRules.Add(app.ProcessName);
-            AllowedApps.Remove(app.ProcessName);
             SaveSettings();
             NotificationService.Instance.ShowSuccess($"已添加 {app.ProcessName} 到阻止列表");
         }
@@ -617,23 +775,19 @@ public partial class AppManagementViewModel : ViewModelBase
         if (!string.IsNullOrWhiteSpace(path) && !BlockedRules.Contains(path))
         {
             BlockedRules.Add(path);
+
+            if (IsAppBlockingEnabled)
+            {
+                var settings = SettingsService.Blockage;
+                if (settings != null)
+                {
+                    settings.BlockedFileAclBackup ??= new Dictionary<string, string>();
+                    ApplyBlockedFilePermissionForPath(path, settings);
+                }
+            }
+
             SaveSettings();
             NotificationService.Instance.ShowSuccess($"已添加路径到阻止列表");
-        }
-    }
-
-    [RelayCommand]
-    private void RemoveFromAllowed(string processName)
-    {
-        var required = SettingsService.Lock.SidebarAppManagementMinAccountType;
-        if (required != null && !(SecurityService.Instance.IsAuthenticated || AccountService.Instance.HasPermission(required.Value)))
-        {
-            NotificationService.Instance.ShowWarning("权限不足：访问应用管理需要更高权限");
-            return;
-        }
-        if (AllowedApps.Remove(processName))
-        {
-            SaveSettings();
         }
     }
 
@@ -646,6 +800,8 @@ public partial class AppManagementViewModel : ViewModelBase
             NotificationService.Instance.ShowWarning("权限不足：访问应用管理需要更高权限");
             return;
         }
+        if (LooksLikePathRule(rule)) RestoreBlockedFilePermissionForPath(rule);
+
         if (BlockedRules.Remove(rule))
         {
             SaveSettings();

@@ -10,11 +10,12 @@ public enum InitStep
     UserAgreement = 0,
     SystemConfig = 1,
     UserPreferences = 2,
-    PermissionSetup = 3,
-    AdminAccount = 4,
-    TwoFactorBinding = 5,
-    AppBlocking = 6,
-    NetworkBlocking = 7
+    MonitoringConfig = 3,
+    PermissionSetup = 4,
+    AdminAccount = 5,
+    TwoFactorBinding = 6,
+    AppBlocking = 7,
+    NetworkBlocking = 8
 }
 
 public class InitializationService
@@ -50,6 +51,7 @@ public class InitializationService
                 return !(_state.UserAgreementDone &&
                          _state.SystemConfigDone &&
                          _state.UserPreferencesDone &&
+                         _state.MonitoringConfigDone &&
                          _state.PermissionSetupDone &&
                          adminConfigured &&
                          twoFactorDone &&
@@ -95,6 +97,9 @@ public class InitializationService
                 case InitStep.UserPreferences:
                     _state.UserPreferencesDone = true;
                     break;
+                case InitStep.MonitoringConfig:
+                    _state.MonitoringConfigDone = true;
+                    break;
                 case InitStep.PermissionSetup:
                     _state.PermissionSetupDone = true;
                     break;
@@ -133,6 +138,7 @@ public class InitializationService
                 InitStep.UserAgreement => _state.UserAgreementDone,
                 InitStep.SystemConfig => _state.SystemConfigDone,
                 InitStep.UserPreferences => _state.UserPreferencesDone,
+                InitStep.MonitoringConfig => _state.MonitoringConfigDone,
                 InitStep.PermissionSetup => _state.PermissionSetupDone,
                 InitStep.AdminAccount => IsAdminConfiguredNoLock(),
                 InitStep.TwoFactorBinding => _state.TwoFactorBindingDone,
@@ -148,6 +154,7 @@ public class InitializationService
         if (!_state.UserAgreementDone) return (int)InitStep.UserAgreement;
         if (!_state.SystemConfigDone) return (int)InitStep.SystemConfig;
         if (!_state.UserPreferencesDone) return (int)InitStep.UserPreferences;
+        if (!_state.MonitoringConfigDone) return (int)InitStep.MonitoringConfig;
         if (!_state.PermissionSetupDone) return (int)InitStep.PermissionSetup;
         if (!IsAdminConfiguredNoLock()) return (int)InitStep.AdminAccount;
         if (ShouldIncludeTwoFactorBinding() && !_state.TwoFactorBindingDone) return (int)InitStep.TwoFactorBinding;
@@ -219,6 +226,7 @@ public class InitializationService
         public bool UserAgreementDone { get; set; }
         public bool SystemConfigDone { get; set; }
         public bool UserPreferencesDone { get; set; }
+        public bool MonitoringConfigDone { get; set; }
         public bool PermissionSetupDone { get; set; }
         public bool AdminAccountDone { get; set; }
         public bool TwoFactorBindingDone { get; set; }

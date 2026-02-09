@@ -223,6 +223,7 @@
                     </StackPanel>
                 </Border>
                 
+
                 <!-- 操作按钮 -->
                 <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
                     <Button Content="{DynamicResource Settings_ResetToDefaults}" Command="{Binding ResetToDefaultsCommand}" 

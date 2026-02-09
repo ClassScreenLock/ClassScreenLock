@@ -26,7 +26,7 @@ public class AppBlockingService
         if (_isRunning) return;
         _isRunning = true;
         _cts = new CancellationTokenSource();
-        Task.Run(() => MonitorLoop(_cts.Token));
+        LogService.Observe(Task.Run(() => MonitorLoop(_cts.Token)), "AppBlocking.MonitorLoop");
     }
 
     public void Stop()
@@ -122,7 +122,27 @@ public class AppBlockingService
                 }
             }
 
-            var blockedRulesSet = new HashSet<string>(blockedRules, StringComparer.OrdinalIgnoreCase);
+            var blockedProcessNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var blockedExePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var rule in blockedRules)
+            {
+                var r = rule?.Trim();
+                if (string.IsNullOrWhiteSpace(r)) continue;
+
+                if (LooksLikePath(r))
+                {
+                    var normalized = NormalizePath(r);
+                    if (!string.IsNullOrWhiteSpace(normalized)) blockedExePaths.Add(normalized);
+                }
+                else
+                {
+                    if (r.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                    {
+                        r = Path.GetFileNameWithoutExtension(r);
+                    }
+                    if (!string.IsNullOrWhiteSpace(r)) blockedProcessNames.Add(r);
+                }
+            }
 
             foreach (var process in allProcesses)
             {
@@ -134,15 +154,24 @@ public class AppBlockingService
                     string name = process.ProcessName;
                     bool shouldKill = false;
 
-                    // 检查是否在允许列表中
-                    if (settings.AllowedApps != null && settings.AllowedApps.Contains(name, StringComparer.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    if (isManualBlockingActive && blockedRulesSet.Contains(name))
+                    if (isManualBlockingActive && blockedProcessNames.Contains(name))
                     {
                         shouldKill = true;
+                    }
+                    else if (isManualBlockingActive && blockedExePaths.Count > 0)
+                    {
+                        try
+                        {
+                            var exePath = process.MainModule?.FileName;
+                            var normalizedExePath = NormalizePath(exePath);
+                            if (!string.IsNullOrWhiteSpace(normalizedExePath) && blockedExePaths.Contains(normalizedExePath))
+                            {
+                                shouldKill = true;
+                            }
+                        }
+                        catch
+                        {
+                        }
                     }
                     else if (isBasicProtectionActive && activeProtectionProcessNames.Contains(name))
                     {
@@ -206,5 +235,30 @@ public class AppBlockingService
                 ProcessNames = new List<string> { "mstsc", "msra" } 
             }
         };
+    }
+
+    private static bool LooksLikePath(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        if (value.IndexOf(Path.DirectorySeparatorChar) >= 0) return true;
+        if (value.IndexOf(Path.AltDirectorySeparatorChar) >= 0) return true;
+        if (value.Contains(":\\", StringComparison.Ordinal)) return true;
+        return false;
+    }
+
+    private static string? NormalizePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return null;
+
+        try
+        {
+            var trimmed = path.Trim().Trim('"');
+            if (string.IsNullOrWhiteSpace(trimmed)) return null;
+            return Path.GetFullPath(trimmed);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

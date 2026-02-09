@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.Encodings.Web;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -121,10 +122,31 @@ public class LogService
     {
         try
         {
-            var options = new JsonSerializerOptions { WriteIndented = true };
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
             var json = JsonSerializer.Serialize(logs, options);
             File.WriteAllText(LogFilePath, json);
         }
         catch { }
+    }
+
+    public static void Observe(Task? task, string source)
+    {
+        if (task == null) return;
+        task.ContinueWith(t =>
+        {
+            try
+            {
+                if (t.IsFaulted && t.Exception != null)
+                {
+                    var ex = t.Exception.Flatten();
+                    Instance.Log("Error", "TaskFault", source, ex.ToString());
+                }
+            }
+            catch { }
+        }, TaskContinuationOptions.OnlyOnFaulted);
     }
 }

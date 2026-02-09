@@ -7,22 +7,29 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AForge.Video;
+using AForge.Video.DirectShow;
 using Avalonia.Threading;
 using ClassScreenLock.Models;
 using ClassScreenLock.Services;
 using ClassScreenLock.Converters;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using AvaloniaBitmap = Avalonia.Media.Imaging.Bitmap;
+using SystemDrawingBitmap = System.Drawing.Bitmap;
+using SystemDrawingImageFormat = System.Drawing.Imaging.ImageFormat;
 
 namespace ClassScreenLock.ViewModels;
 
-public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerViewModel
+public partial class WebcamHistoryViewModel : ViewModelBase, IImageViewerViewModel
 {
     public const double MinZoom = 0.1;
     public const double MaxZoom = 12.0;
 
     private ObservableCollection<ScreenshotItem>? _hookedAllScreenshots;
     private ScreenshotItem? _selectionAnchor;
+    private VideoCaptureDevice? _previewDevice;
+    private DateTime _lastPreviewAtUtc = DateTime.MinValue;
 
     [ObservableProperty]
     private ObservableCollection<ScreenshotItem> _allScreenshots = new();
@@ -38,14 +45,36 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
 
     [ObservableProperty]
     private int _currentPage = 1;
-    
+
     [ObservableProperty]
     private ScreenshotItem? _selectedScreenshot;
 
     [ObservableProperty]
     private ScreenshotSettingsModel _settings = new();
 
-    // Filters
+    public double WebcamBrightness
+    {
+        get => Settings.WebcamBrightness;
+        set
+        {
+            if (Math.Abs(Settings.WebcamBrightness - value) < 0.0001) return;
+            Settings.WebcamBrightness = value;
+            OnPropertyChanged();
+        }
+    }
+
+    [ObservableProperty]
+    private AvaloniaBitmap? _previewImage;
+
+    [ObservableProperty]
+    private bool _isPreviewRunning;
+
+    [ObservableProperty]
+    private string _previewStatus = "未启动";
+
+    [ObservableProperty]
+    private List<CameraItem> _cameraOptions = new();
+
     [ObservableProperty]
     private string? _selectedDate;
 
@@ -53,9 +82,8 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
     private ObservableCollection<string> _availableDates = new() { "全部日期" };
 
     [ObservableProperty]
-    private int _filterTypeIndex = 0; // 0: All, 1: Class, 2: Break
+    private int _filterTypeIndex = 0;
 
-    // Image Viewer
     [ObservableProperty]
     private bool _isImageViewerOpen;
 
@@ -85,16 +113,17 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
         new("GIF", "GIF", "256色，适合简单图形")
     };
 
-    public ScreenshotHistoryViewModel()
+    public WebcamHistoryViewModel()
     {
         LoadSettings();
+        RefreshCameraOptions();
     }
 
     public List<int> PageSizes { get; } = new() { 12, 24, 48, 96 };
     public List<int> ClassIntervalOptions { get; } = Enumerable.Range(1, 120).ToList();
     public List<int> BreakIntervalOptions { get; } = Enumerable.Range(1, 20).ToList();
     public List<int> RetentionDaysOptions { get; } = new() { 7, 15, 30, 60, 90, 180, 365 };
-    public List<int> MaxStorageMBOptions { get; } = Enumerable.Range(2, 39).Select(x => x * 512).ToList(); // 1GB (1024MB) to 20GB (20480MB) in 0.5GB (512MB) steps
+    public List<int> MaxStorageMBOptions { get; } = Enumerable.Range(2, 39).Select(x => x * 512).ToList();
 
     public int TotalItems => AllScreenshots.Count;
     public int TotalPages => TotalItems == 0 ? 0 : (int)Math.Ceiling(TotalItems / (double)PageSize);
@@ -111,6 +140,36 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
 
     IRelayCommand IImageViewerViewModel.DeleteScreenshotCommand => DeleteScreenshotCommand;
 
+    public string SelectedCameraMoniker
+    {
+        get => Settings.SelectedCameraMoniker;
+        set
+        {
+            var next = value ?? string.Empty;
+            if (Settings.SelectedCameraMoniker == next) return;
+            Settings.SelectedCameraMoniker = next;
+            if (IsPreviewRunning)
+            {
+                StopPreview();
+            }
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsDebugEnabled
+    {
+        get => Settings.EnableCaptureDebug;
+        set
+        {
+            if (Settings.EnableCaptureDebug == value) return;
+            Settings.EnableCaptureDebug = value;
+            if (!value)
+            {
+                StopPreview();
+            }
+            OnPropertyChanged();
+        }
+    }
 
     partial void OnAllScreenshotsChanged(ObservableCollection<ScreenshotItem> value)
     {
@@ -182,34 +241,176 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
     {
         Settings = SettingsService.Screenshot;
 
-        Settings.ClassScreenshotInterval = Math.Clamp(Settings.ClassScreenshotInterval, 1, 120);
-        Settings.BreakScreenshotInterval = Math.Clamp(Settings.BreakScreenshotInterval, 1, 20);
+        Settings.ClassWebcamInterval = Math.Clamp(Settings.ClassWebcamInterval, 1, 120);
+        Settings.BreakWebcamInterval = Math.Clamp(Settings.BreakWebcamInterval, 1, 20);
         Settings.RetentionDays = Math.Clamp(Settings.RetentionDays, 7, 365);
         Settings.MaxStorageMB = Math.Clamp(Settings.MaxStorageMB, 1024, 20480);
+        Settings.WebcamBrightness = Math.Clamp(Settings.WebcamBrightness, 0.6, 1.0);
+        OnPropertyChanged(nameof(IsDebugEnabled));
+        OnPropertyChanged(nameof(SelectedCameraMoniker));
+    }
+
+    private void RefreshCameraOptions()
+    {
+        var cameras = WebcamService.Instance.GetAvailableCamerasWithNames();
+        CameraOptions = cameras.Select(kvp => new CameraItem(kvp.Value, kvp.Key)).ToList();
+
+        if (string.IsNullOrEmpty(Settings.SelectedCameraMoniker) && CameraOptions.Any())
+        {
+            Settings.SelectedCameraMoniker = CameraOptions.First().Moniker;
+            OnPropertyChanged(nameof(SelectedCameraMoniker));
+        }
     }
 
     [RelayCommand]
     private void SaveSettings()
     {
         SettingsService.SaveScreenshot(Settings);
-        NotificationService.Instance.ShowSuccess("截图设置已保存");
+        NotificationService.Instance.ShowSuccess("拍照设置已保存");
     }
 
-    private bool _isLoadingScreenshots;
+    [RelayCommand]
+    private void DebugCapture()
+    {
+        if (!IsDebugEnabled)
+        {
+            NotificationService.Instance.ShowError("请先开启调试模式");
+            return;
+        }
+        WebcamService.Instance.CaptureOnce(Settings.SelectedCameraMoniker);
+        NotificationService.Instance.ShowSuccess("已触发拍照");
+    }
+
+    [RelayCommand]
+    private void StartPreview()
+    {
+        if (!IsDebugEnabled)
+        {
+            NotificationService.Instance.ShowError("请先开启调试模式");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(SelectedCameraMoniker))
+        {
+            PreviewStatus = "未选择摄像头";
+            return;
+        }
+
+        if (IsPreviewRunning) return;
+
+        try
+        {
+            _previewDevice = new VideoCaptureDevice(SelectedCameraMoniker);
+            _previewDevice.NewFrame += OnPreviewNewFrame;
+            _previewDevice.Start();
+            IsPreviewRunning = true;
+            PreviewStatus = "预览中";
+        }
+        catch (Exception ex)
+        {
+            PreviewStatus = "预览启动失败";
+            NotificationService.Instance.ShowError($"预览启动失败: {ex.Message}");
+            StopPreview();
+        }
+    }
+
+    [RelayCommand]
+    private void StopPreview()
+    {
+        try
+        {
+            if (_previewDevice != null)
+            {
+                _previewDevice.NewFrame -= OnPreviewNewFrame;
+                if (_previewDevice.IsRunning)
+                {
+                    _previewDevice.SignalToStop();
+                    _previewDevice.WaitForStop();
+                }
+                _previewDevice = null;
+            }
+        }
+        catch
+        {
+        }
+
+        IsPreviewRunning = false;
+        PreviewStatus = "已停止";
+        var old = PreviewImage;
+        PreviewImage = null;
+        old?.Dispose();
+    }
+
+    private void OnPreviewNewFrame(object sender, NewFrameEventArgs eventArgs)
+    {
+        if (!IsPreviewRunning) return;
+        var nowUtc = DateTime.UtcNow;
+        if ((nowUtc - _lastPreviewAtUtc).TotalMilliseconds < 150) return;
+        _lastPreviewAtUtc = nowUtc;
+
+        try
+        {
+            using var frame = (SystemDrawingBitmap)eventArgs.Frame.Clone();
+            var brightness = Math.Clamp(Settings.WebcamBrightness, 0.1, 1.0);
+            using var adjusted = ApplyBrightness(frame, brightness);
+            using var stream = new MemoryStream();
+            adjusted.Save(stream, SystemDrawingImageFormat.Bmp);
+            stream.Position = 0;
+            var bitmap = new AvaloniaBitmap(stream);
+            Dispatcher.UIThread.Post(() =>
+            {
+                var old = PreviewImage;
+                PreviewImage = bitmap;
+                old?.Dispose();
+                if (IsPreviewRunning)
+                {
+                    PreviewStatus = "预览中";
+                }
+            });
+        }
+        catch
+        {
+        }
+    }
+
+    private static SystemDrawingBitmap ApplyBrightness(SystemDrawingBitmap source, double brightness)
+    {
+        if (Math.Abs(brightness - 1.0) < 0.001)
+        {
+            return (SystemDrawingBitmap)source.Clone();
+        }
+
+        var adjusted = new SystemDrawingBitmap(source.Width, source.Height);
+        using var g = System.Drawing.Graphics.FromImage(adjusted);
+        using var attributes = new System.Drawing.Imaging.ImageAttributes();
+        var matrix = new System.Drawing.Imaging.ColorMatrix(new[]
+        {
+            new[] { (float)brightness, 0f, 0f, 0f, 0f },
+            new[] { 0f, (float)brightness, 0f, 0f, 0f },
+            new[] { 0f, 0f, (float)brightness, 0f, 0f },
+            new[] { 0f, 0f, 0f, 1f, 0f },
+            new[] { 0f, 0f, 0f, 0f, 1f }
+        });
+        attributes.SetColorMatrix(matrix);
+        g.DrawImage(source, new System.Drawing.Rectangle(0, 0, source.Width, source.Height), 0, 0, source.Width, source.Height, System.Drawing.GraphicsUnit.Pixel, attributes);
+        return adjusted;
+    }
+
+    private bool _isLoadingPhotos;
 
     [RelayCommand]
     private async Task LoadScreenshots()
     {
-        if (_isLoadingScreenshots) return;
-        _isLoadingScreenshots = true;
+        if (_isLoadingPhotos) return;
+        _isLoadingPhotos = true;
         try
         {
-            var allItems = await Task.Run(() => ScreenshotService.Instance.GetScreenshots());
-            
+            var allItems = await Task.Run(() => WebcamService.Instance.GetPhotos());
+
             // Update Available Dates only if changed
             var dates = allItems.Select(x => x.Timestamp.ToString("yyyy-MM-dd")).Distinct().OrderByDescending(x => x).ToList();
             var currentDates = AvailableDates.Skip(1).ToList(); // Skip "全部日期"
-            
+
             if (!dates.SequenceEqual(currentDates))
             {
                 var currentSelected = SelectedDate;
@@ -219,7 +420,7 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
                     AvailableDates.Add("全部日期");
                     foreach (var d in dates) AvailableDates.Add(d);
                 });
-                
+
                 if (string.IsNullOrEmpty(currentSelected) || !AvailableDates.Contains(currentSelected))
                 {
                     SelectedDate = "全部日期";
@@ -231,8 +432,7 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
             }
 
             var items = allItems.AsEnumerable();
-            
-            // Apply Filters
+
             if (!string.IsNullOrEmpty(SelectedDate) && SelectedDate != "全部日期")
             {
                 if (DateTime.TryParse(SelectedDate, out var date))
@@ -242,11 +442,11 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
                 }
             }
 
-            if (FilterTypeIndex == 1) // Class
+            if (FilterTypeIndex == 1)
             {
                 items = items.Where(x => x.IsClassTime);
             }
-            else if (FilterTypeIndex == 2) // Break
+            else if (FilterTypeIndex == 2)
             {
                 items = items.Where(x => !x.IsClassTime);
             }
@@ -265,19 +465,19 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
         }
         finally
         {
-            _isLoadingScreenshots = false;
+            _isLoadingPhotos = false;
         }
     }
-    
+
     [RelayCommand]
     private void DeleteScreenshot(ScreenshotItem? item)
     {
         if (item == null) return;
-        try 
+        try
         {
-            if (System.IO.File.Exists(item.FilePath))
+            if (File.Exists(item.FilePath))
             {
-                System.IO.File.Delete(item.FilePath);
+                File.Delete(item.FilePath);
             }
             AllScreenshots.Remove(item);
             UpdatePagedScreenshots();
@@ -286,8 +486,7 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
             OnPropertyChanged(nameof(PageStartItemIndex));
             OnPropertyChanged(nameof(PageEndItemIndex));
             OnPropertyChanged(nameof(SelectedCount));
-            
-            // If deleting currently viewed image
+
             if (CurrentViewingImage == item)
             {
                 CloseImageViewer();
@@ -295,16 +494,15 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
         }
         catch (Exception ex)
         {
-             NotificationService.Instance.ShowError($"删除失败: {ex.Message}");
+            NotificationService.Instance.ShowError($"删除失败: {ex.Message}");
         }
     }
-    
+
     [RelayCommand]
     private void OpenScreenshot(ScreenshotItem? item)
     {
         if (item == null) return;
-        
-        // Instead of opening externally, open internal viewer
+
         CurrentViewingImage = item;
         ResetTransform();
         IsImageViewerOpen = true;
@@ -356,15 +554,15 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
         _selectionAnchor = item;
         OnPropertyChanged(nameof(SelectedCount));
     }
-    
+
     [RelayCommand]
     private void OpenFolder()
     {
         try
         {
-            var folder = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Screenshots");
-            if (!System.IO.Directory.Exists(folder)) System.IO.Directory.CreateDirectory(folder);
-            
+            var folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "WebcamPhotos");
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
             Process.Start(new ProcessStartInfo
             {
                 FileName = folder,
@@ -377,88 +575,59 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
         }
     }
 
-
-    // Image Viewer Commands
     [RelayCommand]
-    private void CloseImageViewer()
+    private async Task DeleteSelectedAsync()
     {
-        IsImageViewerOpen = false;
-        IsMaximized = false; // Reset maximization when closing
-        CurrentViewingImage = null;
-        // Optional: clear large image cache to free memory immediately
-        StringToBitmapConverter.ClearCache();
-    }
+        if (SelectedCount == 0) return;
 
-    [RelayCommand]
-    private void ToggleMaximize()
-    {
-        IsMaximized = !IsMaximized;
-    }
+        var selectedItems = AllScreenshots.Where(x => x.IsSelected).ToList();
+        var errors = new List<string>();
 
-    [RelayCommand]
-    private void PreviousImage()
-    {
-        if (CurrentViewingImage == null) return;
-        var index = PagedScreenshots.IndexOf(CurrentViewingImage);
-        if (index > 0)
+        await Task.Run(() =>
         {
-            CurrentViewingImage = PagedScreenshots[index - 1];
-            ResetTransform();
+            foreach (var item in selectedItems)
+            {
+                try
+                {
+                    if (File.Exists(item.FilePath))
+                    {
+                        File.Delete(item.FilePath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"{item.FileName}: {ex.Message}");
+                }
+            }
+        });
+
+        foreach (var item in selectedItems)
+        {
+            AllScreenshots.Remove(item);
         }
-        else if (PagedScreenshots.Count > 0)
-        {
-            // Optional: Loop to last
-            CurrentViewingImage = PagedScreenshots[^1];
-            ResetTransform();
-        }
-    }
 
-    [RelayCommand]
-    private void NextImage()
-    {
-        if (CurrentViewingImage == null) return;
-        var index = PagedScreenshots.IndexOf(CurrentViewingImage);
-        if (index >= 0 && index < PagedScreenshots.Count - 1)
+        UpdatePagedScreenshots();
+        OnPropertyChanged(nameof(TotalItems));
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(PageStartItemIndex));
+        OnPropertyChanged(nameof(PageEndItemIndex));
+        OnPropertyChanged(nameof(SelectedCount));
+
+        if (errors.Count > 0)
         {
-            CurrentViewingImage = PagedScreenshots[index + 1];
-            ResetTransform();
-        }
-        else if (PagedScreenshots.Count > 0)
-        {
-            // Optional: Loop to first
-            CurrentViewingImage = PagedScreenshots[0];
-            ResetTransform();
+            NotificationService.Instance.ShowError($"部分删除失败:\n{string.Join("\n", errors)}");
         }
     }
 
     [RelayCommand]
-    private void ZoomIn()
+    private void SelectAllOnPage()
     {
-        SetZoom(ZoomLevel * 1.1);
-    }
-
-    [RelayCommand]
-    private void ZoomOut()
-    {
-        SetZoom(ZoomLevel / 1.1);
-    }
-
-    [RelayCommand]
-    private void ResetView()
-    {
-        ResetTransform();
-    }
-
-    [RelayCommand]
-    private void RotateLeft()
-    {
-        Rotation -= 90;
-    }
-
-    [RelayCommand]
-    private void RotateRight()
-    {
-        Rotation += 90;
+        if (!IsSelectionMode) return;
+        foreach (var item in PagedScreenshots)
+        {
+            item.IsSelected = true;
+        }
+        OnPropertyChanged(nameof(SelectedCount));
     }
 
     [RelayCommand]
@@ -484,95 +653,74 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
     }
 
     [RelayCommand]
-    private void SelectAllOnPage()
+    private void CloseImageViewer()
     {
-        foreach (var item in PagedScreenshots)
+        IsImageViewerOpen = false;
+        IsMaximized = false;
+        CurrentViewingImage = null;
+        ResetTransform();
+        StringToBitmapConverter.ClearCache();
+    }
+
+    [RelayCommand]
+    private void ToggleMaximize()
+    {
+        IsMaximized = !IsMaximized;
+    }
+
+    [RelayCommand]
+    private void PreviousImage()
+    {
+        if (CurrentViewingImage == null) return;
+        var index = PagedScreenshots.IndexOf(CurrentViewingImage);
+        if (index > 0)
         {
-            item.IsSelected = true;
+            CurrentViewingImage = PagedScreenshots[index - 1];
+            ResetTransform();
         }
-        OnPropertyChanged(nameof(SelectedCount));
-    }
-
-    [RelayCommand]
-    private async Task DeleteSelectedAsync()
-    {
-        var selected = AllScreenshots.Where(x => x.IsSelected).ToList();
-        if (selected.Count == 0) return;
-
-        var confirmed = await NotificationService.Instance.ShowConfirmAsync(
-            $"将删除 {selected.Count} 张图片且无法撤销，确定继续？",
-            "批量删除");
-        if (!confirmed) return;
-
-        var failed = new List<string>();
-        await Task.Run(() =>
+        else if (PagedScreenshots.Count > 0)
         {
-            foreach (var item in selected)
-            {
-                try
-                {
-                    if (File.Exists(item.FilePath))
-                    {
-                        File.Delete(item.FilePath);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    failed.Add($"{Path.GetFileName(item.FilePath)}: {ex.Message}");
-                }
-            }
-        });
-
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            foreach (var item in selected)
-            {
-                AllScreenshots.Remove(item);
-            }
-            UpdatePagedScreenshots();
-            OnPropertyChanged(nameof(TotalItems));
-            OnPropertyChanged(nameof(TotalPages));
-            OnPropertyChanged(nameof(PageStartItemIndex));
-            OnPropertyChanged(nameof(PageEndItemIndex));
-            OnPropertyChanged(nameof(SelectedCount));
-        });
-
-        if (failed.Count > 0)
-        {
-            NotificationService.Instance.ShowWarning($"批量删除完成，但有 {failed.Count} 张失败");
-            Debug.WriteLine(string.Join(Environment.NewLine, failed));
-            return;
+            CurrentViewingImage = PagedScreenshots[^1];
+            ResetTransform();
         }
-
-        NotificationService.Instance.ShowSuccess("已批量删除");
     }
 
     [RelayCommand]
-    private void FirstPage()
+    private void NextImage()
     {
-        CurrentPage = 1;
+        if (CurrentViewingImage == null) return;
+        var index = PagedScreenshots.IndexOf(CurrentViewingImage);
+        if (index >= 0 && index < PagedScreenshots.Count - 1)
+        {
+            CurrentViewingImage = PagedScreenshots[index + 1];
+            ResetTransform();
+        }
+        else if (PagedScreenshots.Count > 0)
+        {
+            CurrentViewingImage = PagedScreenshots[0];
+            ResetTransform();
+        }
     }
 
     [RelayCommand]
-    private void PreviousPage()
+    private void ZoomIn()
     {
-        if (CurrentPage <= 1) return;
-        CurrentPage -= 1;
+        SetZoom(ZoomLevel * 1.1);
     }
 
     [RelayCommand]
-    private void NextPage()
+    private void ZoomOut()
     {
-        if (CurrentPage >= TotalPages) return;
-        CurrentPage += 1;
+        SetZoom(ZoomLevel / 1.1);
     }
 
     [RelayCommand]
-    private void LastPage()
+    private void ResetView()
     {
-        CurrentPage = TotalPages;
+        ResetTransform();
     }
 
+    [RelayCommand]
     private void ResetTransform()
     {
         ZoomLevel = 1.0;
@@ -584,6 +732,18 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
     public void SetZoom(double zoom)
     {
         ZoomLevel = Math.Clamp(zoom, MinZoom, MaxZoom);
+    }
+
+    [RelayCommand]
+    private void RotateLeft()
+    {
+        Rotation -= 90;
+    }
+
+    [RelayCommand]
+    private void RotateRight()
+    {
+        Rotation += 90;
     }
 
     partial void OnZoomLevelChanged(double value)
@@ -600,7 +760,7 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
             return;
         }
     }
-    
+
     partial void OnSelectedDateChanged(string? value)
     {
         LoadScreenshotsCommand.Execute(null);
@@ -610,7 +770,6 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
     {
         LoadScreenshotsCommand.Execute(null);
     }
-
 
     partial void OnPageSizeChanged(int value)
     {
@@ -626,30 +785,9 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
 
     partial void OnCurrentPageChanged(int value)
     {
-        var pages = TotalPages;
-        if (pages == 0)
-        {
-            if (CurrentPage != 0) CurrentPage = 0;
-            return;
-        }
-
-        if (value < 1)
-        {
-            CurrentPage = 1;
-            return;
-        }
-
-        if (value > pages)
-        {
-            CurrentPage = pages;
-            return;
-        }
-
+        if (value < 0) CurrentPage = 0;
+        if (value > TotalPages) CurrentPage = TotalPages;
         UpdatePagedScreenshots();
-        OnPropertyChanged(nameof(PageStartItemIndex));
-        OnPropertyChanged(nameof(PageEndItemIndex));
-        OnPropertyChanged(nameof(CanGoPrevious));
-        OnPropertyChanged(nameof(CanGoNext));
     }
 
     partial void OnIsSelectionModeChanged(bool value)
@@ -657,6 +795,42 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
         if (!value)
         {
             ClearSelection();
+        }
+    }
+
+    [RelayCommand]
+    private void NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            CurrentPage++;
+        }
+    }
+
+    [RelayCommand]
+    private void PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            CurrentPage--;
+        }
+    }
+
+    [RelayCommand]
+    private void FirstPage()
+    {
+        if (TotalPages > 0)
+        {
+            CurrentPage = 1;
+        }
+    }
+
+    [RelayCommand]
+    private void LastPage()
+    {
+        if (TotalPages > 0)
+        {
+            CurrentPage = TotalPages;
         }
     }
 
@@ -687,6 +861,9 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
         OnPropertyChanged(nameof(CanGoPrevious));
         OnPropertyChanged(nameof(CanGoNext));
     }
-}
 
-public record ImageFormatOption(string Name, string Value, string Description);
+    public record CameraItem(string Name, string Moniker)
+    {
+        public override string ToString() => Name;
+    }
+}

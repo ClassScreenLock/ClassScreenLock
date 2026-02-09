@@ -43,21 +43,40 @@ namespace ClassScreenLock.Services
 
         public void Initialize()
         {
-            // 加载所有支持的语言资源
-            LoadLanguageResource("zh-CN");
-            LoadLanguageResource("en-US");
-            
-            // 默认使用中文
-            if (_resourceDictionaries.ContainsKey("zh-CN"))
+            try
             {
-                _currentResourceDictionary = _resourceDictionaries["zh-CN"];
+                // 加载所有支持的语言资源
+                LoadLanguageResource("zh-CN");
+                LoadLanguageResource("en-US");
+                
+                // 获取当前设置的语言，如果没有则默认为中文
+                string targetLang = "zh-CN";
+                try
+                {
+                    targetLang = SettingsService.General.Language;
+                }
+                catch { }
+
+                if (_resourceDictionaries.TryGetValue(targetLang, out var dict))
+                {
+                    _currentResourceDictionary = dict;
+                    _currentLanguage = targetLang;
+                }
+                else if (_resourceDictionaries.TryGetValue("zh-CN", out var zhDict))
+                {
+                    _currentResourceDictionary = zhDict;
+                    _currentLanguage = "zh-CN";
+                }
+                
+                // 如果应用程序已初始化，则立即添加默认语言资源
+                if (Application.Current != null && _currentResourceDictionary != null)
+                {
+                    UpdateApplicationResources(_currentResourceDictionary);
+                }
             }
-            _currentLanguage = "zh-CN";
-            
-            // 如果应用程序已初始化，则立即添加默认语言资源
-            if (Application.Current != null && _currentResourceDictionary != null)
+            catch (Exception ex)
             {
-                UpdateApplicationResources(_currentResourceDictionary);
+                LogService.Instance.Log("Error", "Localization", "Initialize", ex.Message);
             }
         }
 
