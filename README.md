@@ -74,6 +74,18 @@
 - 📥 **[GitHub Releases](https://github.com/jiugulixiaoniu/ClassScreenLock/releases)** - 获取最新稳定版本和测试版本
 - 📝 **安装说明**：下载对应版本的安装包/绿色包，解压后直接运行主程序，无需复杂安装步骤
 
+## 以下是根据发布记录整理的 ClassScreenLock 软件版本列表：
+
+### 2026 Q1：
+
+| 年份 | 季度 | 系列 | 版本 | 发布链接 | 状态 | 具体日期 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026 | 2026 Q1 | V1.8 | V1.8.28.2855 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.8.28.2855) | 测试版 | 2026/2/9 |
+| 2026 | 2026 Q1 | V1.4 | V1.4.18.1361 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.4.18.1361) | 测试版 | 2026/1/31 |
+| 2026 | 2026 Q1 | V1.2 | V1.2.7.1143 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.2.7.1143) | 测试版 | 2026/1/24  |
+| 2026 | 2026 Q1 | V1.1 | V1.1.5.1010 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.1.5.1010) | 测试版 | 2026/1/19  |
+| 2026 | 2026 Q1 | V1.1 | V1.1.1005 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.1.1005) | 测试版 | 2026/1/18 |
+
 
 ## 🙏 贡献者和特别感谢
 
