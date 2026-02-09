@@ -14,6 +14,7 @@
 
 [![License](https://img.shields.io/badge/License-GPLV3-blue.svg?style=for-the-badge)](https://opensource.org/licenses/GPLV3)
 
+## 你可以加入我们的QQ群：1081181845
 
 </div>
 
@@ -118,7 +119,7 @@
 
 - 📧 [邮箱](Lavachicken2512@outlook.com)
 - 🐙 [问题反馈](https://github.com/jiugulixiaoniu/ClassScreenLock/issues)
-- 💬 [交流群](https://qm.qq.com/q/1081181845)
+- 💬 [QQ群：1081181845](https://qm.qq.com/q/1081181845)
 
 ## 📄 官方文档
 
