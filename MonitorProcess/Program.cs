@@ -22,7 +22,7 @@ class Program
         var cts = new CancellationTokenSource();
 
         // 监听退出信号
-        _ = Task.Run(() =>
+        var t = Task.Run(() =>
         {
             try
             {
@@ -38,6 +38,7 @@ class Program
             }
             catch { }
         });
+        t.ContinueWith(ct => { try { Console.Error.WriteLine(ct.Exception?.ToString()); } catch { } }, TaskContinuationOptions.OnlyOnFaulted);
 
         Console.Error.WriteLine("MonitorProcess started.");
 
