@@ -10,6 +10,12 @@ public class StringEqualsConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
+        if (targetType == typeof(bool) || targetType == typeof(bool?))
+        {
+            var target = parameter?.ToString() ?? string.Empty;
+            return string.Equals(value?.ToString(), target, StringComparison.Ordinal);
+        }
+
         if (parameter is string paramStr)
         {
             var parts = paramStr.Split('|');

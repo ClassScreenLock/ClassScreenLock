@@ -5,11 +5,11 @@ namespace ClassScreenLock.Models;
 
 public class SoftwareBlockageModel
 {
-    [JsonPropertyName("allowedApps")]
-    public List<string> AllowedApps { get; set; } = new();
-
     [JsonPropertyName("blockedRules")]
     public List<string> BlockedRules { get; set; } = new();
+
+    [JsonPropertyName("blockedFileAclBackup")]
+    public Dictionary<string, string> BlockedFileAclBackup { get; set; } = new();
 
     [JsonPropertyName("isNetworkLockEnabled")]
     public bool IsNetworkLockEnabled { get; set; } = false;

@@ -65,6 +65,12 @@ public class LockSettingsModel
     [JsonPropertyName("sidebarScreenshotHistoryMinAccountType")]
     public AccountType? SidebarScreenshotHistoryMinAccountType { get; set; } = null;
 
+    [JsonPropertyName("sidebarWebcamHistoryMinAccountType")]
+    public AccountType? SidebarWebcamHistoryMinAccountType { get; set; } = null;
+
+    [JsonPropertyName("sidebarAutomationMinAccountType")]
+    public AccountType? SidebarAutomationMinAccountType { get; set; } = null;
+
     [JsonPropertyName("sidebarSecurityCenterMinAccountType")]
     public AccountType? SidebarSecurityCenterMinAccountType { get; set; } = null;
 

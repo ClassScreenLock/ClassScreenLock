@@ -37,4 +37,16 @@ public class SettingsModel
 
     [JsonPropertyName("termStartDate")]
     public DateTime? TermStartDate { get; set; }
+
+    [JsonPropertyName("automationSchemes")]
+    public System.Collections.Generic.List<string> AutomationSchemes { get; set; } = new() { "Default" };
+
+    [JsonPropertyName("currentAutomationScheme")]
+    public string CurrentAutomationScheme { get; set; } = "Default";
+
+    [JsonPropertyName("automationConfigs")]
+    public System.Collections.Generic.List<string> AutomationConfigs { get; set; } = new() { "Default" };
+
+    [JsonPropertyName("currentAutomationConfig")]
+    public string CurrentAutomationConfig { get; set; } = "Default";
 }

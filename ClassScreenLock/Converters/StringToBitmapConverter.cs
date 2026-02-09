@@ -35,16 +35,15 @@ public class StringToBitmapConverter : IValueConverter
 
                 if (isThumbnail)
                 {
-                    // Create a small thumbnail for the list view to save memory
-                    bitmap = Bitmap.DecodeToWidth(stream, 400);
+                    // Decode to tile width to reduce CPU/memory for grids (240px matches thumbnail tile)
+                    bitmap = Bitmap.DecodeToWidth(stream, 240);
                 }
                 else
                 {
                     bitmap = new Bitmap(stream);
                 }
 
-                // Limit cache size to prevent runaway memory usage
-                if (cache.Count > 100)
+                if (cache.Count > 500)
                 {
                     ClearCache();
                 }
@@ -59,8 +58,6 @@ public class StringToBitmapConverter : IValueConverter
 
     public static void ClearCache()
     {
-        foreach (var bmp in _cache.Values) bmp.Dispose();
-        foreach (var bmp in _thumbCache.Values) bmp.Dispose();
         _cache.Clear();
         _thumbCache.Clear();
     }
