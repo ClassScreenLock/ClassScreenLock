@@ -37,7 +37,7 @@ public partial class BreakButtonWindow : Window
             UpdateButtonStyle(true);
             
             // 3秒后自动重置确认状态
-            Task.Run(async () =>
+            var t = Task.Run(async () =>
             {
                 await Task.Delay(3000);
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
@@ -49,6 +49,7 @@ public partial class BreakButtonWindow : Window
                     }
                 });
             });
+            t.ContinueWith(ct => { try { Console.Error.WriteLine(ct.Exception?.ToString()); } catch { } }, TaskContinuationOptions.OnlyOnFaulted);
         }
         else
         {
