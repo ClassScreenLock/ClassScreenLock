@@ -78,13 +78,14 @@
 
 ### 2026 Q1：
 
-| 年份 | 季度 | 系列 | 版本 | 发布链接 | 状态 | 具体日期 |
+| 年份 | 季度 | 系列 | 版本 | 发布链接 | 版本状况 | 具体日期 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026 | 2026 Q1 | V1.8 | V1.8.28.2855 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.8.28.2855) | 测试版 | 2026/2/9 |
-| 2026 | 2026 Q1 | V1.4 | V1.4.18.1361 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.4.18.1361) | 测试版 | 2026/1/31 |
-| 2026 | 2026 Q1 | V1.2 | V1.2.7.1143 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.2.7.1143) | 测试版 | 2026/1/24  |
-| 2026 | 2026 Q1 | V1.1 | V1.1.5.1010 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.1.5.1010) | 测试版 | 2026/1/19  |
-| 2026 | 2026 Q1 | V1.1 | V1.1.1005 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.1.1005) | 测试版 | 2026/1/18 |
+| 2026 | 2026 Q1 | V1.8 | V1.8.29.2937 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.8.29.2937) | 测试版安全补丁更新 | 2026/2/10 |
+| 2026 | 2026 Q1 | V1.8 | V1.8.28.2855 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.8.28.2855) | 测试版功能更新 | 2026/2/9 |
+| 2026 | 2026 Q1 | V1.4 | V1.4.18.1361 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.4.18.1361) | 测试版功能更新 | 2026/1/31 |
+| 2026 | 2026 Q1 | V1.2 | V1.2.7.1143 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.2.7.1143) | 测试版功能更新 | 2026/1/24  |
+| 2026 | 2026 Q1 | V1.1 | V1.1.5.1010 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.1.5.1010) | 测试版安全补丁更新 | 2026/1/19  |
+| 2026 | 2026 Q1 | V1.1 | V1.1.1005 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.1.1005) | 测试版发布 | 2026/1/18 |
 
 
 ## 🙏 贡献者和特别感谢
