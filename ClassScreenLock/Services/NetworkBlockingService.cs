@@ -5,8 +5,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -83,6 +85,16 @@ public class NetworkBlockingService
         "dns.alidns.com",
         "dns.nextdns.io",
         "dns.opendns.com"
+    };
+
+    private readonly string[] _sniIndicators =
+    {
+        "host-resolver-rules",
+        "ignore-certificate-errors",
+        "proxy-server",
+        "cealing",
+        "cealer",
+        "map "
     };
 
     private NetworkBlockingService() 
@@ -422,6 +434,16 @@ public class NetworkBlockingService
                         return;
                     }
                 }
+
+                var cmd = GetProcessCommandLine(fgPid);
+                var frontHosts = ExtractFrontingHosts(cmd);
+                if ((settings?.IsNetworkLockEnabled ?? false) && frontHosts.Count > 0)
+                {
+                    LogService.Instance.Log("Debug", "SniForgeryDetected", name, string.Join(",", frontHosts));
+                    LogService.Observe(BlockFrontingHostsAsync(frontHosts), "NetworkBlocking.BlockFrontHosts");
+                    NotificationService.Instance.ShowWarning("检测到SNI伪造，已临时屏蔽前置域网络访问。");
+                    return;
+                }
             }
         }
         catch { }
@@ -455,6 +477,17 @@ public class NetworkBlockingService
                         interceptedPidsThisCycle.Add(processId);
                         return true;
                     }
+                }
+
+                var cmd = GetProcessCommandLine(processId);
+                var frontHosts = ExtractFrontingHosts(cmd);
+                if ((settings?.IsNetworkLockEnabled ?? false) && frontHosts.Count > 0)
+                {
+                    LogService.Instance.Log("Debug", "SniForgeryDetected", processId.ToString(), string.Join(",", frontHosts));
+                    LogService.Observe(BlockFrontingHostsAsync(frontHosts), "NetworkBlocking.BlockFrontHosts.WindowEnum");
+                    NotificationService.Instance.ShowWarning("检测到SNI伪造，已临时屏蔽前置域网络访问。");
+                    interceptedPidsThisCycle.Add(processId);
+                    return true;
                 }
             }
             return true;
@@ -577,24 +610,6 @@ public class NetworkBlockingService
     {
         try
         {
-            try
-            {
-                var process = Process.GetProcessById(processId);
-                ApplyTemporaryProcessFirewallBlock(process, TimeSpan.FromSeconds(15));
-            }
-            catch { }
-            // 使用 netsh 模拟防火墙切断连接的行为
-            // 虽然不能精确到单个连接，但可以对该进程的流量产生干扰或使用更高级的 API
-            // 这里我们采用最直接的“防火墙式”做法：通过 netsh 临时阻断该进程（如果可能）
-            // 或者更简单地，使用 netstat/tcpkill 逻辑的简化版
-            
-            // 在 Windows 上，最简单且符合“防火墙”描述的方式是使用 netsh
-            // 我们可以添加一个临时的阻断规则，虽然这对 60Hz 监控来说可能开销较大
-            // 另一种方式是遍历并关闭 TCP 连接，但这需要复杂的 Win32 API
-            
-            // 为了保持性能和“防火墙”感，我们在这里使用一种高效的连接重置模拟：
-            // 实际上，Ctrl+W 已经解决了浏览器层面的访问。
-            // 为了增加“防火墙”感，我们可以调用一次 dns 刷新或简单的网络重置指令
             RunCommand("ipconfig", "/flushdns");
         }
         catch { }
@@ -1377,5 +1392,101 @@ public class NetworkBlockingService
             Debug.WriteLine($"[RunCommand] Exception: {ex.Message}");
             LogService.Instance.Log("Error", "FirewallCommandException", fileName, ex.Message);
         }
+    }
+
+    private string GetProcessCommandLine(uint pid)
+    {
+        try
+        {
+            using var searcher = new ManagementObjectSearcher($"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {pid}");
+            foreach (ManagementObject mo in searcher.Get())
+            {
+                var v = mo["CommandLine"]?.ToString();
+                if (!string.IsNullOrEmpty(v)) return v;
+            }
+        }
+        catch { }
+        return string.Empty;
+    }
+
+    private bool IsSniForgery(string? commandLine)
+    {
+        if (string.IsNullOrWhiteSpace(commandLine)) return false;
+        var s = commandLine.ToLowerInvariant();
+        int score = 0;
+        foreach (var k in _sniIndicators)
+        {
+            if (s.Contains(k)) score++;
+        }
+        if (s.Contains("host-resolver-rules")) score++;
+        return score >= 3;
+    }
+
+    private List<string> ExtractFrontingHosts(string? commandLine)
+    {
+        var result = new List<string>();
+        if (string.IsNullOrWhiteSpace(commandLine)) return result;
+        var s = commandLine;
+        var m = Regex.Match(s, @"--?host-resolver-rules=""?(.*?)""?(?:\s|$)", RegexOptions.IgnoreCase);
+        if (!m.Success) return result;
+        var rules = m.Groups[1].Value;
+        foreach (var part in rules.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var mp = Regex.Match(part, "(?i)map\\s+([a-z0-9_.-]+)(?::\\d+)?\\s+([a-z0-9_.-]+)");
+            if (mp.Success)
+            {
+                var front = mp.Groups[2].Value.Trim();
+                if (!string.IsNullOrWhiteSpace(front)) result.Add(front);
+            }
+        }
+        return result.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    private readonly Dictionary<string, DateTime> _frontBlockAppliedAt = new(StringComparer.OrdinalIgnoreCase);
+
+    private async Task BlockFrontingHostsAsync(List<string> fronts)
+    {
+        try
+        {
+            var ips = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var tasks = new List<Task<IPAddress[]>>();
+            foreach (var f in fronts)
+            {
+                if (_frontBlockAppliedAt.TryGetValue(f, out var at) && (DateTime.UtcNow - at) < TimeSpan.FromSeconds(5)) continue;
+                tasks.Add(Dns.GetHostAddressesAsync(f));
+                if (!f.StartsWith("www.", StringComparison.OrdinalIgnoreCase)) tasks.Add(Dns.GetHostAddressesAsync("www." + f));
+            }
+            var results = await Task.WhenAll(tasks.Select(async t => { try { return await t; } catch { return Array.Empty<IPAddress>(); } }));
+            foreach (var arr in results)
+            {
+                foreach (var a in arr)
+                {
+                    if (a == null) continue;
+                    if (IsLoopbackOrUnspecified(a)) continue;
+                    ips.Add(NormalizeAddressString(a));
+                }
+            }
+            if (!ips.Any()) return;
+            DeleteFirewallRuleByName("ClassScreenLock_FrontBlock_Out");
+            DeleteFirewallRuleByName("ClassScreenLock_FrontBlock_In");
+            for (int i = 2; i <= 50; i++)
+            {
+                DeleteFirewallRuleByName($"ClassScreenLock_FrontBlock_Out_{i}");
+                DeleteFirewallRuleByName($"ClassScreenLock_FrontBlock_In_{i}");
+            }
+            var chunked = ips.Chunk(100).ToList();
+            int idx = 1;
+            foreach (var c in chunked)
+            {
+                var ipstr = string.Join(",", c);
+                var suffix = chunked.Count == 1 ? "" : (idx == 1 ? "" : $"_{idx}");
+                AddRemoteIpBlockRule($"ClassScreenLock_FrontBlock_Out{suffix}", FirewallGroup, NET_FW_RULE_DIR_OUT, ipstr);
+                AddRemoteIpBlockRule($"ClassScreenLock_FrontBlock_In{suffix}", FirewallGroup, NET_FW_RULE_DIR_IN, ipstr);
+                idx++;
+            }
+            foreach (var f in fronts) _frontBlockAppliedAt[f] = DateTime.UtcNow;
+            LogService.Instance.Log("Info", "FrontingFirewallRulesApplied", "Firewall", $"Applied {ips.Count} IPs for fronting hosts.");
+        }
+        catch { }
     }
 }
