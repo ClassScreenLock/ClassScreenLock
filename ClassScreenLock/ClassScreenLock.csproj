@@ -8,10 +8,13 @@
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>ClassScreenLock.ico</ApplicationIcon>
         <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
-    <Version>1.8.28.2855</Version>
-    <AssemblyVersion>1.8.28.2855</AssemblyVersion>
-    <FileVersion>1.8.28.2855</FileVersion>
-    <InformationalVersion>1.8.28.2855</InformationalVersion>
+    <Version>1.8.29.2937</Version>
+    <AssemblyVersion>1.8.29.2937</AssemblyVersion>
+    <FileVersion>1.8.29.2937</FileVersion>
+    <InformationalVersion>1.8.29.2937</InformationalVersion>
+    <Copyright>© 旧故里小牛（jiugulixiaoniu）</Copyright>
+    <Authors>旧故里小牛（jiugulixiaoniu）</Authors>
+    <Company>旧故里小牛（jiugulixiaoniu）</Company>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -52,6 +55,7 @@
         <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="YamlDotNet" Version="13.7.1" />
+        <PackageReference Include="System.Management" Version="8.0.0" />
     </ItemGroup>
 
 </Project>
