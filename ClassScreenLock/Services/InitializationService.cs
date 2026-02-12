@@ -45,9 +45,14 @@ public class InitializationService
         {
             lock (_lock)
             {
+                var adminConfigured = IsAdminConfiguredNoLock();
+                if (adminConfigured && File.Exists(StatePath))
+                {
+                    return false;
+                }
+
                 var include2fa = ShouldIncludeTwoFactorBinding();
                 var twoFactorDone = include2fa ? _state.TwoFactorBindingDone : true;
-                var adminConfigured = IsAdminConfiguredNoLock();
                 return !(_state.UserAgreementDone &&
                          _state.SystemConfigDone &&
                          _state.UserPreferencesDone &&

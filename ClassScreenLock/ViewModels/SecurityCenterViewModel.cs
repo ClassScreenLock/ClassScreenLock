@@ -129,9 +129,6 @@ public partial class SecurityCenterViewModel : ViewModelBase
     private string _securityReportText = string.Empty;
 
     [ObservableProperty]
-    private bool _isBiometricAvailable = SecurityService.Instance.IsBiometricAvailable;
-
-    [ObservableProperty]
     private ObservableCollection<string> _authorizationLevels = new() { "无", "普通用户", "管理员", "超级管理员" };
 
     [ObservableProperty]
@@ -231,7 +228,9 @@ public partial class SecurityCenterViewModel : ViewModelBase
     {
         var current = AccountService.Instance.CurrentAccount;
         var securityLoggedIn = SecurityService.Instance.IsAuthenticated;
-        IsAuthenticated = securityLoggedIn;
+        
+        // 如果安全服务已登录，或者是 AccountService 中的管理员/超级管理员，则视为已授权访问安全中心
+        IsAuthenticated = securityLoggedIn || (current != null && (current.AccountType == AccountType.SuperAdmin || current.AccountType == AccountType.Admin));
         IsSuperAdmin = (current != null && current.AccountType == AccountType.SuperAdmin) || securityLoggedIn;
         
         if (IsSuperAdmin)
@@ -309,7 +308,8 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
         if (!SecurityService.Instance.Settings.IsTwoFactorEnabled)
         {
-            IsLoginTwoFactorVisible = false;
+            // 如果系统层面的 2FA 未启用，但账户层面启用了，则显示验证码输入框
+            IsLoginTwoFactorVisible = AccountService.Instance.IsAccountTwoFactorEnabled(Username);
             return;
         }
 
@@ -320,6 +320,11 @@ public partial class SecurityCenterViewModel : ViewModelBase
             AdminLoginVerificationMode.TwoFactorOnly => true,
             _ => false
         };
+    }
+
+    partial void OnUsernameChanged(string value)
+    {
+        RefreshLoginFieldVisibility();
     }
 
     private static AdminLoginVerificationMode ParseLoginVerificationMode(string text)
@@ -407,59 +412,103 @@ public partial class SecurityCenterViewModel : ViewModelBase
         switch (result.Status)
         {
             case PasswordVerificationStatus.Success:
-                IsAuthenticated = true;
-                IsLocked = false;
-                RemainingAttempts = result.RemainingAttempts;
-                LoginMessage = result.Message;
-                LoginPassword = string.Empty;
-                IsTwoFactorRequired = false;
-                LoginTwoFactorCode = string.Empty;
-                
-                // 同步登录到 AccountService，确保可以进行账户管理
-                var accountLoggedIn = false;
-                if (!string.IsNullOrWhiteSpace(passwordCopy))
                 {
-                    var (success, _) = await AccountService.Instance.LoginAsync(Username, passwordCopy);
-                    accountLoggedIn = success;
-                }
-                if (!accountLoggedIn)
-                {
-                    AccountService.Instance.LoginFromSecuritySession(Username);
-                }
-                
-                UpdateSuperAdminStatus();
-                RefreshAccounts();
+                    IsAuthenticated = true;
+                    IsLocked = false;
+                    RemainingAttempts = result.RemainingAttempts;
+                    LoginMessage = result.Message;
+                    LoginPassword = string.Empty;
+                    IsTwoFactorRequired = false;
+                    LoginTwoFactorCode = string.Empty;
+                    
+                    // 同步登录到 AccountService，确保可以进行账户管理
+                    var accountLoggedIn = false;
+                    if (!string.IsNullOrWhiteSpace(passwordCopy))
+                    {
+                        var (success, _) = await AccountService.Instance.LoginAsync(Username, passwordCopy);
+                        accountLoggedIn = success;
+                    }
+                    if (!accountLoggedIn)
+                    {
+                        AccountService.Instance.LoginFromSecuritySession(Username);
+                    }
+                    
+                    UpdateSuperAdminStatus();
+                    RefreshAccounts();
 
-                // 登录成功后通知侧边栏刷新
-                if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-                    desktop.MainWindow?.DataContext is MainWindowViewModel mainVm)
-                {
-                    mainVm.SidebarViewModel.RefreshAccountInfo();
-                }
+                    // 登录成功后通知侧边栏刷新
+                    if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
+                        desktop.MainWindow?.DataContext is MainWindowViewModel mainVm)
+                    {
+                        mainVm.SidebarViewModel.RefreshAccountInfo();
+                    }
 
-                NotificationService.Instance.ShowSuccess("管理员登录成功");
+                    NotificationService.Instance.ShowSuccess("管理员登录成功");
+                }
                 break;
             case PasswordVerificationStatus.LockedOut:
-                IsAuthenticated = false;
-                IsLocked = true;
-                RemainingAttempts = 0;
-                LockoutMessage = result.Message;
-                if (result.LockoutUntil.HasValue)
                 {
-                    LockoutMessage += $"，解锁时间：{result.LockoutUntil:yyyy-MM-dd HH:mm:ss}";
+                    IsAuthenticated = false;
+                    IsLocked = true;
+                    RemainingAttempts = 0;
+                    LockoutMessage = result.Message;
+                    if (result.LockoutUntil.HasValue)
+                    {
+                        LockoutMessage += $"，解锁时间：{result.LockoutUntil:yyyy-MM-dd HH:mm:ss}";
+                    }
+                    NotificationService.Instance.ShowError(LockoutMessage);
                 }
-                NotificationService.Instance.ShowError(LockoutMessage);
                 break;
             case PasswordVerificationStatus.NotConfigured:
-                IsAuthenticated = false;
-                LoginMessage = result.Message;
-                NotificationService.Instance.ShowWarning(result.Message);
+                {
+                    IsAuthenticated = false;
+                    LoginMessage = result.Message;
+                    NotificationService.Instance.ShowWarning(result.Message);
+                }
                 break;
             default:
-                IsAuthenticated = false;
-                RemainingAttempts = result.RemainingAttempts;
-                LoginMessage = result.Message;
-                NotificationService.Instance.ShowWarning(result.Message);
+                {
+                    IsAuthenticated = false;
+                    RemainingAttempts = result.RemainingAttempts;
+                    LoginMessage = result.Message;
+                    NotificationService.Instance.ShowWarning(result.Message);
+
+                    if (!string.IsNullOrWhiteSpace(passwordCopy))
+                    {
+                        var (ok, msg) = await AccountService.Instance.LoginAsync(Username, passwordCopy, LoginTwoFactorCode);
+                        if (ok)
+                        {
+                            UpdateSuperAdminStatus();
+                            var current = AccountService.Instance.CurrentAccount;
+                            if (current != null && (current.AccountType == AccountType.Admin || current.AccountType == AccountType.SuperAdmin))
+                            {
+                                // 成功登录子管理员账号，重置安全服务的失败计数
+                                SecurityService.Instance.ResetFailedAttempts();
+                                RemainingAttempts = 10;
+                                
+                                IsAuthenticated = true;
+                                LoginMessage = string.Empty;
+                                NotificationService.Instance.ShowSuccess("管理员登录成功");
+                                
+                                // 登录成功后通知侧边栏刷新
+                                if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
+                                    desktop.MainWindow?.DataContext is MainWindowViewModel mainVm)
+                                {
+                                    mainVm.SidebarViewModel.RefreshAccountInfo();
+                                }
+                            }
+                            else
+                            {
+                                NotificationService.Instance.ShowSuccess("账户登录成功，但权限不足以管理安全中心");
+                                LoginMessage = "已以账户登录，如需管理安全中心请使用管理员账户";
+                            }
+                        }
+                        else
+                        {
+                            NotificationService.Instance.ShowWarning(msg);
+                        }
+                    }
+                }
                 break;
         }
 
@@ -1102,28 +1151,6 @@ public partial class SecurityCenterViewModel : ViewModelBase
         IsTwoFactorEnabled = SecurityService.Instance.Settings.IsTwoFactorEnabled;
         IsTwoFactorConfigured = IsTwoFactorEnabled;
         RefreshLoginFieldVisibility();
-    }
-
-    [RelayCommand]
-    private async Task UseBiometricAsync()
-    {
-        if (!SecurityService.Instance.IsBiometricAvailable)
-        {
-            NotificationService.Instance.ShowWarning("当前设备未配置生物识别认证");
-            return;
-        }
-
-        var success = await SecurityService.Instance.AuthenticateWithBiometricsAsync();
-        if (success)
-        {
-            IsAuthenticated = true;
-            LoginMessage = "已通过生物识别完成管理员验证";
-            NotificationService.Instance.ShowSuccess(LoginMessage);
-        }
-        else
-        {
-            NotificationService.Instance.ShowWarning("生物识别验证失败");
-        }
     }
 
     [RelayCommand]

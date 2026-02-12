@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using BCryptNet = BCrypt.Net.BCrypt;
+using OtpNet;
 using ClassScreenLock.Models;
 
 namespace ClassScreenLock.Services;
@@ -138,7 +139,32 @@ public class AccountService
         return true;
     }
 
-    public async Task<(bool success, string message)> LoginAsync(string username, string password)
+    private static bool VerifyTwoFactorCode(string secret, string? code)
+    {
+        if (string.IsNullOrWhiteSpace(secret)) return true;
+        if (string.IsNullOrWhiteSpace(code)) return false;
+        try
+        {
+            var secretBytes = Base32Encoding.ToBytes(secret);
+            var totp = new Totp(secretBytes);
+            return totp.VerifyTotp(code, out _);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public bool IsAccountTwoFactorEnabled(string username)
+    {
+        lock (_lock)
+        {
+            var account = _accounts.FirstOrDefault(a => string.Equals(a.Username, username, StringComparison.OrdinalIgnoreCase) && !a.IsDisabled);
+            return account != null && account.IsTwoFactorEnabled && !string.IsNullOrWhiteSpace(account.TwoFactorSecret);
+        }
+    }
+
+    public async Task<(bool success, string message)> LoginAsync(string username, string password, string? twoFactorCode = null)
     {
         lock (_lock)
         {
@@ -172,6 +198,16 @@ public class AccountService
             return (false, "用户名或密码错误");
         }
 
+        if (account.IsTwoFactorEnabled && !string.IsNullOrWhiteSpace(account.TwoFactorSecret))
+        {
+            var twoFactorOk = VerifyTwoFactorCode(account.TwoFactorSecret, twoFactorCode);
+            if (!twoFactorOk)
+            {
+                LogService.Instance.Log("Account", "LoginFailed", username, "双重验证码不正确");
+                return (false, "双重验证码不正确或未提供");
+            }
+        }
+
         lock (_lock)
         {
             _currentAccount = account;
@@ -183,6 +219,70 @@ public class AccountService
         LogService.Instance.Log("Account", "LoginSuccess", username);
         await Task.CompletedTask;
         return (true, "登录成功");
+    }
+
+    public TwoFactorSetupResult GenerateTwoFactorSetupForAccount(string username)
+    {
+        var secretBytes = KeyGeneration.GenerateRandomKey(20);
+        var secret = Base32Encoding.ToString(secretBytes);
+        var issuer = "ClassScreenLock";
+        var label = $"{issuer}:{username}";
+        var qrCodeUri = $"otpauth://totp/{label}?secret={secret}&issuer={issuer}";
+        return new TwoFactorSetupResult { Secret = secret, QrCodeUri = qrCodeUri };
+    }
+
+    public async Task<PasswordChangeResult> EnableTwoFactorForAccountAsync(Guid accountId, string secret, string code)
+    {
+        var result = new PasswordChangeResult();
+        lock (_lock)
+        {
+            var account = _accounts.FirstOrDefault(a => a.Id == accountId && !a.IsDisabled);
+            if (account == null)
+            {
+                result.Success = false;
+                result.Message = "账号不存在或已禁用";
+                return result;
+            }
+
+            var ok = VerifyTwoFactorCode(secret, code);
+            if (!ok)
+            {
+                result.Success = false;
+                result.Message = "验证码不正确";
+                return result;
+            }
+
+            account.IsTwoFactorEnabled = true;
+            account.TwoFactorSecret = secret;
+            SaveAccounts();
+            LogService.Instance.Log("Account", "2FAEnabled", account.Username);
+            result.Success = true;
+            result.Message = "双重验证已启用";
+        }
+        return await Task.FromResult(result);
+    }
+
+    public async Task<PasswordChangeResult> DisableTwoFactorForAccountAsync(Guid accountId)
+    {
+        var result = new PasswordChangeResult();
+        lock (_lock)
+        {
+            var account = _accounts.FirstOrDefault(a => a.Id == accountId && !a.IsDisabled);
+            if (account == null)
+            {
+                result.Success = false;
+                result.Message = "账号不存在或已禁用";
+                return result;
+            }
+
+            account.IsTwoFactorEnabled = false;
+            account.TwoFactorSecret = string.Empty;
+            SaveAccounts();
+            LogService.Instance.Log("Account", "2FADisabled", account.Username);
+            result.Success = true;
+            result.Message = "双重验证已禁用";
+        }
+        return await Task.FromResult(result);
     }
 
     public bool LoginFromSecuritySession(string username)

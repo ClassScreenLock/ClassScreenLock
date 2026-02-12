@@ -73,6 +73,6 @@
         </Grid>
         
         <!-- 底部信息 -->
-        <TextBlock Grid.Row="2" Text="ClassScreenLock v1.8.28.2855" HorizontalAlignment="Center" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Margin="0,20,0,0"/>
+        <TextBlock Grid.Row="2" Text="ClassScreenLock v1.8.30.3049" HorizontalAlignment="Center" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Margin="0,20,0,0"/>
     </Grid>
 </UserControl>

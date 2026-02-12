@@ -15,16 +15,16 @@
 
     <Grid RowDefinitions="Auto, *" Margin="32">
         <!-- 标题部分 -->
-        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,24">
+        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,32">
             <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
                 <Border Background="{DynamicResource SystemAccentColorLightBrush}" 
-                        Width="48" Height="48" CornerRadius="8">
-                    <icons:Icon Value="fas fa-shield" Width="24" Height="24" 
+                        Width="56" Height="56" CornerRadius="12">
+                    <icons:Icon Value="fas fa-shield-halved" Width="28" Height="28" 
                                 Foreground="{DynamicResource SystemAccentColor}"/>
                 </Border>
-                <StackPanel VerticalAlignment="Center">
+                <StackPanel VerticalAlignment="Center" Spacing="4">
                     <TextBlock Text="{DynamicResource SecurityCenter_Title}" Classes="h1" Margin="0"/>
-                    <TextBlock Text="管理您的账户安全与权限设置" Classes="caption" Opacity="0.6"/>
+                    <TextBlock Text="管理账户权限、安全验证及系统级访问控制" Classes="caption" Opacity="0.6" FontSize="14"/>
                 </StackPanel>
             </StackPanel>
         </StackPanel>
@@ -34,22 +34,25 @@
             <!-- 身份验证与概览 -->
             <TabItem Header="身份验证">
                 <ScrollViewer>
-                    <StackPanel Spacing="20" Margin="0,16,0,0">
+                    <StackPanel Spacing="24" Margin="0,16,0,0">
                         <!-- 登录卡片 -->
-                        <Border Classes="card" Padding="24">
+                        <Border Classes="card" Padding="32">
                             <Grid ColumnDefinitions="*, Auto">
-                                <StackPanel Spacing="16">
-                                    <TextBlock Text="管理员登录" Classes="h3"/>
+                                <StackPanel Spacing="24">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="管理员身份验证" Classes="h2"/>
+                                        <TextBlock Text="访问受限设置需要更高的权限级别" Classes="caption" Opacity="0.7"/>
+                                    </StackPanel>
                                     
                                     <StackPanel Spacing="20" IsVisible="{Binding !IsAuthenticated}">
-                                        <StackPanel Spacing="8">
-                                            <TextBlock Text="用户名" Classes="caption"/>
-                                            <TextBox Text="{Binding Username}" Watermark="输入管理员用户名" Width="300" HorizontalAlignment="Left" VerticalContentAlignment="Center" Classes="clear"/>
+                                        <StackPanel Spacing="12">
+                                            <TextBlock Text="用户名" Classes="caption" FontWeight="SemiBold"/>
+                                            <TextBox Text="{Binding Username}" Watermark="输入管理员用户名" Width="320" HorizontalAlignment="Left" VerticalContentAlignment="Center" Classes="clear"/>
                                         </StackPanel>
 
-                                        <StackPanel Spacing="8" IsVisible="{Binding IsLoginPasswordVisible}">
-                                            <TextBlock Text="密码" Classes="caption"/>
-                                            <Grid ColumnDefinitions="*,Auto" Width="300" HorizontalAlignment="Left">
+                                        <StackPanel Spacing="12" IsVisible="{Binding IsLoginPasswordVisible}">
+                                            <TextBlock Text="密码" Classes="caption" FontWeight="SemiBold"/>
+                                            <Grid ColumnDefinitions="*,Auto" Width="320" HorizontalAlignment="Left">
                                                 <TextBox Text="{Binding LoginPassword, Mode=TwoWay}" 
                                                          PasswordChar="{Binding PasswordChar}" 
                                                          Watermark="输入管理员密码" 
@@ -73,28 +76,24 @@
                                             </Grid>
                                         </StackPanel>
 
-                                        <StackPanel Spacing="8" IsVisible="{Binding IsLoginTwoFactorVisible}">
-                                            <TextBlock Text="双重验证码" Classes="caption"/>
+                                        <StackPanel Spacing="12" IsVisible="{Binding IsLoginTwoFactorVisible}">
+                                            <TextBlock Text="双重验证码" Classes="caption" FontWeight="SemiBold"/>
                                             <TextBox Text="{Binding LoginTwoFactorCode}" 
                                                      Watermark="输入 6 位验证码" 
                                                      MaxLength="6"
-                                                     Width="300" 
+                                                     Width="320" 
                                                      HorizontalAlignment="Left"
                                                      Classes="clear"/>
                                         </StackPanel>
 
                                         <TextBlock Text="{Binding LoginMessage}" Classes="caption" 
                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                                                   IsVisible="{Binding LoginMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                                    TextWrapping="Wrap"/>
                                         
-                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
                                             <Button Content="登录" Command="{Binding LoginCommand}" 
-                                                    Classes="accent" Width="120" Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-                                            <Button Command="{Binding UseBiometricCommand}" 
-                                                    IsEnabled="{Binding IsBiometricAvailable}"
-                                                    ToolTip.Tip="使用生物识别登录" Padding="8">
-                                                <icons:Icon Value="fas fa-fingerprint" Width="20" Height="20"/>
-                                            </Button>
+                                                    Classes="accent" Width="140" Height="40" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.7">
@@ -102,43 +101,52 @@
                                             <TextBlock Text="剩余尝试次数：" Classes="caption"/>
                                             <TextBlock Text="{Binding RemainingAttempts}" Classes="caption" FontWeight="Bold"/>
                                         </StackPanel>
+
+                                        <Border Background="{DynamicResource SystemAccentColorLightBrush}" Padding="12" CornerRadius="8" IsVisible="{Binding IsLocked}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <icons:Icon Value="fas fa-clock" Width="16" Height="16" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                <TextBlock Text="{Binding LockoutMessage}" Classes="caption" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
 
                                     <!-- 已登录状态 -->
-                                    <StackPanel Spacing="20" IsVisible="{Binding IsAuthenticated}">
+                                    <StackPanel Spacing="32" IsVisible="{Binding IsAuthenticated}">
                                         <Border Background="{DynamicResource SystemAccentColorLightBrush}" 
-                                                CornerRadius="8" Padding="16">
-                                            <StackPanel Orientation="Horizontal" Spacing="16">
-                                                <icons:Icon Value="fas fa-user-shield" Width="32" Height="32" 
-                                                            Foreground="{DynamicResource SystemAccentColor}"/>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="管理员权限已激活" FontWeight="Bold" FontSize="16"/>
-                                                    <TextBlock Text="您可以完全访问所有系统功能" Classes="caption"/>
+                                                CornerRadius="12" Padding="20">
+                                            <StackPanel Orientation="Horizontal" Spacing="20">
+                                                <Border Width="48" Height="48" CornerRadius="24" Background="{DynamicResource SystemAccentColor}">
+                                                    <icons:Icon Value="fas fa-user-shield" Width="24" Height="24" 
+                                                                Foreground="White"/>
+                                                </Border>
+                                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="管理员权限已激活" FontWeight="Bold" FontSize="18"/>
+                                                    <TextBlock Text="您现在可以管理系统安全设置、账户及访问权限" Classes="caption" FontSize="13"/>
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>
 
-                                        <StackPanel Orientation="Horizontal" Spacing="40" Margin="0,10">
+                                        <UniformGrid Columns="4" Margin="0,10">
                                             <StackPanel Spacing="8">
                                                 <TextBlock Text="当前账户" Classes="caption" Opacity="0.6"/>
-                                                <TextBlock Text="{Binding Username}" FontWeight="SemiBold" FontSize="18"/>
+                                                <TextBlock Text="{Binding Username}" FontWeight="SemiBold" FontSize="16"/>
                                             </StackPanel>
                                             <StackPanel Spacing="8">
                                                 <TextBlock Text="身份类型" Classes="caption" Opacity="0.6"/>
-                                                <TextBlock Text="{Binding AccountTypeText}" FontWeight="SemiBold" FontSize="18"/>
+                                                <TextBlock Text="{Binding AccountTypeText}" FontWeight="SemiBold" FontSize="16"/>
                                             </StackPanel>
                                             <StackPanel Spacing="8">
                                                 <TextBlock Text="登录状态" Classes="caption" Opacity="0.6"/>
-                                                <TextBlock Text="{Binding AccountStatusText}" FontWeight="SemiBold" FontSize="18"/>
+                                                <TextBlock Text="{Binding AccountStatusText}" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource SystemAccentColor}"/>
                                             </StackPanel>
                                             <StackPanel Spacing="8">
                                                 <TextBlock Text="登录时间" Classes="caption" Opacity="0.6"/>
-                                                <TextBlock Text="{Binding LoginTimeText}" FontWeight="SemiBold" FontSize="18"/>
+                                                <TextBlock Text="{Binding LoginTimeText}" FontWeight="SemiBold" FontSize="16"/>
                                             </StackPanel>
-                                        </StackPanel>
+                                        </UniformGrid>
 
-                                        <Button Content="退出登录" Command="{Binding LogoutCommand}" 
-                                                Classes="outline" Width="120" Height="36"/>
+                                        <Button Content="退出管理会话" Command="{Binding LogoutCommand}" 
+                                                Classes="outline" Width="160" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
                                 
@@ -216,35 +224,40 @@
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate x:DataType="models:AccountModel">
                                                     <Border Background="{DynamicResource SystemControlBackgroundAltMediumHighBrush}" 
-                                                            CornerRadius="8" Margin="4" Padding="16" Classes="account-card">
+                                                            CornerRadius="10" Margin="4,6" Padding="20" Classes="account-card">
                                                         <Grid ColumnDefinitions="Auto, *, Auto, Auto">
                                                             <Border Background="{DynamicResource SystemAccentColorLightBrush}" 
-                                                                    Width="40" Height="40" CornerRadius="20" Margin="0,0,16,0">
-                                                                <icons:Icon Value="fas fa-user" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                                    Width="48" Height="48" CornerRadius="24" Margin="0,0,20,0">
+                                                                <icons:Icon Value="fas fa-user" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
                                                             </Border>
                                                             
-                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Username}" FontWeight="Bold" FontSize="16"/>
+                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <TextBlock Text="{Binding Username}" FontWeight="Bold" FontSize="16"/>
+                                                                    <Border Background="{DynamicResource SystemAccentColor}" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding AccountType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='SuperAdmin'}">
+                                                                        <TextBlock Text="超级管理员" FontSize="10" Foreground="White"/>
+                                                                    </Border>
+                                                                </StackPanel>
                                                                 <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.6">
                                                                     <TextBlock Text="{Binding AccountType, Converter={StaticResource AccountTypeToStringConverter}}" Classes="caption"/>
                                                                     <TextBlock Text="•" Classes="caption"/>
-                                                                    <TextBlock Text="最后登录:" Classes="caption"/>
+                                                                    <TextBlock Text="最后活跃:" Classes="caption"/>
                                                                     <TextBlock Text="{Binding LastLoginAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}" Classes="caption"/>
                                                                 </StackPanel>
                                                             </StackPanel>
 
                                                             <Border Grid.Column="2" VerticalAlignment="Center" Margin="0,0,16,0"
-                                                                    Padding="8,2" CornerRadius="4" 
+                                                                    Padding="10,4" CornerRadius="6" 
                                                                     Background="{Binding IsLocked, Converter={StaticResource BooleanToStatusBrushConverter}}">
                                                                 <TextBlock Text="{Binding IsLocked, Converter={StaticResource BooleanToStatusTextConverter}}" 
-                                                                           FontSize="10" Foreground="White"/>
+                                                                           FontSize="11" Foreground="White" FontWeight="SemiBold"/>
                                                             </Border>
 
                                                             <Button Grid.Column="3" 
                                                                     Command="{Binding $parent[UserControl].((vm:SecurityCenterViewModel)DataContext).DeleteAccountCommand}"
                                                                     CommandParameter="{Binding}"
-                                                                    Classes="danger" Padding="8">
-                                                                <icons:Icon Value="fas fa-trash-alt" Width="16" Height="16"/>
+                                                                    Classes="danger" Width="36" Height="36" Padding="0">
+                                                                <icons:Icon Value="fas fa-trash-can" Width="16" Height="16"/>
                                                             </Button>
                                                         </Grid>
                                                     </Border>

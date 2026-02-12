@@ -786,7 +786,7 @@ public class SecurityService
         await Task.CompletedTask;
     }
 
-    private void ResetFailedAttempts()
+    public void ResetFailedAttempts()
     {
         var settings = Settings;
         settings.FailedCount = 0;
