@@ -1,10 +1,9 @@
-# ClassScreenLock - 班级屏幕锁定系统
+# ClassScreenLock - 班级屏幕管理系统
 
 <div align="center">
 
 <image src="img/xuanchuan.png" width="600" height="600" />
 
-🎯 **课堂专注管理工具** | 🚀 **简易高效屏幕管控** | 🎨 **友好交互体验**
 
 [![GitHub Issues](https://img.shields.io/github/issues-search/jiugulixiaoniu/ClassScreenLock?query=is%3Aopen&style=for-the-badge&color=667eea&logo=github&label=问题)](https://github.com/jiugulixiaoniu/ClassScreenLock/issues)
 [![最新版本](https://img.shields.io/github/v/release/jiugulixiaoniu/ClassScreenLock?style=for-the-badge&color=667eea&label=最新正式版)](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/latest)
@@ -74,19 +73,6 @@
 - 📥 **[GitHub Releases](https://github.com/jiugulixiaoniu/ClassScreenLock/releases)** - 获取最新稳定版本和测试版本
 - 📝 **安装说明**：下载对应版本的安装包/绿色包，解压后直接运行主程序，无需复杂安装步骤
 
-## 以下是根据发布记录整理的 ClassScreenLock 软件版本列表：
-
-### 2026 Q1：
-
-| 年份 | 季度 | 系列 | 版本 | 发布链接 | 版本状况 | 具体日期 |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026 | 2026 Q1 | V1.8 | V1.8.29.2937 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.8.29.2937) | 测试版安全补丁更新 | 2026/2/10 |
-| 2026 | 2026 Q1 | V1.8 | V1.8.28.2855 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.8.28.2855) | 测试版功能更新 | 2026/2/9 |
-| 2026 | 2026 Q1 | V1.4 | V1.4.18.1361 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.4.18.1361) | 测试版功能更新 | 2026/1/31 |
-| 2026 | 2026 Q1 | V1.2 | V1.2.7.1143 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.2.7.1143) | 测试版功能更新 | 2026/1/24  |
-| 2026 | 2026 Q1 | V1.1 | V1.1.5.1010 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.1.5.1010) | 测试版安全补丁更新 | 2026/1/19  |
-| 2026 | 2026 Q1 | V1.1 | V1.1.1005 | [点击查看](https://github.com/jiugulixiaoniu/ClassScreenLock/releases/tag/V1.1.1005) | 测试版发布 | 2026/1/18 |
-
 
 ## 🙏 贡献者和特别感谢
 
@@ -110,17 +96,6 @@
 
 感谢所有为本项目提供建议、测试和代码贡献的老师与开发者！
 
-## 第三方依赖与代码
-
-本项目使用了以下第三方开源代码/依赖，特此致谢：
-
-<!-- 示例：
-### XXX库
-- **路径**：`vendors/xxx/`
-- **来源**：[用户名/仓库名](https://github.com/用户名/仓库名)
-- **许可证**：MIT License
-- **修改说明**：适配了Windows 11的界面样式
--->
 
 ## 💝 支持与反馈
 
@@ -136,7 +111,7 @@
 
 ## 📄 官方文档
 
-暂时没写
+查看[官方网站](classscreenlock.us.ci)
 
 ## 贡献指南
 
