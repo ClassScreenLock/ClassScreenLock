@@ -1,0 +1,417 @@
+using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.IO;
+
+namespace CSL.Watchdog;
+
+class Program
+{
+    private static Process? _mainProcess;
+    private static Process? _monitorProcess;
+    private static Process? _breakButtonProcess;
+    private static int _instanceId = 0;
+    private static bool _shouldExit = false;
+    private static readonly ManualResetEvent _exitEvent = new ManualResetEvent(false);
+    private static string _restartLockFile = Path.Combine(AppContext.BaseDirectory, "restart.lock");
+    
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
+    
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GetCurrentProcess();
+    
+    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern bool LookupPrivilegeValue(string? lpSystemName, string lpName, out LUID lpLuid);
+    
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool AdjustTokenPrivileges(
+        IntPtr TokenHandle,
+        bool DisableAllPrivileges,
+        ref TOKEN_PRIVILEGES NewState,
+        uint BufferLength,
+        IntPtr PreviousState,
+        IntPtr ReturnLength);
+    
+    [DllImport("kernel32.dll")]
+    private static extern uint GetLastError();
+    
+    private const uint TOKEN_ADJUST_PRIVILEGES = 0x0020;
+    private const uint TOKEN_QUERY = 0x0008;
+    private const uint SE_PRIVILEGE_ENABLED = 0x00000002;
+    
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LUID
+    {
+        public uint LowPart;
+        public int HighPart;
+    }
+    
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LUID_AND_ATTRIBUTES
+    {
+        public LUID Luid;
+        public uint Attributes;
+    }
+    
+    [StructLayout(LayoutKind.Sequential)]
+    private struct TOKEN_PRIVILEGES
+    {
+        public uint PrivilegeCount;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+        public LUID_AND_ATTRIBUTES[] Privileges;
+    }
+    
+    [STAThread]
+    static void Main(string[] args)
+    {
+        // 尽早设置独立的 AppUserModelID，避免和主程序分在同一组
+        // 必须在任何窗口创建之前调用
+        try
+        {
+            // 为每个实例设置不同的AppUserModelID
+            _instanceId = args.Length > 0 && int.TryParse(args[0], out int id) ? id : 0;
+            SetCurrentProcessExplicitAppUserModelID($"CSL.Watchdog.Instance{_instanceId}");
+        }
+        catch
+        {
+            // 忽略失败，不影响功能
+        }
+
+        try
+        {
+            EnablePrivileges();
+            SetWatchdogProtection();
+            Console.WriteLine($"WatchdogProcess instance {_instanceId} started with elevated privileges and protection.");
+            
+            StartOrAttachToProcesses();
+            
+            MonitorProcesses();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Watchdog error: {ex.Message}");
+            Environment.Exit(1);
+        }
+        finally
+        {
+            Cleanup();
+        }
+    }
+    
+    [DllImport("shell32.dll", SetLastError = true)]
+    private static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
+    
+    private static void EnablePrivileges()
+    {
+        try
+        {
+            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, out IntPtr tokenHandle))
+            {
+                Console.WriteLine($"Failed to open process token. Error: {GetLastError()}");
+                return;
+            }
+            
+            var tkp = new TOKEN_PRIVILEGES
+            {
+                PrivilegeCount = 3,
+                Privileges = new LUID_AND_ATTRIBUTES[3]
+            };
+            
+            string[] privileges = { "SeDebugPrivilege", "SeIncreasePriorityPrivilege", "SeLockMemoryPrivilege" };
+            
+            for (int i = 0; i < privileges.Length; i++)
+            {
+                if (LookupPrivilegeValue(null, privileges[i], out tkp.Privileges[i].Luid))
+                {
+                    tkp.Privileges[i].Attributes = SE_PRIVILEGE_ENABLED;
+                }
+            }
+            
+            if (!AdjustTokenPrivileges(tokenHandle, false, ref tkp, 0, IntPtr.Zero, IntPtr.Zero))
+            {
+                Console.WriteLine($"Failed to adjust privileges. Error: {GetLastError()}");
+            }
+            
+            Console.WriteLine("Privileges enabled successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error enabling privileges: {ex.Message}");
+        }
+    }
+    
+    private static void SetWatchdogProtection()
+    {
+        try
+        {
+            // 看门狗使用正常优先级，避免占用过多系统资源
+            var currentProcess = Process.GetCurrentProcess();
+            currentProcess.PriorityClass = ProcessPriorityClass.Normal;
+            Console.WriteLine("Watchdog protection enabled with normal priority.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error setting watchdog protection: {ex.Message}");
+        }
+    }
+    
+    private static void StartOrAttachToProcesses()
+    {
+        var baseDir = AppContext.BaseDirectory;
+        
+        // 所有进程都在同一目录下
+        string mainExe = Path.Combine(baseDir, "ClassScreenLock.exe");
+        string monitorExe = Path.Combine(baseDir, "MonitorProcess.exe");
+        string breakButtonExe = Path.Combine(baseDir, "BreakButtonProcess.exe");
+        
+        _mainProcess = GetOrStartProcessByPath("ClassScreenLock", mainExe);
+        _monitorProcess = GetOrStartProcessByPath("MonitorProcess", monitorExe);
+        _breakButtonProcess = GetOrStartProcessByPath("BreakButtonProcess", breakButtonExe);
+        
+        Console.WriteLine($"Main process: {_mainProcess?.Id ?? -1}");
+        Console.WriteLine($"Monitor process: {_monitorProcess?.Id ?? -1}");
+        Console.WriteLine($"BreakButton process: {_breakButtonProcess?.Id ?? -1}");
+    }
+    
+    private static Process? GetOrStartProcessByPath(string name, string path, string? args = null)
+    {
+        try
+        {
+            var existing = Process.GetProcessesByName(name);
+            if (existing.Length > 0)
+            {
+                Console.WriteLine($"Found existing {name} process: {existing[0].Id}");
+                return existing[0];
+            }
+            
+            if (File.Exists(path))
+            {
+                // 使用更直接的方式启动进程，不通过cmd.exe
+                var arguments = string.IsNullOrEmpty(args) ? "" : args;
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = path,
+                    Arguments = arguments,
+                    UseShellExecute = true,
+                    CreateNoWindow = false, // 直接显示进程窗口，加快启动速度
+                    WorkingDirectory = Path.GetDirectoryName(path)
+                };
+                
+                // 启动进程并立即返回，不等待
+                Process.Start(startInfo);
+                Console.WriteLine($"Started new {name} process");
+                
+                // 短暂延迟确保进程启动
+                Thread.Sleep(50);
+                var newProcess = Process.GetProcessesByName(name);
+                return newProcess.Length > 0 ? newProcess[0] : null;
+            }
+            else
+            {
+                Console.WriteLine($"Executable not found: {path}");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error with {name}: {ex.Message}");
+            return null;
+        }
+    }
+    
+    private static void MonitorProcesses()
+    {
+        var restartDelay = TimeSpan.FromMilliseconds(50);
+        var baseDir = AppContext.BaseDirectory;
+        var mainProcessPath = Path.Combine(baseDir, "ClassScreenLock.exe");
+        
+        // 启动退出信号监听线程
+        var exitMonitorThread = new Thread(MonitorExitSignal);
+        exitMonitorThread.IsBackground = true;
+        exitMonitorThread.Start();
+        
+        while (!_shouldExit)
+        {
+            try
+            {
+                // 检查主进程
+                var mainProcesses = Process.GetProcessesByName("ClassScreenLock");
+                bool mainProcessExists = mainProcesses.Length > 0;
+                
+                if (!mainProcessExists)
+                {
+                    // 检查是否有退出标记文件
+                    if (File.Exists(Path.Combine(baseDir, "exit.flag")))
+                    {
+                        // 主进程正常退出，看门狗也退出
+                        Console.WriteLine("Main process exited normally. Watchdog exiting.");
+                        _shouldExit = true;
+                        break;
+                    }
+                    else
+                    {
+                        // 尝试获取重启锁，避免多个看门狗实例同时重启主进程
+                        if (TryAcquireRestartLock())
+                        {
+                            try
+                            {
+                                // 主进程异常退出，重启它
+                                Console.WriteLine($"Watchdog instance {_instanceId} acquired restart lock. Restarting main process...");
+                                _mainProcess = GetOrStartProcessByPath("ClassScreenLock", mainProcessPath);
+                                Thread.Sleep((int)restartDelay.TotalMilliseconds);
+                            }
+                            finally
+                            {
+                                // 释放重启锁
+                                ReleaseRestartLock();
+                            }
+                        }
+                        else
+                        {
+                            // 其他看门狗实例已经在重启主进程，等待一段时间后再检查
+                            Console.WriteLine($"Watchdog instance {_instanceId} could not acquire restart lock. Waiting...");
+                            Thread.Sleep(100);
+                        }
+                    }
+                }
+                else if (_mainProcess == null)
+                {
+                    // 更新主进程对象
+                    _mainProcess = mainProcesses[0];
+                }
+                
+                // 检查其他辅助进程
+                CheckAndRestartProcess(ref _monitorProcess, "MonitorProcess", 
+                    Path.Combine(baseDir, "MonitorProcess.exe"), 
+                    restartDelay);
+                
+                CheckAndRestartProcess(ref _breakButtonProcess, "BreakButtonProcess", 
+                    Path.Combine(baseDir, "BreakButtonProcess.exe"), 
+                    restartDelay);
+                
+                // 监控间隔增加到 5 秒，大幅降低 CPU 占用
+                Thread.Sleep(3000);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Monitor error: {ex.Message}");
+                Thread.Sleep(200);
+            }
+        }
+        
+        Console.WriteLine($"Watchdog instance {_instanceId} exiting.");
+    }
+    
+    private static void MonitorExitSignal()
+    {
+        try
+        {
+            var baseDir = AppContext.BaseDirectory;
+            var exitFlagFile = Path.Combine(baseDir, "exit.flag");
+            
+            while (!_shouldExit)
+            {
+                if (File.Exists(exitFlagFile))
+                {
+                    Console.WriteLine("Exit flag detected. Watchdog exiting.");
+                    _shouldExit = true;
+                    break;
+                }
+                Thread.Sleep(100);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exit signal monitor error: {ex.Message}");
+        }
+    }
+    
+    private static bool TryAcquireRestartLock()
+    {
+        try
+        {
+            // 尝试创建重启锁文件，如果文件已存在则获取失败
+            using (var fileStream = new FileStream(_restartLockFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                // 写入当前实例ID和时间戳
+                using (var writer = new StreamWriter(fileStream))
+                {
+                    writer.WriteLine($"Instance: {_instanceId}");
+                    writer.WriteLine($"Timestamp: {DateTime.UtcNow}");
+                }
+                return true;
+            }
+        }
+        catch (IOException)
+        {
+            // 文件已存在，获取锁失败
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error acquiring restart lock: {ex.Message}");
+            return false;
+        }
+    }
+    
+    private static void ReleaseRestartLock()
+    {
+        try
+        {
+            if (File.Exists(_restartLockFile))
+            {
+                File.Delete(_restartLockFile);
+                Console.WriteLine($"Watchdog instance {_instanceId} released restart lock.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error releasing restart lock: {ex.Message}");
+        }
+    }
+    
+    private static void CheckAndRestartProcess(ref Process? process, string name, string path, TimeSpan delay, string? args = null)
+    {
+        try
+        {
+            // 直接检查进程名称，不依赖于保存的进程对象，确保即使进程对象失效也能检测到
+            var existingProcesses = Process.GetProcessesByName(name);
+            bool processExists = existingProcesses.Length > 0;
+            
+            // 如果进程不存在或已退出，立即重启
+            if (!processExists || (process != null && process.HasExited))
+            {
+                Console.WriteLine($"{name} process not found or exited. Restarting immediately...");
+                
+                // 不做任何等待，直接启动新进程
+                process = GetOrStartProcessByPath(name, path, args);
+                
+                // 短暂延迟确保进程启动
+                Thread.Sleep((int)delay.TotalMilliseconds);
+            }
+            else if (process == null && processExists)
+            {
+                // 如果进程存在但进程对象为null，更新进程对象
+                process = existingProcesses[0];
+                Console.WriteLine($"Found existing {name} process: {process.Id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error checking {name}: {ex.Message}");
+        }
+    }
+    
+    private static void Cleanup()
+    {
+        try
+        {
+            _mainProcess?.Dispose();
+            _monitorProcess?.Dispose();
+            _breakButtonProcess?.Dispose();
+        }
+        catch { }
+    }
+}
