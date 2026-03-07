@@ -1,0 +1,35 @@
+{
+  "name": "classscreenlock-web",
+  "version": "1.0.0",
+  "main": "vite.config.js",
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:server dev:client",
+    "dev:client": "vite --port 5174",
+    "dev:server": "node server.js",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fluentui/web-components": "^2.6.1",
+    "@fortawesome/fontawesome-free": "^7.2.0",
+    "axios": "^1.13.6",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "http-proxy-middleware": "^3.0.5",
+    "npm-run-all": "^4.1.5",
+    "otplib": "^13.3.0",
+    "qrcode": "^1.5.4",
+    "vue": "^3.5.29",
+    "vue-router": "^5.0.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.4",
+    "vite": "^7.3.1"
+  }
+}
