@@ -31,5 +31,13 @@ public class AccountModel
     [JsonPropertyName("isDisabled")]
     public bool IsDisabled { get; set; }
         = false;
-}
 
+    [JsonPropertyName("isTwoFactorEnabled")]
+    public bool IsTwoFactorEnabled { get; set; } = false;
+
+    [JsonPropertyName("twoFactorSecret")]
+    public string TwoFactorSecret { get; set; } = string.Empty;
+
+    [JsonPropertyName("isFromOrganization")]
+    public bool IsFromOrganization { get; set; } = false;
+}
