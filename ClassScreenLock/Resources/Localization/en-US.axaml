@@ -39,8 +39,8 @@
     
     <!-- Theme Options -->
     <x:String x:Key="Theme_Default">Default</x:String>
-    <x:String x:Key="Theme_Light">Light</x:String>
-    <x:String x:Key="Theme_Dark">Dark</x:String>
+    <x:String x:Key="Theme_Light">Dark</x:String>
+    <x:String x:Key="Theme_Dark">Light</x:String>
     
     <!-- Color Options -->
     <x:String x:Key="Color_Blue">Blue</x:String>

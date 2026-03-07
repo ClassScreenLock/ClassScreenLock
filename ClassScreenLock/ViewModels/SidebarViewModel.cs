@@ -124,6 +124,7 @@ public partial class SidebarViewModel : ViewModelBase
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_ScreenshotHistory"), "fas fa-camera", NavigateCommand, "ScreenshotHistory"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_WebcamHistory"), "fas fa-video", NavigateCommand, "WebcamHistory"));
         MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_Automation"), "fas fa-robot", NavigateCommand, "Automation"));
+        MenuItems.Add(new MenuItemViewModel(LocalizationService.Instance.GetString("Sidebar_Organization"), "fa-sitemap", NavigateCommand, "Organization"));
         
         OnPropertyChanged(nameof(SettingsMenuItem));
         OnPropertyChanged(nameof(AboutMenuItem));
@@ -330,6 +331,9 @@ public partial class SidebarViewModel : ViewModelBase
             case "SecurityLogs":
                 _mainWindowViewModel?.NavigateToSecurityLogs();
                 break;
+            case "Organization":
+                _mainWindowViewModel?.NavigateToOrganization();
+                break;
             case "Settings":
                 _mainWindowViewModel?.NavigateToSettings();
                 break;
@@ -354,6 +358,7 @@ public partial class SidebarViewModel : ViewModelBase
             "WebcamHistory" => s.SidebarWebcamHistoryMinAccountType,
             "Automation" => s.SidebarAutomationMinAccountType,
             "SecurityCenter" => s.SidebarSecurityCenterMinAccountType,
+            "Organization" => s.SidebarNetworkInterceptionMinAccountType, // 使用与网络拦截相同的权限
             "Settings" => s.SidebarSettingsMinAccountType,
             "About" => s.SidebarAboutMinAccountType,
             _ => null

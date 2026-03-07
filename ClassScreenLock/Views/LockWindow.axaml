@@ -90,6 +90,11 @@
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
+        <!-- 解锁按钮样式 -->
+        <Style Selector="Button.keypad:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="Opacity" Value="0.8"/>
+        </Style>
     </Window.Styles>
 
     <Grid>
@@ -389,6 +394,19 @@
                                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                                     <icons:Icon Value="fas fa-hashtag" Width="16" Height="16"/>
                                     <TextBlock Text="符号"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 解锁按钮 -->
+                            <Button Classes="keypad keypad-func"
+                                    Width="120"
+                                    Margin="8,0,0,0"
+                                    Command="{Binding VerifyUnlockCommand}"
+                                    Background="{DynamicResource SystemAccentColor}"
+                                    BorderBrush="{DynamicResource SystemAccentColor}">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <icons:Icon Value="fas fa-unlock" Width="16" Height="16"/>
+                                    <TextBlock Text="解锁"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

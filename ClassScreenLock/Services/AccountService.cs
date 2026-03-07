@@ -81,15 +81,84 @@ public class AccountService
         }
     }
 
+    /// <summary>
+    /// 获取所有账户（包括被禁用的），用于恢复操作
+    /// </summary>
+    public IReadOnlyList<AccountModel> GetAllAccountsForRestore()
+    {
+        lock (_lock)
+        {
+            return _accounts.ToList();
+        }
+    }
+
+    /// <summary>
+    /// 重新启用账户（用于退出集控端后恢复超级管理员账户）
+    /// </summary>
+    public void ReenableAccount(Guid accountId)
+    {
+        lock (_lock)
+        {
+            var account = _accounts.FirstOrDefault(a => a.Id == accountId);
+            if (account != null)
+            {
+                account.IsDisabled = false;
+                SaveAccounts();
+                LogService.Instance.Log("Account", "Reenabled", account.Username);
+            }
+        }
+    }
+
+    public void DisableAccount(Guid accountId)
+    {
+        lock (_lock)
+        {
+            var account = _accounts.FirstOrDefault(a => a.Id == accountId);
+            if (account != null)
+            {
+                account.IsDisabled = true;
+                SaveAccounts();
+                LogService.Instance.Log("Account", "Disabled", account.Username);
+            }
+        }
+    }
+
     public void UpdateSuperAdminPasswordSync(string username, string newHash)
     {
         lock (_lock)
         {
-            var admin = _accounts.FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin);
+            // 优先更新本地超级管理员账户（非组织账户且未禁用）
+            var admin = _accounts.FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin && !a.IsFromOrganization && !a.IsDisabled);
+            
+            // 如果没有本地超级管理员账户，找未禁用的超级管理员账户
+            if (admin == null)
+            {
+                admin = _accounts.FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin && !a.IsDisabled);
+            }
+            
+            // 如果还是没有，找第一个超级管理员账户（不管是否禁用）
+            if (admin == null)
+            {
+                admin = _accounts.FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin);
+            }
+            
             if (admin != null)
             {
                 admin.Username = username;
                 admin.PasswordHash = newHash;
+                SaveAccounts();
+            }
+        }
+    }
+
+    public void UpdateAccountIsFromOrganization(Guid accountId, bool isFromOrganization)
+    {
+        lock (_lock)
+        {
+            var account = _accounts.FirstOrDefault(a => a.Id == accountId);
+            if (account != null)
+            {
+                account.IsFromOrganization = isFromOrganization;
                 SaveAccounts();
             }
         }
@@ -285,6 +354,29 @@ public class AccountService
         return await Task.FromResult(result);
     }
 
+    public async Task<PasswordChangeResult> UpdateAccountTwoFactorAsync(Guid accountId, bool isEnabled, string secret)
+    {
+        var result = new PasswordChangeResult();
+        lock (_lock)
+        {
+            var account = _accounts.FirstOrDefault(a => a.Id == accountId && !a.IsDisabled);
+            if (account == null)
+            {
+                result.Success = false;
+                result.Message = "账号不存在或已禁用";
+                return result;
+            }
+
+            account.IsTwoFactorEnabled = isEnabled;
+            account.TwoFactorSecret = secret;
+            SaveAccounts();
+            LogService.Instance.Log("Account", "2FAUpdated", account.Username);
+            result.Success = true;
+            result.Message = "双重验证设置已更新";
+        }
+        return await Task.FromResult(result);
+    }
+
     public bool LoginFromSecuritySession(string username)
     {
         if (!SecurityService.Instance.IsAuthenticated)
@@ -345,7 +437,12 @@ public class AccountService
 
         if (accountType == AccountType.SuperAdmin)
         {
-            return (false, "不允许创建额外的超级管理员");
+            // 允许最多两个超级管理员账户（本地 + 集控端）
+            var superAdminCount = _accounts.Count(a => a.AccountType == AccountType.SuperAdmin);
+            if (superAdminCount >= 2)
+            {
+                return (false, "超级管理员账户数量已达到上限");
+            }
         }
 
         if (accountType != AccountType.Admin && accountType != AccountType.User)
@@ -420,6 +517,72 @@ public class AccountService
 
         await Task.CompletedTask;
         return (true, "账号已删除");
+    }
+
+    public void DeleteAccountInternal(Guid accountId)
+    {
+        lock (_lock)
+        {
+            var account = _accounts.FirstOrDefault(a => a.Id == accountId);
+            if (account != null)
+            {
+                _accounts.Remove(account);
+                SaveAccounts();
+                LogService.Instance.Log("Account", "DeletedInternal", account.Username);
+            }
+        }
+    }
+
+    public (bool success, string message) CreateSubAccountInternal(string username, string password, AccountType accountType)
+    {
+        lock (_lock)
+        {
+            if (accountType == AccountType.SuperAdmin)
+            {
+                // 允许最多两个超级管理员账户（本地 + 集控端）
+                var superAdminCount = _accounts.Count(a => a.AccountType == AccountType.SuperAdmin);
+                if (superAdminCount >= 2)
+                {
+                    return (false, "超级管理员账户数量已达到上限（最多两个）");
+                }
+            }
+            else
+            {
+                // 普通账户和管理员账户的限制
+                var subCount = _accounts.Count(a => a.AccountType != AccountType.SuperAdmin && !a.IsDisabled);
+                if (subCount >= MaxSubAccounts)
+                {
+                    return (false, "子账号数量已达到上限");
+                }
+            }
+
+            if (_accounts.Any(a => string.Equals(a.Username, username, StringComparison.OrdinalIgnoreCase)))
+            {
+                return (false, "该用户名已存在");
+            }
+        }
+
+        var policy = SecurityService.Instance.ValidatePolicy(password);
+        if (!policy.IsValid)
+        {
+            return (false, "密码不符合安全策略要求");
+        }
+
+        var account = new AccountModel
+        {
+            Username = username,
+            AccountType = accountType,
+            PasswordHash = BCryptNet.HashPassword(password)
+        };
+
+        lock (_lock)
+        {
+            _accounts.Add(account);
+            SaveAccounts();
+            LogService.Instance.Log("Account", "CreatedInternal", account.Username);
+        }
+
+        return (true, "账号创建成功");
     }
 
     public bool HasPermission(AccountType requiredLevel)

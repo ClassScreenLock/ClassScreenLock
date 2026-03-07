@@ -233,12 +233,14 @@ public partial class LockWindowViewModel : ViewModelBase
     {
         if (!IsSecurityAdminUsername(Username))
         {
+            // 普通账户：始终显示密码输入框，如果账户启用了 2FA 则显示验证码输入框
             IsPasswordInputVisible = true;
-            IsTwoFactorInputVisible = false;
+            IsTwoFactorInputVisible = AccountService.Instance.IsAccountTwoFactorEnabled(Username);
             EnsureFocusedField();
             return;
         }
 
+        // 安全管理员：使用系统层面的验证模式
         var mode = SecurityService.Instance.GetEffectiveLoginVerificationMode();
         IsPasswordInputVisible = mode != AdminLoginVerificationMode.TwoFactorOnly;
 
@@ -405,6 +407,7 @@ public partial class LockWindowViewModel : ViewModelBase
         if (isSecurityAdmin)
         {
             var mode = SecurityService.Instance.GetEffectiveLoginVerificationMode();
+            var is2FAEnabled = SecurityService.Instance.Settings.IsTwoFactorEnabled;
 
             if (mode is AdminLoginVerificationMode.PasswordOnly or AdminLoginVerificationMode.PasswordAndTwoFactor)
             {
@@ -432,18 +435,32 @@ public partial class LockWindowViewModel : ViewModelBase
                 }
             }
 
-            if (mode == AdminLoginVerificationMode.PasswordAndTwoFactor && SecurityService.Instance.Settings.IsTwoFactorEnabled && !IsTwoFactorRequired)
+            // 如果系统启用了 2FA，在 PasswordAndTwoFactor 或 PasswordOrTwoFactor 模式下需要检查
+            if (is2FAEnabled && mode is AdminLoginVerificationMode.PasswordAndTwoFactor or AdminLoginVerificationMode.PasswordOrTwoFactor)
             {
-                var passwordOnly = await SecurityService.Instance.VerifyPasswordOnlyAsync(Username, Password);
-                if (passwordOnly.Status == PasswordVerificationStatus.Success)
+                // 如果还没有显示 2FA 输入框，先验证密码，然后要求 2FA
+                if (!IsTwoFactorRequired && !string.IsNullOrWhiteSpace(Password))
                 {
-                    IsTwoFactorRequired = true;
+                    var passwordOnly = await SecurityService.Instance.VerifyPasswordOnlyAsync(Username, Password);
+                    if (passwordOnly.Status == PasswordVerificationStatus.Success)
+                    {
+                        IsTwoFactorRequired = true;
+                        ErrorMessage = "请输入双重验证码";
+                        return;
+                    }
+
+                    ErrorMessage = passwordOnly.Message;
+                    return;
+                }
+            }
+            // 如果是 TwoFactorOnly 模式，只需要 2FA
+            else if (is2FAEnabled && mode == AdminLoginVerificationMode.TwoFactorOnly)
+            {
+                if (string.IsNullOrWhiteSpace(TwoFactorCode))
+                {
                     ErrorMessage = "请输入双重验证码";
                     return;
                 }
-
-                ErrorMessage = passwordOnly.Message;
-                return;
             }
 
             securityResult = await SecurityService.Instance.VerifyPasswordAsync(Username, Password, TwoFactorCode);

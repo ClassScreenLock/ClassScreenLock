@@ -11,7 +11,13 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/ClassScreenLock.ico"
         Title="ClassScreenLock"
-        Classes="acrylic">
+        Classes="acrylic"
+        Width="1200"
+        Height="800"
+        MinWidth="800"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        CanResize="True">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,

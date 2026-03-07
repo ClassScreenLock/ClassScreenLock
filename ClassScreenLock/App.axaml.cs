@@ -3,6 +3,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Avalonia.Markup.Xaml;
 using ClassScreenLock.ViewModels;
@@ -45,6 +47,11 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // 立即创建并显示SplashWindow，不做任何延迟操作
+            splashWindow = new SplashWindow();
+            splashWindow.Show();
+            splashWindow.SetProgress(null, "正在启动…");
+
             try
             {
                 var settings = SettingsService.General;
@@ -60,30 +67,70 @@ public partial class App : Application
             }
             catch { }
 
-            splashWindow = new SplashWindow();
-            splashWindow.Show();
-            splashWindow.SetProgress(null, "正在启动…");
-
             var isMinimized = desktop.Args?.Any(a => string.Equals(a, "--minimized", StringComparison.OrdinalIgnoreCase)) ?? false;
+            LogService.Instance.Log("Info", "Startup", "App", $"应用启动，isMinimized = {isMinimized}, Args = {string.Join(", ", desktop.Args ?? Array.Empty<string>())}");
 
             Services.LogService.Observe(Task.Run(async () =>
             {
                 try
                 {
+                    LogService.Instance.Log("Info", "Startup", "App", "开始初始化后台服务...");
                     splashWindow?.SetProgress(25, "正在准备通知系统…");
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         _ = NotificationService.Instance;
                     });
 
+                    // 初始化数据保护服务并执行数据核验
+                    splashWindow?.SetProgress(35, "正在核验数据完整性…");
+                    try
+                    {
+                        await DataProtectionService.Instance.VerifyAndRestoreDataAsync();
+                        // 确保创建备份并设置系统隐藏保护
+                        await DataProtectionService.Instance.CreateEncryptedBackupAsync();
+                        // 确保所有 AppData 文件都被系统隐藏保护
+                        DataProtectionService.Instance.EnsureAllFilesProtected();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Instance.Log("Error", "DataProtection", "App", $"数据保护初始化失败：{ex.Message}");
+                    }
+
                     var requiresInit = InitializationService.Instance.RequiresInitialization;
+                    LogService.Instance.Log("Info", "Startup", "App", $"RequiresInitialization = {requiresInit}");
+                    
                     if (!requiresInit)
                     {
+                        LogService.Instance.Log("Info", "Startup", "App", "初始化已完成，启动后台服务...");
                         splashWindow?.SetProgress(55, "正在启动后台服务…");
-                        AppBlockingService.Instance.Start();
-                        ScreenshotService.Instance.Start();
-                        WebcamService.Instance.Start();
-                        AutomationService.Instance.Start();
+                        
+                        // 并行启动后台服务以减少启动时间
+                        var serviceTasks = new List<Task>
+                        {
+                            Task.Run(() => AppBlockingService.Instance.Start()),
+                            Task.Run(() => ScreenshotService.Instance.Start()),
+                            Task.Run(() => WebcamService.Instance.Start()),
+                            Task.Run(() => AutomationService.Instance.Start()),
+                            Task.Run(() => MutualProtectionService.Instance.Start())
+                        };
+
+                        // 同时加载组织配置
+                        splashWindow?.SetProgress(60, "正在加载组织配置…");
+                        var orgTask = OrganizationService.Instance.LoadOrganizationAsync();
+                        
+                        // 等待所有服务启动完成
+                        await Task.WhenAll(serviceTasks);
+                        await orgTask;
+                        
+                        splashWindow?.SetProgress(65, "正在启动配置同步…");
+                        if (OrganizationService.Instance.HasJoinedOrganization)
+                        {
+                            OrganizationService.Instance.StartPeriodicSyncWithTimer();
+                            
+                            // 如果已加入集控，启用网络拦截功能
+                            SettingsService.UpdateBlockage(s => s.IsNetworkLockEnabled = true);
+                            Console.WriteLine("[DEBUG] 已加入集控，自动启用网络拦截功能");
+                        }
 
                         splashWindow?.SetProgress(75, "正在应用网络规则…");
                         await NetworkBlockingService.Instance.ApplyRulesAsync("AppStartup");
@@ -106,32 +153,51 @@ public partial class App : Application
                     // 初始化完成后再显示主界面
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        var mainWindow = new MainWindow
+                        try
                         {
-                            DataContext = new MainWindowViewModel(),
-                        };
+                            LogService.Instance.Log("Info", "MainWindow", "App", "开始创建主窗口...");
+                            Console.WriteLine("[DEBUG] Creating MainWindow...");
+                            
+                            var mainWindow = new MainWindow
+                            {
+                                DataContext = new MainWindowViewModel(),
+                            };
 
-                        desktop.MainWindow = mainWindow;
-                        desktop.Exit += OnApplicationExit;
+                            desktop.MainWindow = mainWindow;
+                            desktop.Exit += OnApplicationExit;
 
-                        // Ripple 特效与 IPC 在主窗口创建后启用，避免启动阶段卡顿
-                        RippleEffectService.Instance.Attach(desktop.MainWindow);
-                        IpcService.Instance.Start();
+                            LogService.Instance.Log("Info", "MainWindow", "App", $"主窗口已创建，isMinimized = {isMinimized}");
+                            Console.WriteLine($"[DEBUG] isMinimized = {isMinimized}");
 
-                        if (isMinimized)
-                        {
-                            mainWindow.Opacity = 0;
-                            mainWindow.Show();
-                            mainWindow.Hide();
-                            mainWindow.Opacity = 1;
+                            // Ripple 特效与 IPC 在主窗口创建后启用，避免启动阶段卡顿
+                            RippleEffectService.Instance.Attach(desktop.MainWindow);
+                            IpcService.Instance.Start();
+
+                            if (isMinimized)
+                            {
+                                mainWindow.Opacity = 0;
+                                mainWindow.Show();
+                                mainWindow.Hide();
+                                mainWindow.Opacity = 1;
+                                LogService.Instance.Log("Info", "MainWindow", "App", "主窗口已隐藏（最小化模式）");
+                                Console.WriteLine("[DEBUG] MainWindow hidden (minimized mode)");
+                            }
+                            else
+                            {
+                                mainWindow.Show();
+                                mainWindow.Activate();
+                                LogService.Instance.Log("Info", "MainWindow", "App", "主窗口已显示并激活");
+                                Console.WriteLine("[DEBUG] MainWindow shown and activated");
+                            }
+
+                            splashWindow?.Close();
+                            LogService.Instance.Log("Info", "MainWindow", "App", "启动完成，闪屏窗口已关闭");
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            mainWindow.Show();
-                            mainWindow.Activate();
+                            Console.WriteLine($"[DEBUG] Error creating MainWindow: {ex}");
+                            LogService.Instance.Log("Error", "MainWindow Creation", "App", ex.ToString());
                         }
-
-                        splashWindow?.Close();
                     }, Avalonia.Threading.DispatcherPriority.Background);
                 }
                 catch (Exception ex)
@@ -301,11 +367,47 @@ public partial class App : Application
 
     private void ShowMainWindow()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+        try
         {
-            desktop.MainWindow.Show();
-            desktop.MainWindow.WindowState = Avalonia.Controls.WindowState.Normal;
-            desktop.MainWindow.Activate();
+            LogService.Instance.Log("Info", "ShowMainWindow", "App", "尝试显示主窗口...");
+            
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                if (desktop.MainWindow != null)
+                {
+                    var window = desktop.MainWindow;
+                    LogService.Instance.Log("Info", "ShowMainWindow", "App", $"主窗口存在，当前状态：IsVisible={window.IsVisible}, WindowState={window.WindowState}, Position=({window.Position.X}, {window.Position.Y}), Size=({window.Bounds.Width}x{window.Bounds.Height})");
+                    
+                    // 强制将窗口移到屏幕中央
+                    window.WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterScreen;
+                    
+                    window.Show();
+                    window.WindowState = Avalonia.Controls.WindowState.Normal;
+                    window.Activate();
+                    window.Focus();
+                    
+                    // 临时设置为最顶层，确保窗口可见
+                    window.Topmost = true;
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        window.Topmost = false;
+                    }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+                    
+                    LogService.Instance.Log("Info", "ShowMainWindow", "App", "主窗口已显示并激活");
+                }
+                else
+                {
+                    LogService.Instance.Log("Error", "ShowMainWindow", "App", "主窗口不存在！desktop.MainWindow = null");
+                }
+            }
+            else
+            {
+                LogService.Instance.Log("Error", "ShowMainWindow", "App", "ApplicationLifetime 不是 IClassicDesktopStyleApplicationLifetime");
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "ShowMainWindow", "App", $"显示主窗口失败: {ex.Message}");
         }
     }
     
@@ -314,6 +416,25 @@ public partial class App : Application
     {
         try
         {
+            // 创建退出标记文件，通知看门狗主进程正常退出
+            var exitFlagFile = Path.Combine(AppContext.BaseDirectory, "exit.flag");
+            File.Create(exitFlagFile).Dispose();
+            Console.WriteLine("Created exit.flag file");
+            
+            // 禁用应用防护，确保重启后不会自动启用
+            SettingsService.UpdateBlockage(s =>
+            {
+                s.IsBasicProtectionEnabled = false;
+                s.IsAppBlockingEnabled = false;
+            });
+            Console.WriteLine("Disabled protection settings");
+            
+            // 停止配置同步
+            OrganizationService.Instance.StopPeriodicSyncTimer();
+            
+            // 通知组织服务应用程序正在退出（保留组织信息）
+            OrganizationService.Instance.OnApplicationExit();
+
             // 停止子进程
             FloatingWidgetService.Instance.HideWidget();
 
@@ -322,6 +443,9 @@ public partial class App : Application
 
             // 停止应用阻止服务
             AppBlockingService.Instance.Stop();
+
+            // 停止互相守护服务
+            MutualProtectionService.Instance.Stop();
 
             // 清理网络拦截规则（恢复 Hosts 和防火墙）
             NetworkBlockingService.Instance.Cleanup();
@@ -336,6 +460,24 @@ public partial class App : Application
             if (NotificationService.Instance is IDisposable notificationService)
             {
                 notificationService.Dispose();
+            }
+
+            // 发送设备离线通知（后台执行，不阻塞退出）
+            var deviceService = DeviceService.Instance;
+            if (deviceService != null)
+            {
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await deviceService.SendOfflineNotificationAsync();
+                        Console.WriteLine("✓ 离线通知发送成功");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"发送离线通知失败: {ex.Message}");
+                    }
+                });
             }
         }
         catch (Exception ex)

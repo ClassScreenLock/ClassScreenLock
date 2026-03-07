@@ -8,10 +8,10 @@
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>ClassScreenLock.ico</ApplicationIcon>
         <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
-    <Version>1.8.29.2937</Version>
-    <AssemblyVersion>1.8.29.2937</AssemblyVersion>
-    <FileVersion>1.8.29.2937</FileVersion>
-    <InformationalVersion>1.8.29.2937</InformationalVersion>
+    <Version>1.12.26.2637</Version>
+    <AssemblyVersion>1.12.26.2637</AssemblyVersion>
+    <FileVersion>1.12.26.2637</FileVersion>
+    <InformationalVersion>1.12.26.2637</InformationalVersion>
     <Copyright>© 旧故里小牛（jiugulixiaoniu）</Copyright>
     <Authors>旧故里小牛（jiugulixiaoniu）</Authors>
     <Company>旧故里小牛（jiugulixiaoniu）</Company>
@@ -21,11 +21,9 @@
         <DebugType>none</DebugType>
         <DebugSymbols>false</DebugSymbols>
         <PublishSingleFile>true</PublishSingleFile>
-        <SelfContained>true</SelfContained>
+        <SelfContained>false</SelfContained>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <PublishReadyToRun>true</PublishReadyToRun>
-        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     </PropertyGroup>
 
   <ItemGroup>
@@ -56,6 +54,7 @@
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="YamlDotNet" Version="13.7.1" />
         <PackageReference Include="System.Management" Version="8.0.0" />
+        <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
     </ItemGroup>
 
 </Project>

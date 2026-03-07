@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
         xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-        mc:Ignorable="d" Width="350" Height="400"
+        mc:Ignorable="d" Width="480" Height="550"
         x:Class="ClassScreenLock.Views.VerifyWindow"
         x:DataType="vm:SecurityCenterViewModel"
         Title="身份验证"
@@ -16,53 +16,60 @@
         <StackPanel Spacing="20">
             <StackPanel Spacing="10" HorizontalAlignment="Center">
                 <icons:Icon Value="fas fa-user-shield" Width="48" Height="48" Foreground="{DynamicResource SystemAccentColor}"/>
-                <TextBlock Text="身份验证" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                <TextBlock Text="此操作需要管理员权限" FontSize="12" Opacity="0.6" HorizontalAlignment="Center"/>
+                <TextBlock Text="身份验证" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="此操作需要管理员权限" FontSize="14" Opacity="0.6" HorizontalAlignment="Center"/>
             </StackPanel>
 
             <StackPanel Spacing="15">
-                <StackPanel Spacing="5">
-                    <TextBlock Text="用户名" FontSize="12" Opacity="0.8"/>
-                    <TextBox Text="{Binding Username}" Watermark="输入用户名" Height="35"/>
+                <StackPanel Spacing="8">
+                    <TextBlock Text="用户名" FontSize="14" FontWeight="SemiBold" Opacity="0.9"/>
+                    <TextBox Text="{Binding Username}" Watermark="输入用户名" Height="40" FontSize="15"/>
                 </StackPanel>
 
-                <StackPanel Spacing="5" IsVisible="{Binding IsLoginPasswordVisible}">
-                    <TextBlock Text="密码" FontSize="12" Opacity="0.8"/>
+                <StackPanel Spacing="8" IsVisible="{Binding IsLoginPasswordVisible}">
+                    <TextBlock Text="密码" FontSize="14" FontWeight="SemiBold" Opacity="0.9"/>
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBox Text="{Binding LoginPassword}" 
                                  PasswordChar="{Binding PasswordChar}" 
                                  Watermark="输入密码" 
-                                 Height="35"/>
+                                 Height="40"
+                                 FontSize="15"/>
                         <Button Grid.Column="1" Command="{Binding TogglePasswordVisibilityCommand}"
-                                Background="Transparent" BorderThickness="0" Width="32" Height="32">
-                            <icons:Icon Value="{Binding PasswordIcon}" Width="14" Height="14" Opacity="0.5"/>
+                                Background="Transparent" BorderThickness="0" Width="36" Height="36">
+                            <icons:Icon Value="{Binding PasswordIcon}" Width="16" Height="16" Opacity="0.5"/>
                         </Button>
                     </Grid>
                 </StackPanel>
 
-                <StackPanel Spacing="5" IsVisible="{Binding IsLoginTwoFactorVisible}">
-                    <TextBlock Text="双重验证码" FontSize="12" Opacity="0.8"/>
-                    <TextBox Text="{Binding LoginTwoFactorCode}" Watermark="6 位验证码" Height="35" MaxLength="6"/>
+                <StackPanel Spacing="8" IsVisible="{Binding IsLoginTwoFactorVisible}">
+                    <TextBlock Text="双重验证码" FontSize="14" FontWeight="SemiBold" Opacity="0.9"/>
+                    <TextBox Text="{Binding LoginTwoFactorCode}" Watermark="输入 6 位验证码" Height="40" MaxLength="6" FontSize="15"/>
                 </StackPanel>
             </StackPanel>
 
-            <TextBlock Text="{Binding LoginMessage}" Foreground="Red" FontSize="12" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding LoginMessage}" Foreground="Red" FontSize="13" TextWrapping="Wrap" HorizontalAlignment="Center" Margin="0,8,0,0"/>
 
-            <Button Content="验证并退出" 
-                    Command="{Binding LoginCommand}" 
-                    Classes="accent" 
-                    HorizontalAlignment="Stretch" 
-                    Height="40"
-                    VerticalContentAlignment="Center"
-                    HorizontalContentAlignment="Center"/>
-            
-            <Button Content="取消" 
-                    Click="CancelButton_OnClick"
-                    HorizontalAlignment="Stretch" 
-                    Height="40"
-                    Background="Transparent"
-                    VerticalContentAlignment="Center"
-                    HorizontalContentAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" Margin="0,16,0,0">
+                <Button Content="验证并退出" 
+                        Command="{Binding LoginCommand}" 
+                        Classes="accent" 
+                        Width="160"
+                        Height="45"
+                        FontSize="16"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"/>
+                
+                <Button Content="取消" 
+                        Click="CancelButton_OnClick"
+                        Width="120"
+                        Height="45"
+                        FontSize="16"
+                        Background="Transparent"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"/>
+            </StackPanel>
         </StackPanel>
     </Border>
 </Window>

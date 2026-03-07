@@ -55,7 +55,6 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" Margin="0,8,0,0">
                         <Button Content="{DynamicResource About_Repository}" Command="{Binding OpenRepositoryCommand}" Classes="outline"/>
                         <Button Content="{DynamicResource About_UserAgreement}" Command="{Binding OpenUserAgreementCommand}" Classes="outline"/>
-                        <Button Content="{DynamicResource About_PrivacyPolicy}" Command="{Binding OpenPrivacyPolicyCommand}" Classes="outline"/>
                     </StackPanel>
                     
                     <!-- 版权信息 -->

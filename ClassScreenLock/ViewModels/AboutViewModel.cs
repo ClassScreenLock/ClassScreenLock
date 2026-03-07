@@ -10,7 +10,7 @@ public partial class AboutViewModel : ViewModelBase
     private string _appName = "ClassScreenLock";
     
     [ObservableProperty]
-    private string _appVersion = "1.0.0";
+    private string _appVersion = "V1.12.26.2637 - Creeper";
     
     [ObservableProperty]
     private string _appDescription = "一款专业的课堂屏幕锁定工具，帮助教师管理课堂环境，提高教学效率。";
@@ -31,10 +31,10 @@ public partial class AboutViewModel : ViewModelBase
     private string _repositoryUrl = "https://github.com/jiugulixiaoniu/ClassScreenLock";
 
     [ObservableProperty]
-    private string _userAgreementUrl = "https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/UserAgreement.html";
+    private string _userAgreementUrl = "https://classscreenlock.us.ci/eula";
 
     [ObservableProperty]
-    private string _privacyPolicyUrl = "https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/PrivacyPolicy.html";
+    private string _privacyPolicyUrl = "https://classscreenlock.us.ci/eula";
 
     public AboutViewModel()
     {
@@ -61,16 +61,6 @@ public partial class AboutViewModel : ViewModelBase
         try
         {
             Process.Start(new ProcessStartInfo(UserAgreementUrl) { UseShellExecute = true });
-        }
-        catch { }
-    }
-
-    [RelayCommand]
-    private void OpenPrivacyPolicy()
-    {
-        try
-        {
-            Process.Start(new ProcessStartInfo(PrivacyPolicyUrl) { UseShellExecute = true });
         }
         catch { }
     }

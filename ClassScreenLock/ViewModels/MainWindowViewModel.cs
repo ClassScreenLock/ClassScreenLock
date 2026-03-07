@@ -58,6 +58,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private AutomationViewModel _automationViewModel;
 
     [ObservableProperty]
+    private OrganizationViewModel _organizationViewModel;
+
+    [ObservableProperty]
     private bool _isInitialized;
     
     private bool _disposed = false;
@@ -112,7 +115,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
         WebcamHistoryViewModel = new WebcamHistoryViewModel();
 
+// 创建自动化视图模型实例
         AutomationViewModel = new AutomationViewModel();
+
+        // 创建组织管理视图模型实例
+        OrganizationViewModel = new OrganizationViewModel();
         
         // 监听锁定状态
         IsLocked = LockScreenService.Instance.IsLocked;
@@ -279,6 +286,15 @@ public partial class MainWindowViewModel : ViewModelBase
         OnViewChanging();
         CurrentView = new AutomationView { DataContext = AutomationViewModel };
         Status = "自动化扩展";
+        IsOnboarding = false;
+    }
+
+    public void NavigateToOrganization()
+    {
+        OnViewChanging();
+        // 使用已初始化的 OrganizationViewModel 实例，避免状态丢失
+        CurrentView = new OrganizationView { DataContext = OrganizationViewModel };
+        Status = "组织管理";
         IsOnboarding = false;
     }
 

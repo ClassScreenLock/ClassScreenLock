@@ -91,15 +91,43 @@ public class IpcService
             }
             else if (string.Equals(m, "SHOW_MAIN", StringComparison.OrdinalIgnoreCase) || string.Equals(m, "SHOW", StringComparison.OrdinalIgnoreCase))
             {
+                LogService.Instance.Log("IPC", "ShowMain", "Server", "收到显示主窗口请求");
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     try
                     {
-                        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+                        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
                         {
-                            desktop.MainWindow.Show();
-                            desktop.MainWindow.WindowState = Avalonia.Controls.WindowState.Normal;
-                            desktop.MainWindow.Activate();
+                            if (desktop.MainWindow != null)
+                            {
+                                var window = desktop.MainWindow;
+                                LogService.Instance.Log("IPC", "ShowMain", "Server", $"主窗口状态：IsVisible={window.IsVisible}, WindowState={window.WindowState}, Position=({window.Position.X}, {window.Position.Y}), Size=({window.Bounds.Width}x{window.Bounds.Height})");
+                                
+                                // 强制将窗口移到屏幕中央
+                                window.WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterScreen;
+                                
+                                window.Show();
+                                window.WindowState = Avalonia.Controls.WindowState.Normal;
+                                window.Activate();
+                                window.Focus();
+                                
+                                // 临时设置为最顶层，确保窗口可见
+                                window.Topmost = true;
+                                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                                {
+                                    window.Topmost = false;
+                                }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+                                
+                                LogService.Instance.Log("IPC", "ShowMain", "Server", "主窗口已显示并激活");
+                            }
+                            else
+                            {
+                                LogService.Instance.Log("Error", "ShowMain", "Server", "主窗口不存在！desktop.MainWindow = null");
+                            }
+                        }
+                        else
+                        {
+                            LogService.Instance.Log("Error", "ShowMain", "Server", "ApplicationLifetime 不是 IClassicDesktopStyleApplicationLifetime");
                         }
                     }
                     catch (Exception ex)

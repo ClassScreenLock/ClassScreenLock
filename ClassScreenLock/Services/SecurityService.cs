@@ -407,6 +407,10 @@ public class SecurityService
         {
             var settings = Settings;
 
+            LogService.Instance.Log("Security", "VerifyStart", username, $"2FA 启用：{settings.IsTwoFactorEnabled}, 验证模式：{settings.LoginVerificationMode}");
+            Console.WriteLine($"[DEBUG] VerifyPasswordAsync: username={username}, password={(string.IsNullOrWhiteSpace(password) ? "(empty)" : "(provided)")}, 2FA code={(string.IsNullOrWhiteSpace(twoFactorCode) ? "(empty)" : "(provided)")}");
+            Console.WriteLine($"[DEBUG] Settings: Is2FAEnabled={settings.IsTwoFactorEnabled}, Mode={settings.LoginVerificationMode}");
+
             if (string.IsNullOrWhiteSpace(settings.PasswordHash))
             {
                 LogService.Instance.Log("Security", "VerifyFailed", username, "管理员密码尚未设置");
@@ -433,7 +437,10 @@ public class SecurityService
             var passwordMatches = usernameMatches && !string.IsNullOrWhiteSpace(password) && BCryptNet.Verify(password, settings.PasswordHash);
             var twoFactorMatches = settings.IsTwoFactorEnabled && !string.IsNullOrWhiteSpace(twoFactorCode) && VerifyTwoFactorCode(twoFactorCode);
 
+            Console.WriteLine($"[DEBUG] Verification: usernameMatches={usernameMatches}, passwordMatches={passwordMatches}, twoFactorMatches={twoFactorMatches}");
+
             var mode = GetEffectiveLoginVerificationMode();
+            Console.WriteLine($"[DEBUG] Effective mode: {mode}");
 
             bool success;
             string failureMessage;
@@ -449,7 +456,7 @@ public class SecurityService
                 case AdminLoginVerificationMode.TwoFactorOnly:
                     success = usernameMatches && twoFactorMatches;
                     failureMessage = "双重验证码不正确";
-                    failureReason = "2FA验证失败";
+                    failureReason = "2FA 验证失败";
                     break;
                 case AdminLoginVerificationMode.PasswordOrTwoFactor:
                     success = passwordMatches || (usernameMatches && twoFactorMatches);
@@ -468,7 +475,7 @@ public class SecurityService
                     {
                         success = false;
                         failureMessage = "双重验证码不正确";
-                        failureReason = "2FA验证失败";
+                        failureReason = "2FA 验证失败";
                     }
                     else
                     {
@@ -478,6 +485,8 @@ public class SecurityService
                     }
                     break;
             }
+
+            Console.WriteLine($"[DEBUG] Final result: success={success}");
 
             if (!success)
             {
@@ -509,6 +518,7 @@ public class SecurityService
         catch (Exception ex)
         {
             LogService.Instance.Log("Security", "LoginError", username, ex.Message);
+            Console.WriteLine($"[ERROR] VerifyPasswordAsync: {ex}");
             SetAuthenticated(false);
             return new PasswordVerificationResult
             {
@@ -595,6 +605,34 @@ public class SecurityService
             LogService.Instance.Log("Security", "PasswordChangeError", username, ex.Message);
             result.Message = "修改密码过程中发生错误";
             return result;
+        }
+    }
+
+    public void UpdateAdminPassword(string username, string password)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                return;
+            }
+
+            var settings = Settings;
+            settings.PasswordHash = BCryptNet.HashPassword(password, workFactor: WorkFactor);
+            settings.AdminUsername = username;
+            settings.LastPasswordChange = DateTime.Now;
+            ResetFailedAttempts();
+
+            SaveSettings(settings);
+
+            // 同步更新 AccountService 中的超级管理员密码
+            AccountService.Instance.UpdateSuperAdminPasswordSync(username, settings.PasswordHash);
+
+            LogService.Instance.Log("Security", "AdminPasswordUpdated", username);
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Security", "UpdateAdminPasswordError", username, ex.Message);
         }
     }
 
@@ -709,7 +747,7 @@ public class SecurityService
         }
     }
 
-    private void SaveSettings(SecuritySettingsModel settings)
+    public void SaveSettings(SecuritySettingsModel settings)
     {
         try
         {

@@ -216,7 +216,7 @@ public partial class InitializationViewModel : ViewModelBase
 
     private void LoadInitialState()
     {
-        UserAgreementUrl = "https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/UserAgreement.html";
+        UserAgreementUrl = "https://classscreenlock.us.ci/eula";
         AgreementConnectionStatus = $"协议地址：{UserAgreementUrl}";
         IsAgreementConnectionSuccessful = true;
 
@@ -292,16 +292,6 @@ public partial class InitializationViewModel : ViewModelBase
         try
         {
             Process.Start(new ProcessStartInfo(UserAgreementUrl) { UseShellExecute = true });
-        }
-        catch { }
-    }
-
-    [RelayCommand]
-    private void OpenPrivacyPolicy()
-    {
-        try
-        {
-            Process.Start(new ProcessStartInfo(PrivacyPolicyUrl) { UseShellExecute = true });
         }
         catch { }
     }

@@ -629,40 +629,54 @@ public class NetworkBlockingService
         
         try
         {
-            await Task.Run(async () =>
+            // 检查是否有活跃的域名规则
+            var activeDomainRules = rules
+                .Where(r => r.IsEnabled && r.Type == "Domain" && !string.IsNullOrWhiteSpace(r.Domain))
+                .ToList();
+            bool hasActiveRules = activeDomainRules.Any();
+
+            // 如果既未开启总开关，且当前不在锁态/仅防护，则清空规则
+            if (!(settings.IsNetworkLockEnabled || lockState))
             {
-                try
-                {
-                    if ((settings.IsNetworkLockEnabled || lockState) && !IsAdministrator())
-                    {
-                        TryRestartAsAdministrator();
-                        return;
-                    }
+                ClearHostsRules();
+                DeleteFirewallRulesByGroup(FirewallGroup);
+                DeleteFirewallRuleByName("ClassScreenLock_DomainBlock");
+                DeleteFirewallRuleByName("ClassScreenLock_DomainBlock_Out");
+                DeleteFirewallRuleByName("ClassScreenLock_DomainBlock_In");
+                DeleteFirewallRuleByName("BlockAllOutbound");
+                LogService.Instance.Log("Info", "RulesCleared", "Network", "Network blocking disabled, all rules cleared.");
+                return;
+            }
 
-                    // 如果既未开启总开关，且当前不在锁态/仅防护，则清空规则
-                    if (!(settings.IsNetworkLockEnabled || lockState))
-                    {
-                        ClearHostsRules();
-                        DeleteFirewallRulesByGroup(FirewallGroup);
-                        DeleteFirewallRuleByName("ClassScreenLock_DomainBlock");
-                        DeleteFirewallRuleByName("ClassScreenLock_DomainBlock_Out");
-                        DeleteFirewallRuleByName("ClassScreenLock_DomainBlock_In");
-                        DeleteFirewallRuleByName("BlockAllOutbound");
-                        return;
-                    }
+            // 如果没有活跃规则，清理防火墙和 hosts
+            if (!hasActiveRules)
+            {
+                ClearHostsRules();
+                DeleteFirewallRulesByGroup(FirewallGroup);
+                DeleteFirewallRuleByName("ClassScreenLock_DomainBlock");
+                DeleteFirewallRuleByName("ClassScreenLock_DomainBlock_Out");
+                DeleteFirewallRuleByName("ClassScreenLock_DomainBlock_In");
+                DeleteFirewallRuleByName("BlockAllOutbound");
+                LogService.Instance.Log("Info", "RulesCleared", "Network", "No active domain rules, cleared all blocking rules.");
+                return;
+            }
 
-                    // 确保旧的全拦截规则被删除，避免误杀所有网络
-                    DeleteFirewallRuleByName("BlockAllOutbound");
-                    EnsureFirewallEnabled();
-                    ClearHostsRules();
-                    await UpdateDomainFirewallRules(rules);
-                    UpdateHostsFile(rules);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"NetworkBlockingService Error: {ex.Message}");
-                }
-            });
+            if (!IsAdministrator())
+            {
+                TryRestartAsAdministrator();
+                return;
+            }
+
+            // 确保旧的全拦截规则被删除，避免误杀所有网络
+            DeleteFirewallRuleByName("BlockAllOutbound");
+            EnsureFirewallEnabled();
+            ClearHostsRules();
+            await UpdateDomainFirewallRules(activeDomainRules);
+            UpdateHostsFile(activeDomainRules);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"NetworkBlockingService Error: {ex.Message}");
         }
         finally
         {
@@ -734,24 +748,120 @@ public class NetworkBlockingService
             _isMonitoring = false;
             _cts?.Cancel();
 
-            // 清理 Hosts 文件
-            ClearHostsRules();
-
-            // 删除防火墙规则
-            if (IsAdministrator())
+            // 将清理操作移到后台执行，不阻塞应用退出
+            Task.Run(() =>
             {
-                DeleteFirewallRulesByGroup(FirewallGroup);
-                DeleteFirewallRuleByName("ClassScreenLock_DomainBlock");
-                DeleteFirewallRuleByName("ClassScreenLock_DomainBlock_Out");
-                DeleteFirewallRuleByName("ClassScreenLock_DomainBlock_In");
-                DeleteFirewallRuleByName("BlockAllOutbound");
-            }
-            
-            Debug.WriteLine("[CLEANUP] Network blocking rules removed on exit.");
+                try
+                {
+                    bool isAdmin = IsAdministrator();
+                    
+                    if (isAdmin)
+                    {
+                        // 清理 Hosts 文件
+                        ClearHostsRules();
+
+                        // 删除防火墙规则
+                        DeleteFirewallRulesByGroup(FirewallGroup);
+                        DeleteFirewallRuleByName("ClassScreenLock_DomainBlock");
+                        DeleteFirewallRuleByName("ClassScreenLock_DomainBlock_Out");
+                        DeleteFirewallRuleByName("ClassScreenLock_DomainBlock_In");
+                        DeleteFirewallRuleByName("BlockAllOutbound");
+                        DeleteFirewallRuleByName("ClassScreenLock_FrontBlock_Out");
+                        DeleteFirewallRuleByName("ClassScreenLock_FrontBlock_In");
+                        for (int i = 2; i <= 50; i++)
+                        {
+                            DeleteFirewallRuleByName($"ClassScreenLock_FrontBlock_Out_{i}");
+                            DeleteFirewallRuleByName($"ClassScreenLock_FrontBlock_In_{i}");
+                        }
+                    }
+                    else
+                    {
+                        // 如果不是管理员，尝试以管理员身份运行清理命令
+                        TryCleanupAsAdministrator();
+                    }
+                    
+                    Debug.WriteLine("[CLEANUP] Network blocking rules removed on exit.");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Cleanup Error: {ex.Message}");
+                }
+            });
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Cleanup Error: {ex.Message}");
+        }
+    }
+
+    private void TryCleanupAsAdministrator()
+    {
+        try
+        {
+            // 使用 netsh 命令通过 UAC 提权清理防火墙规则
+            var psi = new ProcessStartInfo
+            {
+                FileName = "netsh",
+                Arguments = $"advfirewall firewall delete rule group=\"{FirewallGroup}\"",
+                UseShellExecute = true,
+                Verb = "runas",
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true
+            };
+            
+            try
+            {
+                Process.Start(psi)?.WaitForExit(5000);
+            }
+            catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+            {
+                // 用户取消了 UAC 提示，静默处理
+                Debug.WriteLine("[CLEANUP] User cancelled UAC prompt for firewall cleanup.");
+            }
+
+            // 清理 hosts 文件 - 通过 PowerShell 提权
+            var hostsCleanupScript = $@"
+$hostsPath = '{HostsPath}'
+$markerStart = '{MarkerStart}'
+$markerEnd = '{MarkerEnd}'
+if (Test-Path $hostsPath) {{
+    $lines = Get-Content $hostsPath
+    $startIndex = -1
+    $endIndex = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) {{
+        if ($lines[$i].Trim() -eq $markerStart) {{ $startIndex = $i }}
+        if ($lines[$i].Trim() -eq $markerEnd) {{ $endIndex = $i }}
+    }}
+    if ($startIndex -ge 0 -and $endIndex -ge 0 -and $endIndex -ge $startIndex) {{
+        $newLines = $lines[0..($startIndex-1)] + $lines[($endIndex+1)..($lines.Count-1)]
+        $newLines | Set-Content $hostsPath -Force
+    }}
+}}
+ipconfig /flushdns
+";
+            
+            var psipsi = new ProcessStartInfo
+            {
+                FileName = "powershell",
+                Arguments = $"-Command \"{hostsCleanupScript.Replace("\"", "\\\"")}\"",
+                UseShellExecute = true,
+                Verb = "runas",
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true
+            };
+            
+            try
+            {
+                Process.Start(psipsi)?.WaitForExit(5000);
+            }
+            catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+            {
+                Debug.WriteLine("[CLEANUP] User cancelled UAC prompt for hosts cleanup.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"TryCleanupAsAdministrator Error: {ex.Message}");
         }
     }
 
@@ -923,14 +1033,17 @@ public class NetworkBlockingService
                 Debug.WriteLine($"[FIREWALL] Applied {ipList.Count} IPs to firewall block rules in {chunks.Count} chunks.");
                 LogService.Instance.Log("Info", "FirewallRulesApplied", "Firewall", $"Applied {ipList.Count} IPs in {chunks.Count} chunks.");
 
-                // 立即验证规则是否真正出现在系统中
+                // 立即验证规则是否真正出现在系统中（不阻塞启动流程）
                 LogService.Observe(Task.Run(() => {
-                    Thread.Sleep(1000); // 等待系统同步
+                    // 移除不必要的等待，直接验证
                     if (!HasFirewallDomainRulesCom())
                     {
                         LogService.Instance.Log("Warning", "FirewallRuleValidationFailed", "Firewall", "Rules were applied but not found by COM API.");
                     }
                 }), "NetworkBlocking.ValidateFirewallRules");
+                
+                // 短暂延迟确保规则生效
+                await Task.Delay(100);
             }
             else
             {

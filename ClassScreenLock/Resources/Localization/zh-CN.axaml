@@ -13,6 +13,7 @@
     <x:String x:Key="Sidebar_ScreenshotHistory">屏幕记录</x:String>
     <x:String x:Key="Sidebar_WebcamHistory">摄像头记录</x:String>
     <x:String x:Key="Sidebar_Automation">自动化</x:String>
+    <x:String x:Key="Sidebar_Organization">组织管理</x:String>
     <x:String x:Key="Sidebar_Settings">设置</x:String>
     <x:String x:Key="Sidebar_About">关于</x:String>
     <x:String x:Key="Sidebar_Collapse">收起侧边栏</x:String>
@@ -39,8 +40,8 @@
     
     <!-- 主题选项 -->
     <x:String x:Key="Theme_Default">默认</x:String>
-    <x:String x:Key="Theme_Light">浅色</x:String>
-    <x:String x:Key="Theme_Dark">深色</x:String>
+    <x:String x:Key="Theme_Light">深色</x:String>
+    <x:String x:Key="Theme_Dark">浅色</x:String>
     
     <!-- 颜色选项 -->
     <x:String x:Key="Color_Blue">蓝色</x:String>
