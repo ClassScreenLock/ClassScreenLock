@@ -6,19 +6,31 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.Versioning;
+using System.Runtime.InteropServices;
 
 namespace MonitorProcess;
 
 [SupportedOSPlatform("windows")]
 class Program
 {
+    [DllImport("shell32.dll", SetLastError = true)]
+    private static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
+
     private static readonly Dictionary<int, (PerformanceCounter Read, PerformanceCounter Write)> _ioCounters = new();
     
     // 备选方案数据
     private static readonly Dictionary<int, (long Read, long Write, DateTime Stamp)> _ioFallback = new();
     
     static async Task Main(string[] args)
-    {        Console.OutputEncoding = System.Text.Encoding.UTF8;
+    {
+        // 设置独立的 AppUserModelID
+        try
+        {
+            SetCurrentProcessExplicitAppUserModelID("CSL.Monitor");
+        }
+        catch { }
+
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
         var cts = new CancellationTokenSource();
 
         // 监听退出信号
