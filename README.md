@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<image src="img/xuanchuan.png" width="600" height="600" />
+<image src="img/xuanchuan.png" width="1080" height="1980" />
 
 
 [![GitHub Issues](https://img.shields.io/github/issues-search/jiugulixiaoniu/ClassScreenLock?query=is%3Aopen&style=for-the-badge&color=667eea&logo=github&label=问题)](https://github.com/jiugulixiaoniu/ClassScreenLock/issues)
