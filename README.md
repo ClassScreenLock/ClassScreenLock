@@ -74,7 +74,7 @@
 - 📝 **安装说明**：下载对应版本的安装包/绿色包，解压后直接运行主程序，无需复杂安装步骤
 
 
-## 🙏 贡献者和特别感谢
+## 🙏 贡献者感谢
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
@@ -90,11 +90,13 @@
 </table>
 
 
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-<!-- ALL-CONTRIBUTORS-LIST:END -->
+### 为我们提供帮助的公司/组织
 
-感谢所有为本项目提供建议、测试和代码贡献的老师与开发者！
+
+| 智教联盟 · 论坛支持 | 汇智卓创 · 下载服务 |
+| :---: | :---: |
+| <div align="center"><a href="https://forum.smart-teach.cn/" target="_blank"><img src="https://static.smart-teach.cn/logos/banner.jpg" width="380" alt="智教联盟" style="border:none;background:transparent;"></a></div> | <div align="center"><a href="https://smart-teach.cn/" target="_blank"><img src="https://smart-teach.cn/images/logos/logo-full.png" width="380" alt="汇智卓创" style="border:none;background:transparent;"></a></div> |
+| 感谢智教联盟提供论坛平台支持 | 感谢天津静海汇智卓创文化发展有限公司提供免费下载服务 |
 
 
 ## 💝 支持与反馈
