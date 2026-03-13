@@ -113,7 +113,7 @@
 
 ## 📄 官方文档
 
-查看[官方网站](classscreenlock.us.ci)
+查看[官方网站](https://classscreenlock.us.ci)
 
 ## 贡献指南
 
