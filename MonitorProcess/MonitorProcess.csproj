@@ -8,10 +8,10 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <OutputPath>..\ClassScreenLock\bin\$(Configuration)\$(TargetFramework)\Monitor\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <Version>1.12.26.2637</Version>
-    <AssemblyVersion>1.12.26.2637</AssemblyVersion>
-    <FileVersion>1.12.26.2637</FileVersion>
-    <InformationalVersion>1.12.26.2637</InformationalVersion>
+    <Version>1.15.29.2803</Version>
+    <AssemblyVersion>1.15.29.2803</AssemblyVersion>
+    <FileVersion>1.15.29.2803</FileVersion>
+    <InformationalVersion>1.15.29.2803</InformationalVersion>
     <Copyright>© 旧故里小牛（jiugulixiaoniu）</Copyright>
     <Authors>旧故里小牛（jiugulixiaoniu）</Authors>
     <Company>旧故里小牛（jiugulixiaoniu）</Company>
