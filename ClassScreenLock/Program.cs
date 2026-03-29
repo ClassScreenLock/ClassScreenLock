@@ -137,10 +137,9 @@ sealed class Program
 
     public static void StartWatchdogProcess()
     {
-        StartSuperWatchdogProcess();
-        
         try
         {
+            // 检查当前运行的看门狗实例数量
             var existingWatchdogs = Process.GetProcessesByName("CSL.Watchdog");
             if (existingWatchdogs.Length >= 3)
             {
@@ -153,13 +152,16 @@ sealed class Program
             
             if (File.Exists(watchdogExe))
             {
+                // 启动缺少的看门狗实例
                 for (int i = 0; i < 3; i++)
                 {
+                    // 检查是否已经有该实例ID的看门狗在运行
                     bool instanceExists = false;
                     foreach (var process in existingWatchdogs)
                     {
                         try
                         {
+                            // 尝试获取进程命令行参数，检查是否包含实例ID
                             string commandLine = GetCommandLine(process.Id);
                             if (commandLine.Contains($" {i}"))
                             {
@@ -193,61 +195,6 @@ sealed class Program
         catch (Exception ex)
         {
             LogCrash(ex, "Program.StartWatchdog");
-        }
-    }
-    
-    public static void StartSuperWatchdogProcess()
-    {
-        try
-        {
-            var existingSuperWatchdogs = Process.GetProcessesByName("CSL.SuperWatchdog");
-            if (existingSuperWatchdogs.Length > 0)
-            {
-                LogCrash(new Exception($"CSL.SuperWatchdog already running ({existingSuperWatchdogs.Length} instances)."), "Program.StartSuperWatchdog");
-                return;
-            }
-            
-            var appDataDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "ClassScreenLock");
-            var appDataSuperWatchdog = Path.Combine(appDataDir, "CSL.SuperWatchdog.exe");
-            var baseDir = AppContext.BaseDirectory;
-            var localSuperWatchdog = Path.Combine(baseDir, "CSL.SuperWatchdog.exe");
-            
-            string? superWatchdogExe = null;
-            
-            if (File.Exists(appDataSuperWatchdog))
-            {
-                superWatchdogExe = appDataSuperWatchdog;
-                Console.WriteLine($"Found SuperWatchdog in AppData: {appDataSuperWatchdog}");
-            }
-            else if (File.Exists(localSuperWatchdog))
-            {
-                superWatchdogExe = localSuperWatchdog;
-                Console.WriteLine($"Found SuperWatchdog in local directory: {localSuperWatchdog}");
-            }
-            
-            if (!string.IsNullOrEmpty(superWatchdogExe))
-            {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "cmd.exe",
-                    Arguments = $"/c start \"SuperWatchdog\" \"{superWatchdogExe}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-                
-                Process.Start(startInfo);
-                LogCrash(new Exception("CSL.SuperWatchdog started"), "Program.StartSuperWatchdog");
-            }
-            else
-            {
-                LogCrash(new Exception("SuperWatchdog executable not found in both AppData and local directory."), "Program.StartSuperWatchdog");
-            }
-        }
-        catch (Exception ex)
-        {
-            LogCrash(ex, "Program.StartSuperWatchdog");
         }
     }
     
