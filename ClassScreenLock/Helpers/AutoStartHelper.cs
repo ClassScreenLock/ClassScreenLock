@@ -178,12 +178,8 @@ public static class AutoStartHelper
                 repairReason += "启动文件夹 ";
             }
 
-            // 检查任务计划程序
-            if (!IsTaskSchedulerEnabled())
-            {
-                needRepair = true;
-                repairReason += "任务计划 ";
-            }
+            // 跳过任务计划程序检查以减少资源占用
+            // 任务计划程序检查会在定时检查中异步执行
 
             // 如果需要修复，重新启用所有自启动方式
             if (needRepair)
@@ -220,7 +216,7 @@ public static class AutoStartHelper
             {
                 if (process != null)
                 {
-                    process.WaitForExit(5000);
+                    process.WaitForExit(2000); // 减少等待时间从 5 秒到 2 秒
                     var output = process.StandardOutput.ReadToEnd().Trim();
                     return output.Equals("Ready", StringComparison.OrdinalIgnoreCase);
                 }
