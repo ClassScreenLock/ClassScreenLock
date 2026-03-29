@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 
 // 通用代理函数
 function proxyRequest(req, res) {
-  const path = req.url;
+  const path = req.url; 
   const method = req.method;
   
   console.log(`[代理] ${method} ${path}`);
@@ -38,7 +38,7 @@ function proxyRequest(req, res) {
   const options = {
     hostname: 'localhost',
     port: BACKEND_PORT,
-    path: '/api' + path,  // 保留 /api 前缀
+    path: '/api' + path, 
     method: method,
     headers: req.headers
   };

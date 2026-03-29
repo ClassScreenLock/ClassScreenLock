@@ -4,10 +4,10 @@ const getBackendURL = () => {
   const config = localStorage.getItem('systemSettings')
   if (config) {
     const settings = JSON.parse(config)
-    const port = settings.backendPort || 5000
+    const port = settings.serverPort || 5173
     return `http://localhost:${port}/api`
   }
-  return 'http://localhost:5000/api'
+  return 'http://localhost:5173/api'
 }
 
 const api = axios.create({

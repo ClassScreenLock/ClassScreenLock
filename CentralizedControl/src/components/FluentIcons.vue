@@ -2,8 +2,8 @@
   <svg
     v-if="currentIcon"
     :viewBox="currentIcon.viewBox"
-    :width="size"
-    :height="size"
+    :width="computedSize"
+    :height="computedSize"
     :fill="fill"
     xmlns="http://www.w3.org/2000/svg"
     class="fluent-icon"
@@ -24,7 +24,7 @@ const props = defineProps({
   },
   size: {
     type: [Number, String],
-    default: 20
+    default: null
   },
   fill: {
     type: String,
@@ -34,6 +34,13 @@ const props = defineProps({
     type: String,
     default: ''
   }
+})
+
+const computedSize = computed(() => {
+  if (props.size !== null) {
+    return props.size
+  }
+  return 'var(--fui-icon-size, 18px)'
 })
 
 const icons = {
