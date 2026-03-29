@@ -70,3 +70,29 @@ public class BooleanToStatusBrushConverter : IValueConverter
         return AvaloniaProperty.UnsetValue;
     }
 }
+
+public class SuccessStatusBrushConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is bool isSuccess)
+        {
+            try
+            {
+                return isSuccess 
+                    ? new SolidColorBrush(Color.Parse("#107C10")) // Success: Green
+                    : new SolidColorBrush(Color.Parse("#E81123")); // Failed: Red
+            }
+            catch
+            {
+                return isSuccess ? Brushes.Green : Brushes.Red;
+            }
+        }
+        return Brushes.Gray;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        return AvaloniaProperty.UnsetValue;
+    }
+}

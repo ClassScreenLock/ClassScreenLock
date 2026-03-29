@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Data.Converters;
+using FluentIcons.Common;
 
 namespace ClassScreenLock.Converters;
 
@@ -14,21 +15,21 @@ public class LogTypeToIconConverter : IValueConverter
         var s = (value as string ?? string.Empty).Trim().ToLowerInvariant();
         return s switch
         {
-            "error" => "fas fa-circle-xmark",
-            "warning" => "fas fa-triangle-exclamation",
-            "info" => "fas fa-info-circle",
-            "debug" => "fas fa-bug",
-            "security" => "fas fa-shield",
-            "network" => "fas fa-network-wired",
-            "account" => "fas fa-user",
-            "ipc" => "fas fa-right-left",
-            "ui" => "fas fa-desktop",
-            "monitoring" => "fas fa-chart-line",
-            "init" => "fas fa-gears",
-            "navigation" => "fas fa-signs-post",
-            "backup" => "fas fa-database",
-            "restore" => "fas fa-undo",
-            _ => "fas fa-file-lines"
+            "error" => Symbol.DismissCircle,
+            "warning" => Symbol.Warning,
+            "info" => Symbol.Info,
+            "debug" => Symbol.Bug,
+            "security" => Symbol.Shield,
+            "network" => Symbol.Building,
+            "account" => Symbol.Person,
+            "ipc" => Symbol.ArrowSwap,
+            "ui" => Symbol.Desktop,
+            "monitoring" => Symbol.Line,
+            "init" => Symbol.Settings,
+            "navigation" => Symbol.SignOut,
+            "backup" => Symbol.Database,
+            "restore" => Symbol.ArrowUndo,
+            _ => Symbol.Document
         };
     }
 

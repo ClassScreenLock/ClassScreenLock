@@ -79,4 +79,13 @@ public class LockSettingsModel
 
     [JsonPropertyName("sidebarAboutMinAccountType")]
     public AccountType? SidebarAboutMinAccountType { get; set; } = null;
+
+    [JsonPropertyName("sidebarOrganizationMinAccountType")]
+    public AccountType? SidebarOrganizationMinAccountType { get; set; } = null;
+
+    [JsonPropertyName("enableLockStateFileCheck")]
+    public bool EnableLockStateFileCheck { get; set; } = true;
+
+    [JsonPropertyName("lockStateFileCheckIntervalSeconds")]
+    public int LockStateFileCheckIntervalSeconds { get; set; } = 5;
 }

@@ -11,9 +11,6 @@ public class SettingsModel
     [JsonPropertyName("fontFamily")]
     public string FontFamily { get; set; } = "Microsoft YaHei UI";
     
-    [JsonPropertyName("autoStart")]
-    public bool AutoStart { get; set; } = false;
-    
     [JsonPropertyName("darkMode")]
     public bool DarkMode { get; set; } = false;
     
@@ -49,4 +46,10 @@ public class SettingsModel
 
     [JsonPropertyName("currentAutomationConfig")]
     public string CurrentAutomationConfig { get; set; } = "Default";
+
+    [JsonPropertyName("autoStartServices")]
+    public bool AutoStartServices { get; set; } = true;
+
+    [JsonPropertyName("maxLockDurationHours")]
+    public int MaxLockDurationHours { get; set; } = 48;
 }

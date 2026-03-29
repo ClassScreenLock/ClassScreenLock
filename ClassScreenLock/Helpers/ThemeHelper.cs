@@ -159,7 +159,30 @@ namespace ClassScreenLock.Helpers
                     // 当圆基本覆盖全屏后再切换主题，避免看到瞬时切换
                     if (!themeApplied && r >= maxRadius * 0.85)
                     {
-                        Application.Current.RequestedThemeVariant = isDark ? ThemeVariant.Dark : ThemeVariant.Light;
+                        if (Application.Current != null)
+                        {
+                            Application.Current.RequestedThemeVariant = isDark ? ThemeVariant.Dark : ThemeVariant.Light;
+                        }
+                        
+                        // 更新所有窗口的 dark 类
+                        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime d)
+                        {
+                            foreach (var win in d.Windows)
+                            {
+                                if (isDark)
+                                {
+                                    if (!win.Classes.Contains("dark"))
+                                    {
+                                        win.Classes.Add("dark");
+                                    }
+                                }
+                                else
+                                {
+                                    win.Classes.Remove("dark");
+                                }
+                            }
+                        }
+                        
                         themeApplied = true;
                     }
                     // 覆盖后再轻微淡出

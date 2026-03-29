@@ -51,4 +51,7 @@ public class SecuritySettingsModel
 
     [JsonPropertyName("failedAttempts")]
     public List<DateTime> FailedAttempts { get; set; } = new();
+
+    [JsonPropertyName("enableSoftwareSecurity")]
+    public bool EnableSoftwareSecurity { get; set; } = true;
 }
