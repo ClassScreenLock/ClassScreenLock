@@ -16,6 +16,16 @@ class Program
     private static readonly ManualResetEvent _exitEvent = new ManualResetEvent(false);
     private static string _restartLockFile = Path.Combine(AppContext.BaseDirectory, "restart.lock");
     
+    // 动态检测频率控制
+    private static int _consecutiveExceptions = 0; // 连续异常计数
+    private static int _consecutiveNormal = 0; // 连续正常计数
+    private static bool _isAbnormalState = false; // 是否处于异常状态
+    private static readonly object _stateLock = new object(); // 状态锁
+    private static TimeSpan _currentCheckInterval = TimeSpan.FromSeconds(2); // 当前检测间隔
+    private static readonly TimeSpan _normalInterval = TimeSpan.FromSeconds(1.5); // 正常间隔：1.5 秒
+    private static readonly TimeSpan _abnormalInterval = TimeSpan.FromMilliseconds(500); // 异常间隔：0.5 秒
+    private const int REQUIRED_NORMAL_COUNT = 10; // 需要连续正常 10 次才恢复正常
+    
     [DllImport("advapi32.dll", SetLastError = true)]
     private static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
     
@@ -222,86 +232,218 @@ class Program
     }
     
     private static void MonitorProcesses()
+{
+    var restartDelay = TimeSpan.FromMilliseconds(50);
+    var baseDir = AppContext.BaseDirectory;
+    var mainProcessPath = Path.Combine(baseDir, "ClassScreenLock.exe");
+    var restartFlagFile = Path.Combine(baseDir, "restart.flag");
+    var exitFlagFile = Path.Combine(baseDir, "exit.flag");
+    
+    // 启动退出信号监听线程
+    var exitMonitorThread = new Thread(MonitorExitSignal);
+    exitMonitorThread.IsBackground = true;
+    exitMonitorThread.Start();
+    
+    Console.WriteLine($"Watchdog instance {_instanceId}: Dynamic check interval enabled (Normal: 1.5s, Abnormal: 0.5s)");
+    
+    while (!_shouldExit)
     {
-        var restartDelay = TimeSpan.FromMilliseconds(50);
-        var baseDir = AppContext.BaseDirectory;
-        var mainProcessPath = Path.Combine(baseDir, "ClassScreenLock.exe");
-        
-        // 启动退出信号监听线程
-        var exitMonitorThread = new Thread(MonitorExitSignal);
-        exitMonitorThread.IsBackground = true;
-        exitMonitorThread.Start();
-        
-        while (!_shouldExit)
+        try
         {
-            try
+            bool hasException = false;
+            
+            // 检查主进程
+            var mainProcesses = Process.GetProcessesByName("ClassScreenLock");
+            bool mainProcessExists = mainProcesses.Length > 0;
+            
+            if (!mainProcessExists)
             {
-                // 检查主进程
-                var mainProcesses = Process.GetProcessesByName("ClassScreenLock");
-                bool mainProcessExists = mainProcesses.Length > 0;
+                hasException = true;
                 
-                if (!mainProcessExists)
+                // 优先检查重启标记文件（UIAccess 重启时创建）
+                if (File.Exists(restartFlagFile))
                 {
-                    // 检查是否有退出标记文件
-                    if (File.Exists(Path.Combine(baseDir, "exit.flag")))
+                    // 主进程正在重启，等待它完成
+                    Console.WriteLine($"Watchdog instance {_instanceId}: restart.flag detected, waiting for process to restart...");
+                    Thread.Sleep(500);
+                    continue;
+                }
+                
+                // 检查是否有退出标记文件
+                if (File.Exists(exitFlagFile))
+                {
+                    // 主进程正常退出，看门狗也退出
+                    Console.WriteLine("Main process exited normally. Watchdog exiting.");
+                    _shouldExit = true;
+                    break;
+                }
+                else
+                {
+                    // 尝试获取重启锁，避免多个看门狗实例同时重启主进程
+                    if (TryAcquireRestartLock())
                     {
-                        // 主进程正常退出，看门狗也退出
-                        Console.WriteLine("Main process exited normally. Watchdog exiting.");
-                        _shouldExit = true;
-                        break;
+                        try
+                        {
+                            // 主进程异常退出，重启它
+                            Console.WriteLine($"Watchdog instance {_instanceId} acquired restart lock. Restarting main process...");
+                            _mainProcess = GetOrStartProcessByPath("ClassScreenLock", mainProcessPath);
+                            Thread.Sleep((int)restartDelay.TotalMilliseconds);
+                        }
+                        finally
+                        {
+                            // 释放重启锁
+                            ReleaseRestartLock();
+                        }
                     }
                     else
                     {
-                        // 尝试获取重启锁，避免多个看门狗实例同时重启主进程
-                        if (TryAcquireRestartLock())
-                        {
-                            try
-                            {
-                                // 主进程异常退出，重启它
-                                Console.WriteLine($"Watchdog instance {_instanceId} acquired restart lock. Restarting main process...");
-                                _mainProcess = GetOrStartProcessByPath("ClassScreenLock", mainProcessPath);
-                                Thread.Sleep((int)restartDelay.TotalMilliseconds);
-                            }
-                            finally
-                            {
-                                // 释放重启锁
-                                ReleaseRestartLock();
-                            }
-                        }
-                        else
-                        {
-                            // 其他看门狗实例已经在重启主进程，等待一段时间后再检查
-                            Console.WriteLine($"Watchdog instance {_instanceId} could not acquire restart lock. Waiting...");
-                            Thread.Sleep(100);
-                        }
+                        // 其他看门狗实例已经在重启主进程，等待一段时间后再检查
+                        Console.WriteLine($"Watchdog instance {_instanceId} could not acquire restart lock. Waiting...");
+                        Thread.Sleep(100);
                     }
                 }
-                else if (_mainProcess == null)
-                {
-                    // 更新主进程对象
-                    _mainProcess = mainProcesses[0];
-                }
-                
-                // 检查其他辅助进程
-                CheckAndRestartProcess(ref _monitorProcess, "MonitorProcess", 
-                    Path.Combine(baseDir, "MonitorProcess.exe"), 
-                    restartDelay);
-                
-                CheckAndRestartProcess(ref _breakButtonProcess, "BreakButtonProcess", 
-                    Path.Combine(baseDir, "BreakButtonProcess.exe"), 
-                    restartDelay);
-                
-                // 监控间隔增加到 5 秒，大幅降低 CPU 占用
-                Thread.Sleep(3000);
             }
-            catch (Exception ex)
+            else if (_mainProcess == null)
             {
-                Console.WriteLine($"Monitor error: {ex.Message}");
-                Thread.Sleep(200);
+                // 更新主进程对象
+                _mainProcess = mainProcesses[0];
+                
+                // 主进程已经成功启动，删除重启标记文件
+                if (File.Exists(restartFlagFile))
+                {
+                    try
+                    {
+                        File.Delete(restartFlagFile);
+                        Console.WriteLine($"Watchdog instance {_instanceId}: removed restart.flag after successful restart.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to delete restart.flag: {ex.Message}");
+                    }
+                }
+            }
+            
+            // 检查其他辅助进程
+            if (!CheckAndRestartProcessWithExceptionFlag(ref _monitorProcess, "MonitorProcess", 
+                Path.Combine(baseDir, "MonitorProcess.exe"), 
+                restartDelay))
+            {
+                hasException = true;
+            }
+            
+            if (!CheckAndRestartProcessWithExceptionFlag(ref _breakButtonProcess, "BreakButtonProcess", 
+                Path.Combine(baseDir, "BreakButtonProcess.exe"), 
+                restartDelay))
+            {
+                hasException = true;
+            }
+            
+            // 根据状态动态调整检测频率
+            UpdateCheckInterval(hasException);
+            
+            // 使用动态调整后的检测间隔
+            Thread.Sleep(_currentCheckInterval);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Monitor error: {ex.Message}");
+            // 发生异常，切换到快速检测模式
+            lock (_stateLock)
+            {
+                _isAbnormalState = true;
+                _consecutiveExceptions++;
+                _currentCheckInterval = _abnormalInterval;
+            }
+            Thread.Sleep(200);
+        }
+    }
+    
+    Console.WriteLine($"Watchdog instance {_instanceId} exiting.");
+}
+    
+    private static void UpdateCheckInterval(bool hasException)
+    {
+        lock (_stateLock)
+        {
+            if (hasException)
+            {
+                // 检测到异常，立即切换到快速检测模式
+                _isAbnormalState = true;
+                _consecutiveExceptions++;
+                _consecutiveNormal = 0; // 重置正常计数
+                _currentCheckInterval = _abnormalInterval;
+                Console.WriteLine($"[Watchdog {_instanceId}] Abnormal state detected! Switched to 0.5s check interval. Consecutive exceptions: {_consecutiveExceptions}");
+            }
+            else
+            {
+                // 正常状态
+                if (_isAbnormalState)
+                {
+                    // 处于异常状态，累计正常次数
+                    _consecutiveNormal++;
+                    
+                    if (_consecutiveNormal >= REQUIRED_NORMAL_COUNT)
+                    {
+                        // 连续正常达到 10 次，恢复正常状态
+                        _consecutiveExceptions = 0;
+                        _consecutiveNormal = 0;
+                        _isAbnormalState = false;
+                        _currentCheckInterval = _normalInterval;
+                        Console.WriteLine($"[Watchdog {_instanceId}] Returned to normal state after {_consecutiveNormal} consecutive normal checks. Switched to 1.5s check interval.");
+                    }
+                    else
+                    {
+                        // 继续快速检测，直到达到 10 次
+                        _currentCheckInterval = _abnormalInterval;
+                        Console.WriteLine($"[Watchdog {_instanceId}] Normal check {_consecutiveNormal}/{REQUIRED_NORMAL_COUNT}. Keeping 0.5s interval.");
+                    }
+                }
+                else
+                {
+                    // 保持正常状态
+                    _currentCheckInterval = _normalInterval;
+                }
             }
         }
-        
-        Console.WriteLine($"Watchdog instance {_instanceId} exiting.");
+    }
+    
+    private static bool CheckAndRestartProcessWithExceptionFlag(ref Process? process, string name, string path, TimeSpan delay, string? args = null)
+    {
+        try
+        {
+            // 直接检查进程名称，不依赖于保存的进程对象，确保即使进程对象失效也能检测到
+            var existingProcesses = Process.GetProcessesByName(name);
+            bool processExists = existingProcesses.Length > 0;
+            
+            // 如果进程不存在或已退出，立即重启
+            if (!processExists || (process != null && process.HasExited))
+            {
+                Console.WriteLine($"{name} process not found or exited. Restarting immediately...");
+                
+                // 不做任何等待，直接启动新进程
+                process = GetOrStartProcessByPath(name, path, args);
+                
+                // 短暂延迟确保进程启动
+                Thread.Sleep((int)delay.TotalMilliseconds);
+                
+                // 返回 false 表示检测到异常
+                return false;
+            }
+            else if (process == null && processExists)
+            {
+                // 如果进程存在但进程对象为 null，更新进程对象
+                process = existingProcesses[0];
+                Console.WriteLine($"Found existing {name} process: {process.Id}");
+            }
+            
+            // 返回 true 表示正常
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error checking {name}: {ex.Message}");
+            return false;
+        }
     }
     
     private static void MonitorExitSignal()
