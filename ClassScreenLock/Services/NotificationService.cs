@@ -265,6 +265,7 @@ public class NotificationService : IDisposable
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             var owner = desktop.MainWindow;
+            var isDarkMode = SettingsService.General.DarkMode;
 
             var window = new Window
             {
@@ -274,8 +275,14 @@ public class NotificationService : IDisposable
                 ShowInTaskbar = false,
                 Topmost = true,
                 SizeToContent = SizeToContent.WidthAndHeight,
-                SystemDecorations = SystemDecorations.BorderOnly
+                SystemDecorations = SystemDecorations.BorderOnly,
+                Background = isDarkMode ? new SolidColorBrush(Color.Parse("#252525")) : new SolidColorBrush(Colors.White)
             };
+
+            if (isDarkMode)
+            {
+                window.Classes.Add("dark");
+            }
 
             if (owner != null)
             {
@@ -292,7 +299,8 @@ public class NotificationService : IDisposable
             {
                 Text = message,
                 Margin = new Thickness(0, 0, 0, 16),
-                TextWrapping = TextWrapping.Wrap
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = isDarkMode ? Brushes.White : Brushes.Black
             };
 
             var buttonPanel = new StackPanel
@@ -305,13 +313,23 @@ public class NotificationService : IDisposable
             var cancelButton = new Button
             {
                 Content = GetLocalizedString("Btn_Cancel"),
-                MinWidth = 80
+                MinWidth = 80,
+                Background = isDarkMode ? new SolidColorBrush(Color.Parse("#3A3A3A")) : new SolidColorBrush(Color.Parse("#E0E0E0")),
+                Foreground = isDarkMode ? Brushes.White : Brushes.Black,
+                BorderThickness = new Thickness(0),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(12, 8)
             };
 
             var okButton = new Button
             {
                 Content = GetLocalizedString("Btn_Save"),
-                MinWidth = 80
+                MinWidth = 80,
+                Background = new SolidColorBrush(Color.Parse("#0078D4")),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(12, 8)
             };
 
             cancelButton.Click += (_, _) =>
@@ -491,7 +509,7 @@ public class NotificationService : IDisposable
                 notificationWindow = new Window
                 {
                     Title = title,
-                    Width = 360,
+                    Width = 420,
                     SizeToContent = SizeToContent.Height,
                     WindowStartupLocation = (SettingsService.General.NotificationPosition == Models.NotificationPosition.Center)
                         ? WindowStartupLocation.CenterScreen
@@ -514,20 +532,22 @@ public class NotificationService : IDisposable
                     Background = backgroundBrush,
                     BorderBrush = chromeBrush,
                     BorderThickness = new Thickness(1),
-                    CornerRadius = new CornerRadius(12),
-                    Padding = new Thickness(12)
+                    CornerRadius = new CornerRadius(16),
+                    Padding = new Thickness(24, 20, 24, 20),
+                    MinHeight = 160
                 };
 
                 var mainGrid = new Grid
                 {
-                    ColumnDefinitions = new ColumnDefinitions("4,auto,*,auto"),
-                    RowDefinitions = new RowDefinitions("auto,auto")
+                    ColumnDefinitions = new ColumnDefinitions("6,auto,*,auto"),
+                    RowDefinitions = new RowDefinitions("auto,auto"),
+                    MinHeight = 88
                 };
 
                 var accentBorder = new Border
                 {
                     Background = borderBrush,
-                    CornerRadius = new CornerRadius(6, 0, 0, 6)
+                    CornerRadius = new CornerRadius(8, 0, 0, 8)
                 };
                 Grid.SetColumn(accentBorder, 0);
                 Grid.SetRowSpan(accentBorder, 2);
@@ -536,12 +556,12 @@ public class NotificationService : IDisposable
                 var iconContainer = new Border
                 {
                     Background = iconBackgroundBrush,
-                    CornerRadius = new CornerRadius(16),
-                    Width = 32,
-                    Height = 32,
-                    VerticalAlignment = VerticalAlignment.Top,
+                    CornerRadius = new CornerRadius(24),
+                    Width = 48,
+                    Height = 48,
+                    VerticalAlignment = VerticalAlignment.Center,
                     HorizontalAlignment = HorizontalAlignment.Center,
-                    Margin = new Thickness(6, 0, 4, 0)
+                    Margin = new Thickness(10, 0, 10, 0)
                 };
                 var iconTextBlock = new TextBlock
                 {
@@ -552,7 +572,7 @@ public class NotificationService : IDisposable
                         "Error" => "✕",
                         _ => "ℹ"
                     },
-                    FontSize = 16,
+                    FontSize = 24,
                     FontWeight = FontWeight.Bold,
                     Foreground = iconBrush,
                     HorizontalAlignment = HorizontalAlignment.Center,
@@ -567,21 +587,24 @@ public class NotificationService : IDisposable
                 {
                     Text = title,
                     FontWeight = FontWeight.SemiBold,
-                    FontSize = 15,
+                    FontSize = 19,
                     Foreground = foregroundBrush,
-                    TextWrapping = TextWrapping.Wrap
+                    TextWrapping = TextWrapping.Wrap,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 0)
                 };
                 Grid.SetColumn(titleTextBlock, 2);
                 Grid.SetRow(titleTextBlock, 0);
+                Grid.SetRowSpan(titleTextBlock, 2);
                 mainGrid.Children.Add(titleTextBlock);
 
                 var messageTextBlock = new TextBlock
                 {
                     Text = message,
-                    FontSize = 13,
+                    FontSize = 16,
                     Foreground = messageBrush,
                     TextWrapping = TextWrapping.Wrap,
-                    Margin = new Thickness(0, 4, 0, 0),
+                    Margin = new Thickness(0, 28, 0, 0),
                     IsVisible = !string.IsNullOrWhiteSpace(message)
                 };
                 Grid.SetColumn(messageTextBlock, 2);
@@ -591,17 +614,17 @@ public class NotificationService : IDisposable
                 closeButton = new Button
                 {
                     Content = "×",
-                    FontSize = 16,
+                    FontSize = 22,
                     FontWeight = FontWeight.Bold,
                     Background = Brushes.Transparent,
                     Foreground = closeButtonForegroundBrush,
                     BorderThickness = new Thickness(0),
-                    Width = 28,
-                    Height = 28,
-                    CornerRadius = new CornerRadius(14),
+                    Width = 40,
+                    Height = 40,
+                    CornerRadius = new CornerRadius(20),
                     HorizontalAlignment = HorizontalAlignment.Right,
-                    VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(8, -2, 0, 0)
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(10, 0, 0, 0)
                 };
 
                 closeHandler = (s, e) =>

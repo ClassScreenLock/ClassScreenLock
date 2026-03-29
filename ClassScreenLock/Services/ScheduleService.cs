@@ -349,6 +349,24 @@ public class ScheduleService
             .OrderBy(t => t.StartTime)
             .FirstOrDefault();
 
+        if (current == null)
+        {
+            var classPoint = schedule.TimePoints
+                .Where(t => t.Type == TimePointType.Class)
+                .FirstOrDefault(t => time >= t.StartTime && time < t.EndTime);
+
+            if (classPoint == null)
+            {
+                current = new TimePoint
+                {
+                    Type = TimePointType.Break,
+                    Label = "课间休息",
+                    StartTime = TimeSpan.Zero,
+                    EndTime = TimeSpan.FromHours(24)
+                };
+            }
+        }
+
         return (current, next);
     }
 

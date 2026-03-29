@@ -57,7 +57,6 @@ public class OrganizationService
                 
                 _currentOrganization = JsonSerializer.Deserialize<OrganizationModel>(json);
                 
-                // 如果组织存在且有服务器地址，自动重新激活
                 if (_currentOrganization != null)
                 {
                     Console.WriteLine($"[DEBUG] 成功反序列化组织信息：ID={_currentOrganization.Id}, Name={_currentOrganization.Name}, ServerUrl={_currentOrganization.ServerUrl}, IsActive={_currentOrganization.IsActive}");
@@ -66,27 +65,28 @@ public class OrganizationService
                     {
                         Console.WriteLine($"✓ 加载已绑定的组织：{_currentOrganization.Name ?? "Unknown"} (ID: {_currentOrganization.Id})");
                         
-                        // 无论 IsActive 状态如何，都尝试重新激活
-                        if (!_currentOrganization.IsActive)
+                        // 后台异步执行网络操作，不阻塞启动
+                        _ = Task.Run(async () =>
                         {
-                            Console.WriteLine("组织为非活跃状态，尝试重新激活...");
-                            var result = await ReactivateOrganizationAsync();
-                            Console.WriteLine($"重新激活结果：{(result ? "成功" : "失败")}");
-                            
-                            // 如果重新激活失败，但仍希望保持组织信息，可以选择将组织设为活跃状态
-                            // 并让后续的心跳检测来决定设备是否在线
-                            if (!result)
+                            try
                             {
-                                // 即使重新激活失败，也保留组织信息，用户可以手动重新连接
-                                Console.WriteLine("重新激活失败，但仍保留组织信息以便用户重试");
+                                if (!_currentOrganization.IsActive)
+                                {
+                                    Console.WriteLine("组织为非活跃状态，后台尝试重新激活...");
+                                    await ReactivateOrganizationAsync();
+                                }
+                                else
+                                {
+                                    Console.WriteLine("组织已是活跃状态，后台注册设备...");
+                                    await _deviceService.RegisterDeviceAsync();
+                                }
                             }
-                        }
-                        else
-                        {
-                            Console.WriteLine("组织已是活跃状态，直接注册设备...");
-                            // 已经是活跃状态，直接注册设备
-                            await _deviceService.RegisterDeviceAsync();
-                        }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"[ERROR] 后台网络操作失败：{ex.Message}");
+                                LogService.Instance.Log("Error", "Organization", "Background", ex.Message);
+                            }
+                        });
                     }
                     else
                     {
@@ -103,7 +103,6 @@ public class OrganizationService
                 Console.WriteLine($"[DEBUG] 组织配置文件不存在：{_organizationConfigPath}");
             }
             
-            // 输出最终状态
             Console.WriteLine($"[DEBUG] 组织加载完成，HasJoinedOrganization={HasJoinedOrganization}");
             if (_currentOrganization != null)
             {
@@ -431,24 +430,9 @@ public class OrganizationService
                 Console.WriteLine($"[INFO] 已恢复本地账户：{account.Username}");
             }
             
-            // 检查是否有本地超级管理员账户
-            var hasLocalSuperAdmin = allAccounts.Any(a => !a.IsFromOrganization && a.AccountType == AccountType.SuperAdmin);
-            if (!hasLocalSuperAdmin)
-            {
-                // 创建默认超级管理员账户
-                var securitySettings = SecurityService.Instance.Settings;
-                var result = AccountService.Instance.CreateSubAccountAsync(
-                    securitySettings.AdminUsername,
-                    "admin123", // 默认密码，用户可以后续修改
-                    AccountType.SuperAdmin
-                ).Result;
-                
-                if (result.success)
-                {
-                    LogService.Instance.Log("Security", "LocalSuperAdminRestored", "Organization", "本地超级管理员账户已恢复");
-                    Console.WriteLine("[INFO] 本地超级管理员账户已恢复");
-                }
-            }
+            // 不再自动创建超级管理员账户，避免与用户已创建的超级管理员账户冲突
+            // 用户应该在初始化时自行创建超级管理员账户
+            Console.WriteLine("[INFO] 组织服务初始化完成，使用现有的超级管理员账户");
         }
         catch (Exception ex)
         {

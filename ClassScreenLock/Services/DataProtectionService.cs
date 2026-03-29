@@ -90,13 +90,38 @@ public class DataProtectionService
 
     public void EnsureAllFilesProtected()
     {
-        // 确保目录和所有文件都被系统隐藏保护
         SetSystemHiddenDirectory(AppDataDirectory);
         SetSystemHiddenFile(EncryptedBackupFile);
         SetSystemHiddenFile(SyncLogFile);
-        // 清理日志文件
         CleanupLogFiles();
+        ProtectDataDirectoryFiles();
         LogService.Instance.Log("DataProtection", "Protected", "System", "已设置 AppData 目录和文件的系统隐藏属性");
+    }
+
+    public void ProtectDataDirectoryFiles()
+    {
+        try
+        {
+            if (!Directory.Exists(DataDirectory))
+            {
+                return;
+            }
+
+            var protectedExtensions = new[] { ".dat", ".hash", ".bak" };
+            var protectedFiles = Directory.GetFiles(DataDirectory, "*", SearchOption.AllDirectories)
+                .Where(f => protectedExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase));
+
+            foreach (var file in protectedFiles)
+            {
+                SetSystemHiddenFile(file);
+            }
+
+            LogService.Instance.Log("DataProtection", "Protected", "DataFiles", "已设置 Data 目录下 .dat/.hash/.bak 文件的系统隐藏属性");
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "DataProtection", "ProtectDataFiles", $"保护 Data 目录文件失败：{ex.Message}");
+        }
     }
 
     private void CleanupLogFiles()
@@ -209,12 +234,18 @@ public class DataProtectionService
 
     private void OnDataFileChanged(object sender, FileSystemEventArgs e)
     {
-        // 排除logs.json文件和临时文件，避免无限循环
+        var ext = Path.GetExtension(e.FullPath);
+        var protectedExtensions = new[] { ".dat", ".hash", ".bak" };
+        
+        if (protectedExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
+        {
+            SetSystemHiddenFile(e.FullPath);
+        }
+        
         if (Path.GetFileName(e.FullPath) == "logs.json" || 
-            Path.GetExtension(e.FullPath).Equals(".tmp", StringComparison.OrdinalIgnoreCase))
+            ext.Equals(".tmp", StringComparison.OrdinalIgnoreCase))
             return;
         
-        // 防重复同步机制
         var now = DateTime.Now;
         if (_isSyncing || (now - _lastSyncTime).TotalMilliseconds < SyncCooldownMs)
             return;
@@ -237,14 +268,20 @@ public class DataProtectionService
 
     private void OnDataFileRenamed(object sender, RenamedEventArgs e)
     {
-        // 排除logs.json文件和临时文件，避免无限循环
+        var ext = Path.GetExtension(e.FullPath);
+        var protectedExtensions = new[] { ".dat", ".hash", ".bak" };
+        
+        if (protectedExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
+        {
+            SetSystemHiddenFile(e.FullPath);
+        }
+        
         if (Path.GetFileName(e.FullPath) == "logs.json" || 
             Path.GetFileName(e.OldFullPath) == "logs.json" ||
-            Path.GetExtension(e.FullPath).Equals(".tmp", StringComparison.OrdinalIgnoreCase) ||
+            ext.Equals(".tmp", StringComparison.OrdinalIgnoreCase) ||
             Path.GetExtension(e.OldFullPath).Equals(".tmp", StringComparison.OrdinalIgnoreCase))
             return;
         
-        // 防重复同步机制
         var now = DateTime.Now;
         if (_isSyncing || (now - _lastSyncTime).TotalMilliseconds < SyncCooldownMs)
             return;
@@ -293,7 +330,7 @@ public class DataProtectionService
 
             var backupJson = JsonSerializer.Serialize(backupData);
             var encryptedData = EncryptData(Encoding.UTF8.GetBytes(backupJson));
-            await File.WriteAllBytesAsync(EncryptedBackupFile, encryptedData);
+            await WriteFileWithRetryAsync(EncryptedBackupFile, encryptedData);
             
             // 设置备份文件为系统隐藏
             SetSystemHiddenFile(EncryptedBackupFile);
@@ -312,48 +349,131 @@ public class DataProtectionService
 
     public async Task<bool> SyncToAppDataAsync()
     {
+        const int maxRetries = 5;
+        const int retryDelayMs = 200;
+        
+        for (int retry = 0; retry < maxRetries; retry++)
+        {
+            try
+            {
+                var dataFiles = GetAllDataFiles();
+                var backupData = new BackupData
+                {
+                    Files = new List<BackupFile>(),
+                    Timestamp = DateTime.Now
+                };
+
+                foreach (var file in dataFiles)
+                {
+                    var fileData = await File.ReadAllBytesAsync(file);
+                    var relativePath = GetRelativePath(file, DataDirectory);
+                    var checksum = CalculateChecksum(fileData);
+
+                    backupData.Files.Add(new BackupFile
+                    {
+                        RelativePath = relativePath,
+                        Content = fileData,
+                        Checksum = checksum,
+                        LastModified = File.GetLastWriteTime(file)
+                    });
+                }
+
+                var backupJson = JsonSerializer.Serialize(backupData);
+                var encryptedData = EncryptData(Encoding.UTF8.GetBytes(backupJson));
+                
+                // 使用安全的文件写入方式
+                await WriteFileWithRetryAsync(EncryptedBackupFile, encryptedData);
+                
+                // 设置备份文件为系统隐藏
+                SetSystemHiddenFile(EncryptedBackupFile);
+                SetSystemHiddenFile(SyncLogFile);
+
+                await LogSyncOperation("Sync", dataFiles.Length);
+                LogService.Instance.Log("DataProtection", "Synced", "System", "数据已同步到 AppData");
+                return true;
+            }
+            catch (UnauthorizedAccessException ex) when (retry < maxRetries - 1)
+            {
+                LogService.Instance.Log("Warning", "DataProtection", "Sync", $"同步失败，正在重试 ({retry + 1}/{maxRetries}): {ex.Message}");
+                await Task.Delay(retryDelayMs * (retry + 1));
+            }
+            catch (IOException ex) when (retry < maxRetries - 1)
+            {
+                LogService.Instance.Log("Warning", "DataProtection", "Sync", $"同步失败，正在重试 ({retry + 1}/{maxRetries}): {ex.Message}");
+                await Task.Delay(retryDelayMs * (retry + 1));
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("Sync", ex.Message);
+                return false;
+            }
+        }
+        
+        await LogErrorAsync("Sync", "达到最大重试次数");
+        return false;
+    }
+
+    private async Task WriteFileWithRetryAsync(string filePath, byte[] data)
+    {
+        const int maxAttempts = 3;
+        const int delayMs = 100;
+        
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                // 先尝试删除旧文件
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                    await Task.Delay(50);
+                }
+                
+                // 确保目录存在
+                var directory = Path.GetDirectoryName(filePath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+                
+                // 写入新文件
+                using (var fs = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                {
+                    await fs.WriteAsync(data, 0, data.Length);
+                }
+                
+                return;
+            }
+            catch (UnauthorizedAccessException) when (attempt < maxAttempts - 1)
+            {
+                await Task.Delay(delayMs);
+            }
+            catch (IOException) when (attempt < maxAttempts - 1)
+            {
+                await Task.Delay(delayMs);
+            }
+        }
+        
+        // 如果上述方法都失败，使用最后手段：写入临时文件然后替换
+        var tempFile = filePath + ".tmp";
         try
         {
-            var dataFiles = GetAllDataFiles();
-            var backupData = new BackupData
+            await File.WriteAllBytesAsync(tempFile, data);
+            if (File.Exists(filePath))
             {
-                Files = new List<BackupFile>(),
-                Timestamp = DateTime.Now
-            };
-
-            foreach (var file in dataFiles)
-            {
-                var fileData = await File.ReadAllBytesAsync(file);
-                var relativePath = GetRelativePath(file, DataDirectory);
-                var checksum = CalculateChecksum(fileData);
-
-                backupData.Files.Add(new BackupFile
-                {
-                    RelativePath = relativePath,
-                    Content = fileData,
-                    Checksum = checksum,
-                    LastModified = File.GetLastWriteTime(file)
-                });
+                File.Replace(tempFile, filePath, null);
             }
-
-            var backupJson = JsonSerializer.Serialize(backupData);
-            var encryptedData = EncryptData(Encoding.UTF8.GetBytes(backupJson));
-            
-            // 直接写入文件，避免多层锁定
-            File.WriteAllBytes(EncryptedBackupFile, encryptedData);
-            
-            // 设置备份文件为系统隐藏
-            SetSystemHiddenFile(EncryptedBackupFile);
-            SetSystemHiddenFile(SyncLogFile);
-
-            await LogSyncOperation("Sync", dataFiles.Length);
-            LogService.Instance.Log("DataProtection", "Synced", "System", "数据已同步到 AppData");
-            return true;
+            else
+            {
+                File.Move(tempFile, filePath);
+            }
         }
-        catch (Exception ex)
+        finally
         {
-            await LogErrorAsync("Sync", ex.Message);
-            return false;
+            if (File.Exists(tempFile))
+            {
+                try { File.Delete(tempFile); } catch { }
+            }
         }
     }
 
@@ -481,12 +601,42 @@ public class DataProtectionService
             return Array.Empty<string>();
         }
 
+        var excludedDirectories = new[] { "Screenshots", "Webcam", "Backup" };
+        var excludedExtensions = new[] { ".tmp", ".png", ".jpg", ".jpeg", ".bmp", ".gif" };
+        const long maxFileSize = 10 * 1024 * 1024;
+
         return Directory.GetFiles(DataDirectory, "*", SearchOption.AllDirectories)
-            .Where(f => 
-                !f.Contains("Backup") && 
-                !Path.GetFileName(f).StartsWith(".") && 
-                Path.GetFileName(f) != "logs.json" &&
-                !Path.GetExtension(f).Equals(".tmp", StringComparison.OrdinalIgnoreCase))
+            .Where(f =>
+            {
+                var relativePath = Path.GetRelativePath(DataDirectory, f);
+                var dirName = relativePath.Split(Path.DirectorySeparatorChar)[0];
+                
+                if (excludedDirectories.Contains(dirName, StringComparer.OrdinalIgnoreCase))
+                    return false;
+                
+                if (Path.GetFileName(f).StartsWith("."))
+                    return false;
+                
+                if (Path.GetFileName(f) == "logs.json")
+                    return false;
+                
+                var ext = Path.GetExtension(f);
+                if (excludedExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
+                    return false;
+                
+                try
+                {
+                    var fileInfo = new FileInfo(f);
+                    if (fileInfo.Length > maxFileSize)
+                        return false;
+                }
+                catch
+                {
+                    return false;
+                }
+                
+                return true;
+            })
             .ToArray();
     }
 

@@ -434,6 +434,14 @@ public class SecurityService
             }
 
             var usernameMatches = string.Equals(settings.AdminUsername, username, StringComparison.OrdinalIgnoreCase);
+            
+            // 同时检查是否是账户列表中的超级管理员用户名
+            var superAdmin = AccountService.Instance.Accounts.FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin && !a.IsDisabled);
+            if (superAdmin != null && string.Equals(superAdmin.Username, username, StringComparison.OrdinalIgnoreCase))
+            {
+                usernameMatches = true;
+            }
+            
             var passwordMatches = usernameMatches && !string.IsNullOrWhiteSpace(password) && BCryptNet.Verify(password, settings.PasswordHash);
             var twoFactorMatches = settings.IsTwoFactorEnabled && !string.IsNullOrWhiteSpace(twoFactorCode) && VerifyTwoFactorCode(twoFactorCode);
 

@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Linq;
+using System.IO;
+using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -11,6 +13,7 @@ using Avalonia.Media;
 using ClassScreenLock.Models;
 using ClassScreenLock.Views;
 using ClassScreenLock.ViewModels;
+using ClassScreenLock.Helpers;
 
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -21,6 +24,11 @@ public class LockScreenService : INotifyPropertyChanged
 {
     private static readonly LockScreenService _instance = new();
     public static LockScreenService Instance => _instance;
+
+    private static readonly string LockStateDirectory = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), 
+        "ClassScreenLock");
+    private static readonly string LockStateFile = Path.Combine(LockStateDirectory, "lock_state.dat");
 
     private LockMode _currentMode = LockMode.ProtectionOnly;
     private bool _isLocked;
@@ -60,13 +68,87 @@ public class LockScreenService : INotifyPropertyChanged
     private Window? _protectionWindow;
     private Timer? _topmostTimer;
     private Timer? _scheduleTimer;
+    private Timer? _lockStateCheckTimer;
+    private Timer? _maxLockDurationTimer;
     private bool _isManualLock;
     private string? _lastAutoLockedBreakId;
     private bool _wasManuallyUnlockedInBreak;
     private (TimePoint? current, TimePoint? next) _lastLockScheduleSnapshot;
+    private bool _isRestoringFromStateFile = false;
+    private DateTime? _lockStartTime;
 
     public LockScreenService()
     {        _scheduleTimer = new Timer(_ => CheckSchedule(), null, 0, 5000);
+    }
+
+    public void StartLockStateFileCheck()
+    {
+        var settings = SettingsService.Lock;
+        if (!settings.EnableLockStateFileCheck)
+        {
+            return;
+        }
+
+        var interval = Math.Max(1, settings.LockStateFileCheckIntervalSeconds) * 1000;
+        _lockStateCheckTimer?.Dispose();
+        _lockStateCheckTimer = new Timer(_ => CheckLockStateFile(), null, 0, interval);
+        LogService.Instance.Log("Info", "LockState", "Check", $"已启动锁屏状态文件检查，间隔: {settings.LockStateFileCheckIntervalSeconds} 秒");
+    }
+
+    public void StopLockStateFileCheck()
+    {
+        _lockStateCheckTimer?.Dispose();
+        _lockStateCheckTimer = null;
+    }
+
+    public void Stop()
+    {
+        _scheduleTimer?.Dispose();
+        _scheduleTimer = null;
+        
+        _topmostTimer?.Dispose();
+        _topmostTimer = null;
+        
+        StopLockStateFileCheck();
+    }
+
+    private void CheckLockStateFile()
+    {
+        if (IsLocked || IsProtectionOnlyActive || _isRestoringFromStateFile)
+        {
+            return;
+        }
+
+        try
+        {
+            var lockStateData = GetLockStateData();
+            if (lockStateData != null && lockStateData.IsLocked)
+            {
+                LogService.Instance.Log("Info", "LockState", "Check", "检测到锁屏状态文件，正在触发锁屏...");
+                _isRestoringFromStateFile = true;
+                
+                Dispatcher.UIThread.Post(() =>
+                {
+                    try
+                    {
+                        ActivateLock(lockStateData.LockMode, false);
+                        LogService.Instance.Log("Info", "LockState", "Check", "已根据状态文件触发锁屏");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Instance.Log("Error", "LockState", "Check", $"触发锁屏失败: {ex.Message}");
+                    }
+                    finally
+                    {
+                        _isRestoringFromStateFile = false;
+                    }
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "LockState", "Check", $"检查锁屏状态文件失败: {ex.Message}");
+        }
     }
 
     private IntPtr _mouseHookId = IntPtr.Zero;
@@ -76,6 +158,34 @@ public class LockScreenService : INotifyPropertyChanged
 
     private const int WH_KEYBOARD_LL = 13;
     private const int WH_MOUSE_LL = 14;
+
+    private const int WM_KEYDOWN = 0x0100;
+    private const int WM_SYSKEYDOWN = 0x0104;
+    private const int WM_KEYUP = 0x0101;
+    private const int WM_SYSKEYUP = 0x0105;
+
+    private const int VK_TAB = 0x09;
+    private const int VK_ESCAPE = 0x1B;
+    private const int VK_F4 = 0x73;
+    private const int VK_LWIN = 0x5B;
+    private const int VK_RWIN = 0x5C;
+    private const int VK_LMENU = 0xA4;
+    private const int VK_RMENU = 0xA5;
+    private const int VK_LCONTROL = 0xA2;
+    private const int VK_RCONTROL = 0xA3;
+    private const int VK_LSHIFT = 0xA0;
+    private const int VK_RSHIFT = 0xA1;
+    private const int VK_DELETE = 0x2E;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct KBDLLHOOKSTRUCT
+    {
+        public int vkCode;
+        public int scanCode;
+        public int flags;
+        public int time;
+        public IntPtr dwExtraInfo;
+    }
 
     private delegate IntPtr LowLevelHookProc(int nCode, IntPtr wParam, IntPtr lParam);
 
@@ -162,16 +272,23 @@ public class LockScreenService : INotifyPropertyChanged
                 var minutesToUnlock = (targetUnlock.Value - now).TotalMinutes;
                 if (minutesToUnlock <= 0)
                 {
-                    Dispatcher.UIThread.Post(() =>
+                    _ = Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        DeactivateLock();
-                        if (breakEnd != null && (earlyUnlock == null || breakEnd.Value <= earlyUnlock.Value))
+                        try
                         {
-                            NotificationService.Instance.ShowInfo("本次课间已结束，已自动解除锁定/防护");
+                            DeactivateLock();
+                            if (breakEnd != null && (earlyUnlock == null || breakEnd.Value <= earlyUnlock.Value))
+                            {
+                                NotificationService.Instance.ShowInfo("本次课间已结束，已自动解除锁定/防护");
+                            }
+                            else
+                            {
+                                NotificationService.Instance.ShowInfo("即将上课，已自动提前解除锁定/防护");
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            NotificationService.Instance.ShowInfo("即将上课，已自动提前解除锁定/防护");
+                            LogService.Instance.Log("Error", "Schedule", "AutoUnlock", $"自动解锁失败：{ex.Message}\n{ex.StackTrace}");
                         }
                     });
                 }
@@ -269,7 +386,10 @@ public class LockScreenService : INotifyPropertyChanged
             {
                 if (!_protectionWindow.IsVisible)
                 {
-                    _protectionWindow.Show();
+                    ShowWindowSafely(ref _protectionWindow, () => new FloatingLockWidget
+                    {
+                        DataContext = new FloatingLockWidgetViewModel()
+                    }, true);
                 }
                 _protectionWindow.Topmost = true;
                 return;
@@ -279,6 +399,12 @@ public class LockScreenService : INotifyPropertyChanged
             {
                 DataContext = new FloatingLockWidgetViewModel()
             };
+
+            // 根据设置应用 dark 类
+            if (SettingsService.General.DarkMode)
+            {
+                window.Classes.Add("dark");
+            }
 
             _protectionWindow = window;
             window.Show();
@@ -325,6 +451,8 @@ public class LockScreenService : INotifyPropertyChanged
         }
 
         IsLocked = true;
+        _lockStartTime = DateTime.Now;
+        StartMaxLockDurationTimer();
 
         if (!OperatingSystem.IsWindows())
         {
@@ -333,6 +461,7 @@ public class LockScreenService : INotifyPropertyChanged
 
         StartHooks();
         CreateOrShowLockWindow();
+        CreateLockStateFile();
 
         _topmostTimer?.Dispose();
         _topmostTimer = new Timer(_ => EnsureLockWindowState(), null, 0, 1000);
@@ -340,7 +469,10 @@ public class LockScreenService : INotifyPropertyChanged
 
     private void StopScreenLock()
     {
+        StopMaxLockDurationTimer();
+        _lockStartTime = null;
         StopHooks();
+        DeleteLockStateFile();
 
         _topmostTimer?.Dispose();
         _topmostTimer = null;
@@ -372,32 +504,92 @@ public class LockScreenService : INotifyPropertyChanged
             {
                 if (!_lockWindow.IsVisible)
                 {
-                    _lockWindow.Show();
+                    ShowWindowSafely(ref _lockWindow, () => CreateLockWindow(), false);
                 }
                 _lockWindow.Topmost = true;
                 return;
+            }
+
+            _lockWindow = CreateLockWindow();
+            ShowWindowSafely(ref _lockWindow, () => CreateLockWindow(), false);
+        });
+    }
+
+    private Window CreateLockWindow()
+    {
+        var mainWindow = Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
+            ? desktop.MainWindow
+            : null;
+
+        var lockWindow = new LockWindow
+        {
+            DataContext = new LockWindowViewModel()
+        };
+
+        // 根据设置应用 dark 类
+        if (SettingsService.General.DarkMode)
+        {
+            lockWindow.Classes.Add("dark");
+        }
+
+        if (mainWindow != null)
+        {
+            lockWindow.Icon = mainWindow.Icon;
+        }
+
+        return lockWindow;
+    }
+
+    private void ShowWindowSafely(ref Window window, Func<Window> createWindowFunc, bool isProtectionWindow)
+    {
+        try
+        {
+            var mainWindow = Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
+                ? desktop.MainWindow
+                : null;
+
+            if (mainWindow != null && mainWindow.IsVisible)
+            {
+                window.Show(mainWindow);
+            }
+            else
+            {
+                window.Show();
+            }
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Cannot re-show a closed window"))
+        {
+            LogService.Instance.Log("Warning", "Window", "Show", $"窗口已关闭，正在释放旧窗口并重建: {ex.Message}");
+            
+            try
+            {
+                window.Close();
+            }
+            catch
+            {
+            }
+            
+            window = createWindowFunc();
+
+            // 根据设置应用 dark 类
+            if (SettingsService.General.DarkMode)
+            {
+                window.Classes.Add("dark");
             }
 
             var mainWindow = Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
                 ? desktop.MainWindow
                 : null;
 
-            var lockWindow = new LockWindow
-            {
-                DataContext = new LockWindowViewModel()
-            };
-
-            if (mainWindow != null)
-            {
-                lockWindow.Icon = mainWindow.Icon;
-            }
-
-            _lockWindow = lockWindow;
             if (mainWindow != null && mainWindow.IsVisible)
-                lockWindow.Show(mainWindow);
+            {
+                window.Show(mainWindow);
+            }
             else
-                lockWindow.Show();
-        });
+            {
+                window.Show();
+            }
+        }
     }
 
     private void EnsureLockWindowState()
@@ -420,7 +612,7 @@ public class LockScreenService : INotifyPropertyChanged
             // 如果当前前台就是锁屏窗口，什么都不做，直接返回
             if (lockHwnd != null && foregroundHwnd == lockHwnd.Value)
             {
-                if (!_lockWindow.IsVisible) _lockWindow.Show();
+                if (!_lockWindow.IsVisible) ShowWindowSafely(ref _lockWindow, () => CreateLockWindow(), false);
                 return;
             }
 
@@ -444,7 +636,7 @@ public class LockScreenService : INotifyPropertyChanged
             else
             {                // 如果是不允许的程序在前台，或者没有前台窗口，显示并强制置顶锁屏窗口
                 if (!_lockWindow.IsVisible)
-                {                    _lockWindow.Show();
+                {                    ShowWindowSafely(ref _lockWindow, () => CreateLockWindow(), false);
                 }
 
                 if (!NotificationService.Instance.IsShowingNotification)
@@ -533,9 +725,50 @@ public class LockScreenService : INotifyPropertyChanged
 
     private IntPtr KeyboardHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
-        if (nCode >= 0 && IsLocked && !IsAllowedForegroundProcess())
+        if (nCode >= 0 && IsLocked)
         {
-            return new IntPtr(1);
+            bool shouldBlock = false;
+
+            if (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN)
+            {
+                var hookStruct = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
+                int vkCode = hookStruct.vkCode;
+
+                if (vkCode == VK_LWIN || vkCode == VK_RWIN)
+                {
+                    shouldBlock = true;
+                }
+                else if (vkCode == VK_LMENU || vkCode == VK_RMENU)
+                {
+                    shouldBlock = true;
+                }
+                else if (vkCode == VK_TAB)
+                {
+                    shouldBlock = true;
+                }
+                else if (vkCode == VK_ESCAPE)
+                {
+                    shouldBlock = true;
+                }
+                else if (vkCode == VK_F4)
+                {
+                    shouldBlock = true;
+                }
+                else if (vkCode == VK_DELETE)
+                {
+                    shouldBlock = true;
+                }
+            }
+
+            if (shouldBlock)
+            {
+                return new IntPtr(1);
+            }
+
+            if (!IsAllowedForegroundProcess())
+            {
+                return new IntPtr(1);
+            }
         }
 
         return CallNextHookEx(_keyboardHookId, nCode, wParam, lParam);
@@ -577,4 +810,175 @@ public class LockScreenService : INotifyPropertyChanged
 
         return false;
     }
+
+    private void CreateLockStateFile()
+    {
+        try
+        {
+            if (!Directory.Exists(LockStateDirectory))
+            {
+                Directory.CreateDirectory(LockStateDirectory);
+            }
+
+            var stateData = new LockStateData
+            {
+                IsLocked = true,
+                LockMode = _currentMode,
+                Timestamp = DateTime.Now,
+                ProcessId = Environment.ProcessId
+            };
+
+            var json = JsonSerializer.Serialize(stateData, new JsonSerializerOptions 
+            { 
+                WriteIndented = true 
+            });
+            File.WriteAllText(LockStateFile, json);
+
+            var fileInfo = new FileInfo(LockStateFile);
+            fileInfo.Attributes = FileAttributes.Hidden | FileAttributes.System;
+
+            LogService.Instance.Log("Info", "LockState", "File", $"锁屏状态文件已创建: {LockStateFile}");
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "LockState", "File", $"创建锁屏状态文件失败: {ex.Message}");
+        }
+    }
+
+    private void DeleteLockStateFile()
+    {
+        try
+        {
+            if (File.Exists(LockStateFile))
+            {
+                File.Delete(LockStateFile);
+                LogService.Instance.Log("Info", "LockState", "File", "锁屏状态文件已删除");
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "LockState", "File", $"删除锁屏状态文件失败: {ex.Message}");
+        }
+    }
+
+    public LockStateData? GetLockStateData()
+    {
+        try
+        {
+            if (!File.Exists(LockStateFile))
+            {
+                return null;
+            }
+
+            var json = File.ReadAllText(LockStateFile);
+            var stateData = JsonSerializer.Deserialize<LockStateData>(json);
+
+            if (stateData == null)
+            {
+                return null;
+            }
+
+            if (stateData.ProcessId > 0)
+            {
+                try
+                {
+                    var process = Process.GetProcessById(stateData.ProcessId);
+                    if (process.ProcessName.Equals("ClassScreenLock", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return null;
+                    }
+                }
+                catch (ArgumentException)
+                {
+                }
+                catch (InvalidOperationException)
+                {
+                }
+            }
+
+            return stateData;
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "LockState", "File", $"读取锁屏状态文件失败: {ex.Message}");
+            return null;
+        }
+    }
+
+    public void CleanupLockStateFile()
+    {
+        DeleteLockStateFile();
+    }
+
+    private void StartMaxLockDurationTimer()
+    {
+        StopMaxLockDurationTimer();
+
+        var maxHours = SettingsService.General.MaxLockDurationHours;
+        
+        if (maxHours <= 0)
+        {
+            return;
+        }
+
+        var checkInterval = TimeSpan.FromMinutes(1);
+        _maxLockDurationTimer = new Timer(_ => CheckMaxLockDuration(), null, checkInterval, checkInterval);
+        LogService.Instance.Log("Info", "LockDuration", "Timer", $"已启动最大锁定时间检查，最大时长: {maxHours} 小时");
+    }
+
+    private void StopMaxLockDurationTimer()
+    {
+        _maxLockDurationTimer?.Dispose();
+        _maxLockDurationTimer = null;
+    }
+
+    private void CheckMaxLockDuration()
+    {
+        try
+        {
+            if (!IsLocked || !_lockStartTime.HasValue)
+            {
+                return;
+            }
+
+            var maxHours = SettingsService.General.MaxLockDurationHours;
+            
+            if (maxHours <= 0)
+            {
+                return;
+            }
+
+            var elapsed = DateTime.Now - _lockStartTime.Value;
+            var maxDuration = TimeSpan.FromHours(maxHours);
+
+            if (elapsed >= maxDuration)
+            {
+                _ = Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    try
+                    {
+                        LogService.Instance.Log("Info", "LockDuration", "AutoUnlock", $"已达到最大锁定时间 {maxHours} 小时，自动解锁");
+                        NotificationService.Instance.ShowSuccess(LocalizationService.Instance.GetString("Notify_MaxLockDurationReached") ?? "已达到最大锁定时间，自动解锁");
+                        DeactivateLock();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Instance.Log("Error", "LockDuration", "AutoUnlock", $"自动解锁失败：{ex.Message}\n{ex.StackTrace}");
+                    }
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "LockDuration", "Check", $"检查最大锁定时间失败：{ex.Message}\n{ex.StackTrace}");
+        }
+    }
+}
+
+public class LockStateData
+{
+    public bool IsLocked { get; set; }
+    public LockMode LockMode { get; set; }
+    public DateTime Timestamp { get; set; }
+    public int ProcessId { get; set; }
 }

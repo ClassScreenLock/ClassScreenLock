@@ -164,6 +164,19 @@ public class AccountService
         }
     }
 
+    public void UpdateAccountType(Guid accountId, AccountType accountType)
+    {
+        lock (_lock)
+        {
+            var account = _accounts.FirstOrDefault(a => a.Id == accountId);
+            if (account != null)
+            {
+                account.AccountType = accountType;
+                SaveAccounts();
+            }
+        }
+    }
+
     public async Task<bool> EnsureSuperAdminExistsAsync(string username, string password)
     {
         lock (_lock)
@@ -393,8 +406,8 @@ public class AccountService
                 return false;
             }
 
-            var usernameMatches = string.Equals(username, superAdmin.Username, StringComparison.OrdinalIgnoreCase) ||
-                                  string.Equals(username, SecurityService.Instance.Settings.AdminUsername, StringComparison.OrdinalIgnoreCase);
+            
+            var usernameMatches = string.Equals(username, superAdmin.Username, StringComparison.OrdinalIgnoreCase);
             if (!usernameMatches)
             {
                 return false;

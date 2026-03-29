@@ -139,7 +139,6 @@ public class SettingsService
                 var general = new SettingsModel();
                 if (oldSettings.TryGetProperty("fontSize", out var fontSize)) general.FontSize = fontSize.GetDouble();
                 if (oldSettings.TryGetProperty("fontFamily", out var fontFamily)) general.FontFamily = fontFamily.GetString() ?? general.FontFamily;
-                if (oldSettings.TryGetProperty("autoStart", out var autoStart)) general.AutoStart = autoStart.GetBoolean();
                 if (oldSettings.TryGetProperty("darkMode", out var darkMode)) general.DarkMode = darkMode.GetBoolean();
                 if (oldSettings.TryGetProperty("accentColor", out var accentColor)) general.AccentColor = accentColor.GetString() ?? general.AccentColor;
                 if (oldSettings.TryGetProperty("showNotifications", out var showNotifications)) general.ShowNotifications = showNotifications.GetBoolean();
