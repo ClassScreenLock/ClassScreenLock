@@ -119,6 +119,10 @@ public partial class ScheduleViewModel : ViewModelBase
 
     public static TimePointType[] AllTimePointTypes => Enum.GetValues<TimePointType>();
 
+    public static int[] HourOptions { get; } = Enumerable.Range(0, 24).ToArray();
+
+    public static int[] MinuteOptions { get; } = Enumerable.Range(0, 60).ToArray();
+
     private readonly DispatcherTimer _breakTimer;
     private SchedulePlan? _hookedSchedule;
 
@@ -588,51 +592,6 @@ public partial class ScheduleViewModel : ViewModelBase
         SaveCurrentScheduleCore(false);
     }
 
-    [ObservableProperty]
-    private bool _isAwaitingBreakLockConfirm;
-
-    private DateTime _lastClickTime = DateTime.MinValue;
-
-    private Guid? _breakLockPendingToken;
-
-    [RelayCommand]
-    private async Task StartBreakLock()
-    {
-        if (!IsBreakNow)
-        {
-            return;
-        }
-
-        var now = DateTime.Now;
-
-        if (IsAwaitingBreakLockConfirm)
-        {
-            _breakLockPendingToken = null;
-            IsAwaitingBreakLockConfirm = false;
-            _lastClickTime = DateTime.MinValue;
-
-            var settings = SettingsService.Lock;
-            LockScreenService.Instance.ActivateLock(settings.BreakTimeLockMode);
-            NotificationService.Instance.ShowSuccess("下课锁屏已启动");
-            return;
-        }
-
-        _lastClickTime = now;
-        IsAwaitingBreakLockConfirm = true;
-        var token = Guid.NewGuid();
-        _breakLockPendingToken = token;
-        NotificationService.Instance.ShowInfo("再次点击“下课锁屏”按钮以启动锁屏");
-
-        await Task.Delay(3000);
-        if (_breakLockPendingToken == token)
-        {
-            _breakLockPendingToken = null;
-            IsAwaitingBreakLockConfirm = false;
-            _lastClickTime = DateTime.MinValue;
-            NotificationService.Instance.ShowInfo("已取消下课锁屏，请重新点击");
-        }
-    }
-
     private void UpdateBreakState()
     {
         var settings = SettingsService.Lock;
@@ -653,6 +612,17 @@ public partial class ScheduleViewModel : ViewModelBase
             return;
         }
 
+        var classPoint = schedule.TimePoints
+            .Where(t => t.Type == TimePointType.Class)
+            .FirstOrDefault(t => now >= t.StartTime && now < t.EndTime);
+
+        if (classPoint != null)
+        {
+            IsBreakNow = false;
+            CurrentBreakTimePoint = null;
+            return;
+        }
+
         var breakPoint = schedule.TimePoints
             .Where(t => t.Type == TimePointType.Break)
             .FirstOrDefault(t => now >= t.StartTime && now < t.EndTime);
@@ -664,7 +634,7 @@ public partial class ScheduleViewModel : ViewModelBase
         }
         else
         {
-            IsBreakNow = false;
+            IsBreakNow = true;
             CurrentBreakTimePoint = null;
         }
     }
@@ -979,5 +949,12 @@ public partial class ScheduleViewModel : ViewModelBase
                || DateTime.TryParse(text, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces, out date);
     }
 
-    
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _breakTimer?.Stop();
+        }
+        base.Dispose(disposing);
+    }
 }

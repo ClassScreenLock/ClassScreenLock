@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
              xmlns:models="clr-namespace:ClassScreenLock.Models"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="ClassScreenLock.Views.SecurityCenterView"
              x:DataType="vm:SecurityCenterViewModel">
@@ -19,12 +20,12 @@
             <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
                 <Border Background="{DynamicResource SystemAccentColorLightBrush}" 
                         Width="56" Height="56" CornerRadius="12">
-                    <icons:Icon Value="fas fa-shield-halved" Width="28" Height="28" 
+                    <fluent:SymbolIcon Symbol="ShieldCheckmark" FontSize="28" 
                                 Foreground="{DynamicResource SystemAccentColor}"/>
                 </Border>
                 <StackPanel VerticalAlignment="Center" Spacing="4">
                     <TextBlock Text="{DynamicResource SecurityCenter_Title}" Classes="h1" Margin="0"/>
-                    <TextBlock Text="管理账户权限、安全验证及系统级访问控制" Classes="caption" Opacity="0.6" FontSize="14"/>
+                    <TextBlock Text="{DynamicResource SecurityCenter_Subtitle}" Classes="caption" Opacity="0.6"/>
                 </StackPanel>
             </StackPanel>
         </StackPanel>
@@ -32,7 +33,7 @@
         <!-- 内容部分 -->
         <TabControl Grid.Row="1" Classes="FluentTabControl">
             <!-- 身份验证与概览 -->
-            <TabItem Header="身份验证">
+            <TabItem Header="{DynamicResource SecurityCenter_Authentication}">
                 <ScrollViewer>
                     <StackPanel Spacing="24" Margin="0,16,0,0">
                         <!-- 登录卡片 -->
@@ -40,22 +41,22 @@
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel Spacing="24">
                                     <StackPanel Spacing="8">
-                                        <TextBlock Text="管理员身份验证" Classes="h2"/>
-                                        <TextBlock Text="访问受限设置需要更高的权限级别" Classes="caption" Opacity="0.7"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_AdminAuthTitle}" Classes="h2"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_AdminAuthDesc}" Classes="caption" Opacity="0.7"/>
                                     </StackPanel>
                                     
                                     <StackPanel Spacing="20" IsVisible="{Binding !IsAuthenticated}">
                                         <StackPanel Spacing="12">
-                                            <TextBlock Text="用户名" Classes="caption" FontWeight="SemiBold"/>
-                                            <TextBox Text="{Binding Username}" Watermark="输入管理员用户名" Width="320" HorizontalAlignment="Left" VerticalContentAlignment="Center" Classes="clear"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_Username}" Classes="caption" FontWeight="SemiBold"/>
+                                            <TextBox Text="{Binding Username}" Watermark="{DynamicResource SecurityCenter_EnterUsername}" Width="320" HorizontalAlignment="Left" VerticalContentAlignment="Center" Classes="clear"/>
                                         </StackPanel>
 
                                         <StackPanel Spacing="12" IsVisible="{Binding IsLoginPasswordVisible}">
-                                            <TextBlock Text="密码" Classes="caption" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_Password}" Classes="caption" FontWeight="SemiBold"/>
                                             <Grid ColumnDefinitions="*,Auto" Width="320" HorizontalAlignment="Left">
                                                 <TextBox Text="{Binding LoginPassword, Mode=TwoWay}" 
                                                          PasswordChar="{Binding PasswordChar}" 
-                                                         Watermark="输入管理员密码" 
+                                                         Watermark="{DynamicResource SecurityCenter_EnterPassword}" 
                                                          Padding="10,0,35,0"
                                                          VerticalContentAlignment="Center"
                                                          HorizontalAlignment="Stretch"
@@ -68,7 +69,7 @@
                                                         HorizontalAlignment="Right"
                                                         VerticalAlignment="Center"
                                                         Margin="0,0,2,0">
-                                                    <icons:Icon Value="{Binding PasswordIcon}" 
+                                                    <fluent:SymbolIcon Symbol="{Binding PasswordIcon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}" 
                                                                 Width="14" Height="14" 
                                                                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
                                                                 Opacity="0.6"/>
@@ -77,9 +78,9 @@
                                         </StackPanel>
 
                                         <StackPanel Spacing="12" IsVisible="{Binding IsLoginTwoFactorVisible}">
-                                            <TextBlock Text="双重验证码" Classes="caption" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_TwoFactorCode}" Classes="caption" FontWeight="SemiBold"/>
                                             <TextBox Text="{Binding LoginTwoFactorCode}" 
-                                                     Watermark="输入 6 位验证码" 
+                                                     Watermark="{DynamicResource SecurityCenter_EnterTwoFactorCode}" 
                                                      MaxLength="6"
                                                      Width="320" 
                                                      HorizontalAlignment="Left"
@@ -92,65 +93,64 @@
                                                    TextWrapping="Wrap"/>
                                         
                                         <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
-                                            <Button Content="登录" Command="{Binding LoginCommand}" 
-                                                    Classes="accent" Width="140" Height="40" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                            <Button Content="{DynamicResource SecurityCenter_Login}" Command="{Binding LoginCommand}" 
+                                                    Classes="accent" Width="140" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.7">
-                                            <icons:Icon Value="fas fa-info-circle" Width="14" Height="14"/>
-                                            <TextBlock Text="剩余尝试次数：" Classes="caption"/>
+                                            <fluent:SymbolIcon Symbol="Info" FontSize="14"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_RemainingAttempts}" Classes="caption"/>
                                             <TextBlock Text="{Binding RemainingAttempts}" Classes="caption" FontWeight="Bold"/>
                                         </StackPanel>
 
                                         <Border Background="{DynamicResource SystemAccentColorLightBrush}" Padding="12" CornerRadius="8" IsVisible="{Binding IsLocked}">
                                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                                <icons:Icon Value="fas fa-clock" Width="16" Height="16" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                <fluent:SymbolIcon Symbol="Clock" FontSize="16" Foreground="{DynamicResource SystemAccentColor}"/>
                                                 <TextBlock Text="{Binding LockoutMessage}" Classes="caption" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                             </StackPanel>
                                         </Border>
                                     </StackPanel>
 
-                                    <!-- 已登录状态 -->
                                     <StackPanel Spacing="32" IsVisible="{Binding IsAuthenticated}">
                                         <Border Background="{DynamicResource SystemAccentColorLightBrush}" 
                                                 CornerRadius="12" Padding="20">
                                             <StackPanel Orientation="Horizontal" Spacing="20">
                                                 <Border Width="48" Height="48" CornerRadius="24" Background="{DynamicResource SystemAccentColor}">
-                                                    <icons:Icon Value="fas fa-user-shield" Width="24" Height="24" 
+                                                    <fluent:SymbolIcon Symbol="ShieldPerson" FontSize="24" 
                                                                 Foreground="White"/>
                                                 </Border>
                                                 <StackPanel VerticalAlignment="Center" Spacing="2">
-                                                    <TextBlock Text="管理员权限已激活" FontWeight="Bold" FontSize="18"/>
-                                                    <TextBlock Text="您现在可以管理系统安全设置、账户及访问权限" Classes="caption" FontSize="13"/>
+                                                    <TextBlock Text="{DynamicResource SecurityCenter_AdminPrivilegeActive}" FontWeight="Bold" FontSize="18"/>
+                                                    <TextBlock Text="{DynamicResource SecurityCenter_AdminPrivilegeDesc}" Classes="caption"/>
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>
 
                                         <UniformGrid Columns="4" Margin="0,10">
                                             <StackPanel Spacing="8">
-                                                <TextBlock Text="当前账户" Classes="caption" Opacity="0.6"/>
-                                                <TextBlock Text="{Binding Username}" FontWeight="SemiBold" FontSize="16"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_CurrentAccount}" Classes="caption" Opacity="0.6"/>
+                                                <TextBlock Text="{Binding Username}" FontWeight="SemiBold"/>
                                             </StackPanel>
                                             <StackPanel Spacing="8">
-                                                <TextBlock Text="身份类型" Classes="caption" Opacity="0.6"/>
-                                                <TextBlock Text="{Binding AccountTypeText}" FontWeight="SemiBold" FontSize="16"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_IdentityType}" Classes="caption" Opacity="0.6"/>
+                                                <TextBlock Text="{Binding AccountTypeText}" FontWeight="SemiBold"/>
                                             </StackPanel>
                                             <StackPanel Spacing="8">
-                                                <TextBlock Text="登录状态" Classes="caption" Opacity="0.6"/>
-                                                <TextBlock Text="{Binding AccountStatusText}" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_LoginStatus}" Classes="caption" Opacity="0.6"/>
+                                                <TextBlock Text="{Binding AccountStatusText}" FontWeight="SemiBold" Foreground="{DynamicResource SystemAccentColor}"/>
                                             </StackPanel>
                                             <StackPanel Spacing="8">
-                                                <TextBlock Text="登录时间" Classes="caption" Opacity="0.6"/>
-                                                <TextBlock Text="{Binding LoginTimeText}" FontWeight="SemiBold" FontSize="16"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_LoginTime}" Classes="caption" Opacity="0.6"/>
+                                                <TextBlock Text="{Binding LoginTimeText}" FontWeight="SemiBold"/>
                                             </StackPanel>
                                         </UniformGrid>
 
-                                        <Button Content="退出管理会话" Command="{Binding LogoutCommand}" 
+                                        <Button Content="{DynamicResource SecurityCenter_LogoutSession}" Command="{Binding LogoutCommand}" 
                                                 Classes="outline" Width="160" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
                                 
-                                <icons:Icon Grid.Column="1" Value="fas fa-user-lock" Width="120" Height="120" 
+                                <fluent:SymbolIcon Grid.Column="1" Symbol="PersonLock" FontSize="120" 
                                             Opacity="0.05" VerticalAlignment="Top" Margin="0,20,20,0"/>
                             </Grid>
                         </Border>
@@ -159,16 +159,16 @@
             </TabItem>
 
             <!-- 密码安全 -->
-            <TabItem Header="安全中心">
+            <TabItem Header="{DynamicResource SecurityCenter_SecurityCenterTab}">
                 <ScrollViewer>
                     <StackPanel Spacing="20" Margin="0,16,0,0">
                         <Border Classes="card" Padding="24" IsVisible="{Binding !IsAuthenticated}">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                    <icons:Icon Value="fas fa-lock" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                    <TextBlock Text="需要管理员登录" Classes="h3"/>
+                                    <fluent:SymbolIcon Symbol="LockClosed" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLogin}" Classes="h3"/>
                                 </StackPanel>
-                                <TextBlock Text="请先在“身份验证”页完成管理员登录后，再使用密码安全与双重验证功能。" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLoginDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 
@@ -178,21 +178,21 @@
                                 <Border Classes="card" Padding="20">
                                     <StackPanel Spacing="16">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <icons:Icon Value="fas fa-user-plus" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                            <TextBlock Text="创建新账户" Classes="h3"/>
+                                            <fluent:SymbolIcon Symbol="PersonAdd" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_CreateNewAccount}" Classes="h3"/>
                                         </StackPanel>
                                         
                                         <WrapPanel Orientation="Horizontal">
                                             <StackPanel Spacing="8" Margin="0,0,16,8">
-                                                <TextBlock Text="用户名" Classes="caption"/>
-                                                <TextBox Text="{Binding NewAccountUsername}" Width="200" Watermark="输入新用户名" Classes="clear"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_Username}" Classes="caption"/>
+                                                <TextBox Text="{Binding NewAccountUsername}" Width="200" Watermark="{DynamicResource SecurityCenter_EnterNewUsername}" Classes="clear"/>
                                             </StackPanel>
                                             <StackPanel Spacing="8" Margin="0,0,16,8">
-                                                <TextBlock Text="密码" Classes="caption"/>
-                                                <TextBox Text="{Binding NewAccountPassword}" PasswordChar="●" Width="200" Watermark="设置初始密码" Classes="clear"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_Password}" Classes="caption"/>
+                                                <TextBox Text="{Binding NewAccountPassword}" PasswordChar="●" Width="200" Watermark="{DynamicResource SecurityCenter_SetInitialPassword}" Classes="clear"/>
                                             </StackPanel>
                                             <StackPanel Spacing="8" Margin="0,0,16,8">
-                                                <TextBlock Text="账户类型" Classes="caption"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_AccountType}" Classes="caption"/>
                                                 <ComboBox ItemsSource="{Binding AvailableAccountTypes}" 
                                                           SelectedItem="{Binding NewAccountType}" 
                                                           Width="150">
@@ -203,7 +203,7 @@
                                                     </ComboBox.ItemTemplate>
                                                 </ComboBox>
                                             </StackPanel>
-                                            <Button Content="创建账户" Command="{Binding CreateAccountCommand}" 
+                                            <Button Content="{DynamicResource SecurityCenter_CreateAccount}" Command="{Binding CreateAccountCommand}" 
                                                     Classes="accent" VerticalAlignment="Bottom" Margin="0,0,0,8" Height="34"/>
                                         </WrapPanel>
                                     </StackPanel>
@@ -213,9 +213,9 @@
                                     <Grid RowDefinitions="Auto, 300">
                                         <Border Grid.Row="0" Padding="20,16">
                                             <Grid ColumnDefinitions="*, Auto, Auto, Auto">
-                                                <TextBlock Text="现有账户列表" Classes="h3" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_ExistingAccounts}" Classes="h3" VerticalAlignment="Center"/>
                                                 <Button Grid.Column="3" Command="{Binding RefreshAccountsCommand}" Classes="FluentIconButton">
-                                                    <icons:Icon Value="fas fa-sync-alt"/>
+                                                    <fluent:SymbolIcon Symbol="ArrowSync"/>
                                                 </Button>
                                             </Grid>
                                         </Border>
@@ -228,20 +228,20 @@
                                                         <Grid ColumnDefinitions="Auto, *, Auto, Auto">
                                                             <Border Background="{DynamicResource SystemAccentColorLightBrush}" 
                                                                     Width="48" Height="48" CornerRadius="24" Margin="0,0,20,0">
-                                                                <icons:Icon Value="fas fa-user" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                                <fluent:SymbolIcon Symbol="Person" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
                                                             </Border>
                                                             
                                                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
                                                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                    <TextBlock Text="{Binding Username}" FontWeight="Bold" FontSize="16"/>
+                                                                    <TextBlock Text="{Binding Username}" FontWeight="Bold"/>
                                                                     <Border Background="{DynamicResource SystemAccentColor}" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding AccountType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='SuperAdmin'}">
-                                                                        <TextBlock Text="超级管理员" FontSize="10" Foreground="White"/>
+                                                                        <TextBlock Text="{DynamicResource SecurityCenter_SuperAdministrator}" Foreground="White"/>
                                                                     </Border>
                                                                 </StackPanel>
                                                                 <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.6">
                                                                     <TextBlock Text="{Binding AccountType, Converter={StaticResource AccountTypeToStringConverter}}" Classes="caption"/>
                                                                     <TextBlock Text="•" Classes="caption"/>
-                                                                    <TextBlock Text="最后活跃:" Classes="caption"/>
+                                                                    <TextBlock Text="{DynamicResource SecurityCenter_LastActive}" Classes="caption"/>
                                                                     <TextBlock Text="{Binding LastLoginAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}" Classes="caption"/>
                                                                 </StackPanel>
                                                             </StackPanel>
@@ -250,14 +250,14 @@
                                                                     Padding="10,4" CornerRadius="6" 
                                                                     Background="{Binding IsLocked, Converter={StaticResource BooleanToStatusBrushConverter}}">
                                                                 <TextBlock Text="{Binding IsLocked, Converter={StaticResource BooleanToStatusTextConverter}}" 
-                                                                           FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                                                           Width="11" Height="11" Foreground="White" FontWeight="SemiBold"/>
                                                             </Border>
 
                                                             <Button Grid.Column="3" 
                                                                     Command="{Binding $parent[UserControl].((vm:SecurityCenterViewModel)DataContext).DeleteAccountCommand}"
                                                                     CommandParameter="{Binding}"
                                                                     Classes="danger" Width="36" Height="36" Padding="0">
-                                                                <icons:Icon Value="fas fa-trash-can" Width="16" Height="16"/>
+                                                                <fluent:SymbolIcon Symbol="Delete" FontSize="16"/>
                                                             </Button>
                                                         </Grid>
                                                     </Border>
@@ -274,21 +274,21 @@
                             <Border Classes="card" Padding="24">
                                 <StackPanel Spacing="16">
                                     <StackPanel Spacing="4">
-                                        <TextBlock Text="修改管理员密码" Classes="h3"/>
-                                        <TextBlock Text="建议定期更换密码以降低风险。" Classes="caption" Opacity="0.7"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_PasswordSecurity}" Classes="h3"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_ChangePasswordDesc}" Classes="caption" Opacity="0.7"/>
                                     </StackPanel>
 
                                     <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto" RowSpacing="12" ColumnSpacing="16">
-                                        <TextBlock Text="当前密码" Classes="caption" VerticalAlignment="Center"/>
-                                        <TextBox Grid.Column="1" Text="{Binding CurrentPassword}" PasswordChar="●" Watermark="验证当前密码"
+                                        <TextBlock Text="{DynamicResource SecurityCenter_CurrentPassword}" Classes="caption" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1" Text="{Binding CurrentPassword}" PasswordChar="●" Watermark="{DynamicResource SecurityCenter_VerifyCurrentPassword}"
                                                  Width="320" HorizontalAlignment="Left" Classes="clear"/>
 
-                                        <TextBlock Grid.Row="1" Text="新密码" Classes="caption" VerticalAlignment="Center"/>
-                                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NewPassword}" PasswordChar="●" Watermark="设置高强度新密码"
+                                        <TextBlock Grid.Row="1" Text="{DynamicResource SecurityCenter_NewPassword}" Classes="caption" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NewPassword}" PasswordChar="●" Watermark="{DynamicResource SecurityCenter_EnterStrongPassword}"
                                                  Width="320" HorizontalAlignment="Left" Classes="clear"/>
 
-                                        <TextBlock Grid.Row="2" Text="确认新密码" Classes="caption" VerticalAlignment="Center"/>
-                                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ConfirmPassword}" PasswordChar="●" Watermark="重复输入新密码"
+                                        <TextBlock Grid.Row="2" Text="{DynamicResource SecurityCenter_ConfirmNewPassword}" Classes="caption" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ConfirmPassword}" PasswordChar="●" Watermark="{DynamicResource SecurityCenter_RepeatNewPassword}"
                                                  Width="320" HorizontalAlignment="Left" Classes="clear"/>
                                     </Grid>
 
@@ -296,43 +296,41 @@
                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}" 
                                                TextWrapping="Wrap"/>
 
-                                    <Button Content="更新密码" Command="{Binding ChangePasswordCommand}" 
+                                    <Button Content="{DynamicResource SecurityCenter_UpdatePassword}" Command="{Binding ChangePasswordCommand}" 
                                             Classes="accent" HorizontalAlignment="Right" Width="140" Height="36"/>
                                 </StackPanel>
                             </Border>
 
-                            <!-- 密码强度评估 -->
                             <Border Classes="card" Padding="24">
                                 <StackPanel Spacing="16">
-                                    <TextBlock Text="密码强度评估" Classes="h3"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_PasswordStrength}" Classes="h3"/>
                                     <ProgressBar Minimum="0" Maximum="100" Value="{Binding PasswordStrengthScore}" 
                                                  Height="8" CornerRadius="4"/>
                                     <Grid ColumnDefinitions="*, Auto">
-                                        <TextBlock Text="当前评估结果：" Classes="caption"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_CurrentAssessment}" Classes="caption"/>
                                         <TextBlock Grid.Column="1" Text="{Binding PasswordStrengthLabel}" 
                                                    FontWeight="Bold" Foreground="{DynamicResource SystemAccentColor}"/>
                                     </Grid>
                                     
-                                    <Button Content="生成随机强密码" Command="{Binding GenerateStrongPasswordCommand}" 
+                                    <Button Content="{DynamicResource SecurityCenter_GenerateStrongPassword}" Command="{Binding GenerateStrongPasswordCommand}" 
                                             HorizontalAlignment="Stretch"/>
                                 </StackPanel>
                             </Border>
 
-                            <!-- 双重验证 (2FA) -->
                             <Border Classes="card" Padding="24">
                                 <StackPanel Spacing="16">
                                     <Grid ColumnDefinitions="*, Auto">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="双重验证 (2FA)" Classes="h3"/>
-                                            <TextBlock Text="为您的管理员账户增加额外的安全保障。" Classes="caption" Opacity="0.7"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_TwoFactorAuth}" Classes="h3"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_TwoFactorDesc}" Classes="caption" Opacity="0.7"/>
                                         </StackPanel>
                                         <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsTwoFactorEnabled}" 
                                                       Command="{Binding SetupTwoFactorCommand}"
-                                                      OnContent="已开启" OffContent="已关闭"/>
+                                                      OnContent="{DynamicResource SecurityCenter_Enabled}" OffContent="{DynamicResource SecurityCenter_Disabled}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" IsVisible="{Binding IsTwoFactorConfigured}">
-                                        <TextBlock Text="登录验证方式" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_LoginVerificationMode}" VerticalAlignment="Center"/>
                                         <ComboBox Grid.Column="1" Width="260" Margin="12,0,0,0"
                                                   ItemsSource="{Binding LoginVerificationModeOptions}"
                                                   SelectedItem="{Binding SelectedLoginVerificationMode}"/>
@@ -340,8 +338,8 @@
 
                                     <StackPanel Spacing="16" IsVisible="{Binding IsSettingUpTwoFactor}">
                                         <Separator/>
-                                        <TextBlock Text="设置双重验证" FontWeight="Bold"/>
-                                        <TextBlock Text="1. 使用 Google Authenticator 或 Microsoft Authenticator 扫描下方的二维码（或手动输入密钥）：" 
+                                        <TextBlock Text="{DynamicResource SecurityCenter_SetupTwoFactor}" FontWeight="Bold"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_ScanQRCodeDesc}" 
                                                    Classes="caption" TextWrapping="Wrap"/>
                                         
                                         <Border Background="White" Padding="8" CornerRadius="8" Width="200" Height="200" HorizontalAlignment="Center"
@@ -358,14 +356,14 @@
                                                                 FontWeight="Bold"/>
                                         </Border>
 
-                                        <TextBlock Text="2. 输入 App 中生成的 6 位验证码以确认：" Classes="caption"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_Enter6DigitCodeDesc}" Classes="caption"/>
                                         <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto">
-                                            <TextBox Text="{Binding TwoFactorInputCode}" Watermark="6 位验证码" MaxLength="6" Width="160" Classes="clear"/>
-                                            <Button Grid.Column="1" Content="验证并启用" 
+                                            <TextBox Text="{Binding TwoFactorInputCode}" Watermark="{DynamicResource SecurityCenter_TwoFactorCode}" MaxLength="6" Width="160" Classes="clear"/>
+                                            <Button Grid.Column="1" Content="{DynamicResource SecurityCenter_VerifyAndEnable}" 
                                                     Command="{Binding VerifyAndEnableTwoFactorCommand}" 
                                                     Classes="accent" Margin="8,0,0,0"/>
                                         </Grid>
-                                        <Button Content="取消设置" Command="{Binding CancelTwoFactorSetupCommand}" 
+                                        <Button Content="{DynamicResource SecurityCenter_CancelSetup}" Command="{Binding CancelTwoFactorSetupCommand}" 
                                                 HorizontalAlignment="Stretch" Classes="outline"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -374,10 +372,10 @@
                             <Border Classes="card" Padding="24">
                                 <StackPanel Spacing="16">
                                     <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                        <icons:Icon Value="fas fa-shield" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                        <TextBlock Text="安全中心概览" Classes="h3"/>
+                                        <fluent:SymbolIcon Symbol="Shield" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_SecurityCenterOverview}" Classes="h3"/>
                                     </StackPanel>
-                                    <TextBlock Text="这里展示了系统的安全状态和最近的安全活动。您可以点击下方按钮进行安全检查。" 
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SecurityCenterOverviewDesc}" 
                                                Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
@@ -386,26 +384,113 @@
                 </ScrollViewer>
             </TabItem>
 
+            <!-- 软件安全 -->
+            <TabItem Header="{DynamicResource SecurityCenter_SoftwareSecurity}">
+                <ScrollViewer>
+                    <StackPanel Spacing="20" Margin="0,16,0,0">
+                        <Border Classes="card" Padding="24" IsVisible="{Binding !IsAuthenticated}">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <fluent:SymbolIcon Symbol="LockClosed" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLogin}" Classes="h3"/>
+                                </StackPanel>
+                                <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLoginForSoftwareSecurity}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Spacing="20" IsVisible="{Binding IsAuthenticated}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SoftwareSecurity}" Classes="h2"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SoftwareSecurityDesc}" Classes="caption" Opacity="0.6"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Border Classes="card" Padding="24">
+                                <StackPanel Spacing="20">
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <fluent:SymbolIcon Symbol="EyeOff" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_ScreenCaptureProtection}" Classes="h3" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EnableScreenCaptureProtection}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_ScreenCaptureProtectionDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableSoftwareSecurity}" OnContent="" OffContent=""/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,8,0,0">
+                                        <fluent:SymbolIcon Symbol="CheckmarkCircle" Width="16" Height="16" Foreground="Green" Opacity="0.8"/>
+                                        <TextBlock Grid.Column="1" Text="{DynamicResource SecurityCenter_PreventScreenRecording}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4,0,0">
+                                        <fluent:SymbolIcon Symbol="CheckmarkCircle" Width="16" Height="16" Foreground="Green" Opacity="0.8"/>
+                                        <TextBlock Grid.Column="1" Text="{DynamicResource SecurityCenter_PreventScreenshot}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4,0,0">
+                                        <fluent:SymbolIcon Symbol="CheckmarkCircle" Width="16" Height="16" Foreground="Green" Opacity="0.8"/>
+                                        <TextBlock Grid.Column="1" Text="{DynamicResource SecurityCenter_PreventRemoteDesktop}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Classes="card" Padding="24">
+                                <StackPanel Spacing="20">
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <fluent:SymbolIcon Symbol="Clock" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_LockStateFileCheck}" Classes="h3" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EnableStateFileCheck}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EnableStateFileCheckDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableLockStateFileCheck}" OnContent="" OffContent=""/>
+                                    </Grid>
+
+                                    <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
+
+                                    <Grid ColumnDefinitions="*,Auto" IsEnabled="{Binding EnableLockStateFileCheck}">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_CheckInterval}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_CheckIntervalDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <NumericUpDown Value="{Binding LockStateFileCheckIntervalSeconds}"
+                                                       Minimum="1" Maximum="60" Increment="1"
+                                                       Width="120" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
             <!-- 权限管理 -->
-            <TabItem Header="权限管理" IsEnabled="{Binding IsSuperAdmin}">
+            <TabItem Header="{DynamicResource SecurityCenter_AccessControl}" IsEnabled="{Binding IsSuperAdmin}">
                 <ScrollViewer>
                     <StackPanel Spacing="20" Margin="0,16,0,0">
                         <!-- 授权与操作 -->
                         <Border Classes="card" Padding="24">
                             <StackPanel Spacing="16">
                                 <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                    <icons:Icon Value="fas fa-user-shield" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                    <TextBlock Text="基础功能授权" Classes="h3"/>
+                                    <fluent:SymbolIcon Symbol="ShieldPerson" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_BasicFunctionAuth}" Classes="h3"/>
                                 </StackPanel>
 
                                 <StackPanel Spacing="12">
                                     <Grid ColumnDefinitions="Auto,*,Auto,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-power-off" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="退出应用" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Power" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_ExitAppPermission}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding ExitAppLevel}"/>
-                                        <Button Grid.Column="3" Content="执行" Command="{Binding ExitAppCommand}" Classes="FluentIconButton"/>
+                                        <Button Grid.Column="3" Content="{DynamicResource SecurityCenter_Execute}" Command="{Binding ExitAppCommand}" Classes="FluentIconButton"/>
                                     </Grid>
                                 </StackPanel>
                             </StackPanel>
@@ -414,118 +499,126 @@
                         <Border Classes="card" Padding="24">
                             <StackPanel Spacing="16">
                                 <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                    <icons:Icon Value="fas fa-sitemap" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                    <TextBlock Text="边栏功能访问控制" Classes="h3"/>
+                                    <fluent:SymbolIcon Symbol="Organization" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SidebarPermissions}" Classes="h3"/>
                                 </StackPanel>
 
                                 <StackPanel Spacing="12">
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-home" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="主页" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Home" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_Home}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarHomeLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-lock" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="锁屏设置" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="LockClosed" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_LockSettings}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarLockSettingsLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-coffee" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="下课锁屏设置" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="WeatherMoon" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_BreakTimeLockSettings}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding BreakTimeLockSettingsLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-calendar-alt" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="课表" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Calendar" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_Schedule}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarScheduleLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-th-large" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="应用管理" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Grid" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_AppManagement}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarAppManagementLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-network-wired" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="网络拦截" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Building" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_NetworkInterception}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarNetworkInterceptionLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-clipboard-list" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="安全日志" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="ClipboardText" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_SecurityLogs}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarSecurityLogsLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-camera" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="屏幕记录" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Camera" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_ScreenshotHistory}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarScreenshotHistoryLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-video" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="摄像头拍照" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Video" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_WebcamHistory}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarWebcamHistoryLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-robot" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="自动化" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Bot" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_Automation}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarAutomationLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-user-shield" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="安全中心" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="ShieldPerson" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_SecurityCenter}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarSecurityCenterLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-cog" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="系统设置" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="People" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_Organization}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarOrganizationLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Settings" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_Settings}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarSettingsLevel}"/>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <icons:Icon Value="fas fa-info-circle" Width="16" Height="16" Opacity="0.8"/>
-                                            <TextBlock Text="关于" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Info" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_About}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarAboutLevel}"/>
                                     </Grid>
                                 </StackPanel>
 
                                 <Separator Margin="0,8"/>
-                                <Button Content="应用权限配置" Command="{Binding ApplyAuthorizationSettingsCommand}"
+                                <Button Content="{DynamicResource SecurityCenter_SavePermissions}" Command="{Binding ApplyAuthorizationSettingsCommand}"
                                         Classes="accent" HorizontalAlignment="Right" Width="140"/>
                             </StackPanel>
                         </Border>
@@ -534,29 +627,29 @@
             </TabItem>
 
             <!-- 锁屏中心 -->
-            <TabItem Header="锁屏中心">
+            <TabItem Header="{DynamicResource SecurityCenter_LockCenter}">
                 <ScrollViewer>
                     <StackPanel Spacing="20" Margin="0,16,0,0">
                         <Border Classes="card" Padding="24" IsVisible="{Binding !IsAuthenticated}">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                    <icons:Icon Value="fas fa-lock" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                    <TextBlock Text="需要管理员登录" Classes="h3"/>
+                                    <fluent:SymbolIcon Symbol="LockClosed" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLogin}" Classes="h3"/>
                                 </StackPanel>
-                                <TextBlock Text="请先在“身份验证”页完成管理员登录后，再管理锁屏中心设置。" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLoginForLockCenter}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 
                         <StackPanel Spacing="20" IsVisible="{Binding IsAuthenticated}">
                             <Grid ColumnDefinitions="*,Auto">
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="锁屏中心" Classes="h2"/>
-                                    <TextBlock Text="管理下课锁屏与相关行为" Classes="caption" Opacity="0.6"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_LockCenter}" Classes="h2"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_LockCenterDesc}" Classes="caption" Opacity="0.6"/>
                                 </StackPanel>
                                 <Button Grid.Column="1" Command="{Binding SaveLockSettingsCommand}" Classes="accent" Padding="16,8" VerticalAlignment="Top">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <icons:Icon Value="fas fa-save" Width="16" Height="16"/>
-                                        <TextBlock Text="保存" VerticalAlignment="Center"/>
+                                        <fluent:SymbolIcon Symbol="Save" Width="16" Height="16"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_Save}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
                             </Grid>
@@ -564,14 +657,14 @@
                             <Border Classes="card" Padding="20" IsEnabled="{Binding CanEditBreakTimeLock}">
                                 <StackPanel Spacing="20">
                                     <StackPanel Orientation="Horizontal" Spacing="12">
-                                        <icons:Icon Value="fas fa-lock" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
-                                        <TextBlock Text="下课锁屏" Classes="h3" VerticalAlignment="Center"/>
+                                        <fluent:SymbolIcon Symbol="LockClosed" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_BreakTimeLock}" Classes="h3" VerticalAlignment="Center"/>
                                     </StackPanel>
 
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="启用下课锁屏" Classes="subtitle"/>
-                                            <TextBlock Text="在课程结束进入课间时自动显示下课按钮" Classes="caption" Opacity="0.7"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EnableBreakTimeLock}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EnableBreakTimeLockDesc}" Classes="caption" Opacity="0.7"/>
                                         </StackPanel>
                                         <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableBreakTimeLock}" OnContent="" OffContent=""/>
                                     </Grid>
@@ -580,13 +673,13 @@
 
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="锁屏模式" Classes="subtitle"/>
-                                            <TextBlock Text="选择点击下课按钮后触发的锁定级别" Classes="caption" Opacity="0.7"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_LockMode}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_LockModeDesc}" Classes="caption" Opacity="0.7"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="1" Width="220" SelectedIndex="{Binding BreakTimeLockMode}">
-                                            <ComboBoxItem Content="仅防护（不控屏）"/>
-                                            <ComboBoxItem Content="仅锁屏"/>
-                                            <ComboBoxItem Content="完整锁定（防护+锁屏）"/>
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_LockModeProtectionOnly}"/>
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_LockModeLockOnly}"/>
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_LockModeFull}"/>
                                         </ComboBox>
                                     </Grid>
 
@@ -594,12 +687,12 @@
 
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="锁屏等待时间" Classes="subtitle"/>
-                                            <TextBlock Text="设置自动进入锁屏前的等待时间" Classes="caption" Opacity="0.7"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_LockWaitTime}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_LockWaitTimeDesc}" Classes="caption" Opacity="0.7"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
                                             <NumericUpDown Minimum="5" Maximum="300" Value="{Binding LockTimeout}" Width="120"/>
-                                            <TextBlock Text="秒" VerticalAlignment="Center" Classes="caption"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_Seconds}" VerticalAlignment="Center" Classes="caption"/>
                                         </StackPanel>
                                     </Grid>
 
@@ -607,11 +700,11 @@
 
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="自动解锁" Classes="subtitle"/>
-                                            <TextBlock Text="在即将上课前自动解除锁定" Classes="caption" Opacity="0.7"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_AutoUnlock}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_AutoUnlockDesc}" Classes="caption" Opacity="0.7"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
-                                            <TextBlock Text="提前解锁时间 (分钟)" VerticalAlignment="Center" Classes="caption"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EarlyUnlockMinutes}" VerticalAlignment="Center" Classes="caption"/>
                                             <NumericUpDown Value="{Binding AutoUnlockBeforeClassMinutes}" Minimum="1" Maximum="30" Width="120"/>
                                         </StackPanel>
                                     </Grid>
@@ -620,8 +713,8 @@
 
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="显示桌面悬浮锁屏按钮" Classes="subtitle"/>
-                                            <TextBlock Text="在桌面上显示一个半透明的可拖动按钮，点击可快速进入下课锁定状态" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_ShowFloatingLockWidget}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_ShowFloatingLockWidgetDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                                         </StackPanel>
                                         <ToggleSwitch Grid.Column="1" IsChecked="{Binding ShowFloatingLockWidget}" OnContent="" OffContent=""/>
                                     </Grid>
@@ -630,28 +723,41 @@
 
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="提前解锁所需最小账户级别" Classes="subtitle"/>
-                                            <TextBlock Text="低于此级别的账户无法在锁屏界面提前解锁" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EarlyUnlockMinLevel}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EarlyUnlockMinLevelDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                                         </StackPanel>
                                         <ComboBox Grid.Column="1" Width="220" SelectedIndex="{Binding EarlyUnlockMinAccountTypeIndex}">
-                                            <ComboBoxItem Content="超级管理员"/>
-                                            <ComboBoxItem Content="管理员"/>
-                                            <ComboBoxItem Content="普通用户"/>
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_SuperAdministrator}"/>
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_Administrator}"/>
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_OrdinaryUser}"/>
                                         </ComboBox>
+                                    </Grid>
+
+                                    <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_MaxLockDuration}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_MaxLockDurationDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="1" Width="220" 
+                                                  SelectedIndex="{Binding MaxLockDurationIndex}" 
+                                                  ItemsSource="{Binding MaxLockDurationOptions}"
+                                                  MaxDropDownHeight="400"/>
                                     </Grid>
 
                                     <Separator Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Opacity="0.1"/>
 
                                     <StackPanel Spacing="12">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <icons:Icon Value="fas fa-font" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
-                                            <TextBlock Text="锁屏文字显示效果" Classes="h2" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="TextFont" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_LockTextDisplayEffect}" Classes="h2" VerticalAlignment="Center"/>
                                         </StackPanel>
 
                                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
                                             <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
-                                                <TextBlock Text="背景遮罩透明度" Classes="subtitle"/>
-                                                <TextBlock Text="调节锁屏时的暗色遮罩强度，数值越小越透明" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_BackgroundMaskOpacity}" Classes="subtitle"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_BackgroundMaskOpacityDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                                             </StackPanel>
                                             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                                 <Slider Minimum="0.1" Maximum="0.8" SmallChange="0.05" LargeChange="0.1" Width="200" Value="{Binding LockBackgroundOpacity}"/>
@@ -659,8 +765,8 @@
                                             </StackPanel>
 
                                             <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
-                                                <TextBlock Text="文字阴影强度" Classes="subtitle"/>
-                                                <TextBlock Text="提升文字与背景的对比度，避免在浅色背景下看不清" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_TextShadowIntensity}" Classes="subtitle"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_TextShadowIntensityDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                                             </StackPanel>
                                             <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                                 <Slider Minimum="0.3" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" Width="200" Value="{Binding LockTextShadowOpacity}"/>
@@ -668,8 +774,8 @@
                                             </StackPanel>
 
                                             <StackPanel Grid.Row="2" Grid.Column="0" Spacing="4">
-                                                <TextBlock Text="文字描边/阴影宽度" Classes="subtitle"/>
-                                                <TextBlock Text="控制文字周围发光/描边范围，数值越大越厚重" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_TextStrokeWidth}" Classes="subtitle"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_TextStrokeWidthDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                                             </StackPanel>
                                             <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                                 <Slider Minimum="2" Maximum="16" SmallChange="1" LargeChange="2" Width="200" Value="{Binding LockTextShadowBlurRadius}"/>
@@ -681,9 +787,9 @@
                                             <Border Background="Black" CornerRadius="12" Opacity="{Binding LockBackgroundOpacity}"/>
                                             <Border Background="Transparent" CornerRadius="12" Padding="20">
                                                 <StackPanel Spacing="12" HorizontalAlignment="Center">
-                                                    <TextBlock Text="锁屏文字效果预览" FontSize="16" Opacity="0.8" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{DynamicResource SecurityCenter_LockTextPreview}" FontSize="16" Opacity="0.8" HorizontalAlignment="Center"/>
                                                     <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                                        <TextBlock Text="屏幕已锁定" FontSize="32" FontWeight="Light" Foreground="White" HorizontalAlignment="Center">
+                                                        <TextBlock Text="{DynamicResource SecurityCenter_ScreenLocked}" FontSize="32" FontWeight="Light" Foreground="White" HorizontalAlignment="Center">
                                                             <TextBlock.Effect>
                                                                 <DropShadowEffect Color="#CC000000"
                                                                                   BlurRadius="{Binding LockTextShadowBlurRadius}"
@@ -697,7 +803,7 @@
                                                                                   Opacity="{Binding LockTextShadowOpacity}"/>
                                                             </TextBlock.Effect>
                                                         </TextBlock>
-                                                        <TextBlock Text="距离下节课: 10:00" FontSize="18" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
+                                                        <TextBlock Text="{DynamicResource SecurityCenter_DistanceToNextClass}" FontSize="18" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
                                                             <TextBlock.Effect>
                                                                 <DropShadowEffect Color="#CC000000"
                                                                                   BlurRadius="{Binding LockTextShadowBlurRadius}"
@@ -716,15 +822,15 @@
                                         <Border Grid.Column="0" Classes="card" Padding="20">
                                             <StackPanel Spacing="16">
                                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                                    <icons:Icon Value="fas fa-shield" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                                    <TextBlock Text="置顶豁免设置" Classes="h3" VerticalAlignment="Center"/>
+                                                    <fluent:SymbolIcon Symbol="Shield" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                    <TextBlock Text="{DynamicResource SecurityCenter_TopmostExemptionSettings}" Classes="h3" VerticalAlignment="Center"/>
                                                 </StackPanel>
-                                                <TextBlock Text="当屏幕锁定时，列表中的程序允许保持置顶以便操作（例如视频会议窗口）" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_TopmostExemptionSettingsDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
 
                                                 <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-                                                    <TextBox Text="{Binding NewAllowedApp}" Watermark="输入进程名或窗口标题关键字" Margin="0,0,8,0"/>
+                                                    <TextBox Text="{Binding NewAllowedApp}" Watermark="{DynamicResource SecurityCenter_EnterProcessNameOrKeyword}" Margin="0,0,8,0"/>
                                                     <Button Grid.Column="1" Command="{Binding AddAllowedAppCommand}" Classes="accent" Width="40" Height="40" Padding="0">
-                                                        <icons:Icon Value="fas fa-plus" Width="16" Height="16"/>
+                                                        <fluent:SymbolIcon Symbol="Add" Width="16" Height="16"/>
                                                     </Button>
                                                 </Grid>
 
@@ -742,12 +848,12 @@
                                                                     CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
                                                                 <Grid ColumnDefinitions="*,Auto">
                                                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                        <icons:Icon Value="fas fa-window-maximize" Width="14" Height="14" Opacity="0.5"/>
-                                                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="13"/>
+                                                                        <fluent:SymbolIcon Symbol="Maximize" Width="14" Height="14" Opacity="0.5"/>
+                                                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
                                                                     </StackPanel>
                                                                     <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveAllowedAppCommand}" 
                                                                             CommandParameter="{Binding}" Classes="transparent" Width="32" Height="32" Padding="0">
-                                                                        <icons:Icon Value="fas fa-times" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                                                        <fluent:SymbolIcon Symbol="Dismiss" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
                                                                     </Button>
                                                                 </Grid>
                                                             </Border>
@@ -760,15 +866,15 @@
                                         <Border Grid.Column="1" Classes="card" Padding="20">
                                             <StackPanel Spacing="16">
                                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                                    <icons:Icon Value="fas fa-thumbtack" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                                    <TextBlock Text="强制置顶设置" Classes="h3" VerticalAlignment="Center"/>
+                                                    <fluent:SymbolIcon Symbol="Pin" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                    <TextBlock Text="{DynamicResource SecurityCenter_ForcedTopmostSettings}" Classes="h3" VerticalAlignment="Center"/>
                                                 </StackPanel>
-                                                <TextBlock Text="屏幕锁定时强制将列表中的程序窗口置顶" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_ForcedTopmostSettingsDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
 
                                                 <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-                                                    <TextBox Text="{Binding NewForcedApp}" Watermark="输入进程名或窗口标题关键字" Margin="0,0,8,0"/>
+                                                    <TextBox Text="{Binding NewForcedApp}" Watermark="{DynamicResource SecurityCenter_EnterProcessNameOrKeyword}" Margin="0,0,8,0"/>
                                                     <Button Grid.Column="1" Command="{Binding AddForcedAppCommand}" Classes="accent" Width="40" Height="40" Padding="0">
-                                                        <icons:Icon Value="fas fa-plus" Width="16" Height="16"/>
+                                                        <fluent:SymbolIcon Symbol="Add" Width="16" Height="16"/>
                                                     </Button>
                                                 </Grid>
 
@@ -786,12 +892,12 @@
                                                                     CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
                                                                 <Grid ColumnDefinitions="*,Auto">
                                                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                        <icons:Icon Value="fas fa-arrow-up" Width="14" Height="14" Opacity="0.5"/>
-                                                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="13"/>
+                                                                        <fluent:SymbolIcon Symbol="ArrowUp" Width="14" Height="14" Opacity="0.5"/>
+                                                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
                                                                     </StackPanel>
                                                                     <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveForcedAppCommand}" 
                                                                             CommandParameter="{Binding}" Classes="transparent" Width="32" Height="32" Padding="0">
-                                                                        <icons:Icon Value="fas fa-times" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                                                        <fluent:SymbolIcon Symbol="Dismiss" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
                                                                     </Button>
                                                                 </Grid>
                                                             </Border>
@@ -809,15 +915,15 @@
             </TabItem>
 
             <!-- 安全报告 -->
-            <TabItem Header="安全报告">
+            <TabItem Header="{DynamicResource SecurityCenter_SecurityReport}">
                 <StackPanel Margin="0,16,0,0" Spacing="20">
                     <Border Classes="card" Padding="24" IsVisible="{Binding !IsAuthenticated}">
                         <StackPanel Spacing="12">
                             <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                <icons:Icon Value="fas fa-lock" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                                <TextBlock Text="需要管理员登录" Classes="h3"/>
+                                <fluent:SymbolIcon Symbol="LockClosed" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLogin}" Classes="h3"/>
                             </StackPanel>
-                            <TextBlock Text="请先在“身份验证”页完成管理员登录后，再查看密码安全报告。" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                            <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLoginForSecurityReport}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
 
@@ -825,11 +931,11 @@
                         <StackPanel Spacing="20">
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="系统安全概览" Classes="h3"/>
-                                    <TextBlock Text="最近 30 天的安全事件记录" Classes="caption" Opacity="0.6"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SystemSecurityOverview}" Classes="h3"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_Last30DaysSecurityEvents}" Classes="caption" Opacity="0.6"/>
                                 </StackPanel>
-                                <Button Grid.Column="1" Content="刷新报告" Command="{Binding RefreshReportCommand}" Classes="FluentIconButton">
-                                    <icons:Icon Value="fas fa-sync-alt"/>
+                                <Button Grid.Column="1" Content="{DynamicResource SecurityCenter_RefreshReport}" Command="{Binding RefreshReportCommand}" Classes="FluentIconButton">
+                                    <fluent:SymbolIcon Symbol="ArrowSync"/>
                                 </Button>
                             </Grid>
 
@@ -840,8 +946,8 @@
                             
                             <Border Background="{DynamicResource SystemAccentColorLightBrush}" CornerRadius="8" Padding="16">
                                 <StackPanel Orientation="Horizontal" Spacing="16">
-                                    <icons:Icon Value="fas fa-shield" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
-                                    <TextBlock Text="系统当前运行正常，未检测到异常登录尝试。" VerticalAlignment="Center"/>
+                                    <fluent:SymbolIcon Symbol="Shield" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SystemRunningNormally}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

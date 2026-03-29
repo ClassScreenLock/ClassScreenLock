@@ -32,6 +32,12 @@ public partial class HomeViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isLocked;
 
+    [ObservableProperty]
+    private bool _hasUiAccess;
+
+    [ObservableProperty]
+    private string _uiAccessStatusText = string.Empty;
+
     public HomeViewModel(MainWindowViewModel mainWindowViewModel)
     {
         _mainWindowViewModel = mainWindowViewModel;
@@ -51,6 +57,10 @@ public partial class HomeViewModel : ViewModelBase
         IsLocked = LockScreenService.Instance.IsLocked;
         LockStatusText = IsLocked ? "屏幕已锁定" : "屏幕未锁定";
         LockStatusIcon = IsLocked ? "fas fa-lock" : "fas fa-lock-open";
+        
+        // 更新UIAccess状态
+        HasUiAccess = UiAccessService.Instance.HasUiAccess;
+        UiAccessStatusText = UiAccessService.Instance.StatusMessage;
         
         // 更新其他状态信息
         RefreshStats();

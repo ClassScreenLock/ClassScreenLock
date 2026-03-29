@@ -3,8 +3,10 @@
              x:Class="ClassScreenLock.App"
              xmlns:local="using:ClassScreenLock"
              xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
              xmlns:converters="clr-namespace:ClassScreenLock.Converters"
              xmlns:controls="clr-namespace:ClassScreenLock.Controls"
+             xmlns:sty="using:FluentAvalonia.Styling"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -16,10 +18,12 @@
         <converters:BooleanToStatusTextConverter x:Key="BooleanToStatusTextConverter"/>
         <converters:BooleanToStatusBrushConverter x:Key="BooleanToStatusBrushConverter"/>
         <converters:ServiceStatusBrushConverter x:Key="ServiceStatusBrushConverter"/>
+        <converters:SuccessStatusBrushConverter x:Key="SuccessStatusBrushConverter"/>
         <converters:AccountTypeToStringConverter x:Key="AccountTypeToStringConverter"/>
         <converters:StringEqualsConverter x:Key="StringEqualsConverter"/>
         <converters:IsNullConverter x:Key="IsNullConverter"/>
         <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
+        <converters:FontAwesomeToFluentIconConverter x:Key="FontAwesomeToFluentIconConverter"/>
         <!-- 鸿蒙字体定义 -->
         <FontFamily x:Key="HarmonyOSFont">avares://ClassScreenLock/Assets/Fonts#HarmonyOS Sans SC</FontFamily>
         
@@ -30,7 +34,7 @@
     </Application.Resources>
 
     <Application.Styles>
-        <FluentTheme />
+        <sty:FluentAvaloniaTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
         <StyleInclude Source="avares://ClassScreenLock/Styles/FluentStyles.axaml"/>
         
@@ -46,26 +50,82 @@
         <Style Selector="Window">
             <Setter Property="FontFamily" Value="{DynamicResource GlobalFontFamily}"/>
         </Style>
+        
+        <!-- 深色主题文字颜色 -->
+        <Style Selector="Window.dark TextBlock">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark TextBox">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark ComboBox">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark ComboBoxItem">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark ListBox">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark ListBoxItem">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark CheckBox">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark RadioButton">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark ToggleSwitch">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark DataGrid">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark DataGridRow">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark DataGridCell">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark DataGridColumnHeader">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark TabControl">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark TabItem">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark Menu">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark MenuItem">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark ContextMenu">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark ToggleButton">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark Button">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark DatePicker">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark TimePicker">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark Calendar">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark CalendarDatePicker">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Window.dark NumericUpDown">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
     </Application.Styles>
-
-    <TrayIcon.Icons>
-        <TrayIcons>
-            <TrayIcon Icon="avares://ClassScreenLock/ClassScreenLock.ico" 
-                      ToolTipText="{DynamicResource AppTitle}"
-                      Clicked="TrayIcon_OnClicked">
-                <TrayIcon.Menu>
-                    <NativeMenu>
-                        <NativeMenuItem Header="{DynamicResource Tray_Show}" Click="MenuShow_OnClick" />
-                        <NativeMenuItem Header="{DynamicResource Tray_QuickLock}" Click="MenuLock_OnClick" />
-                        <NativeMenuItem Header="{DynamicResource Tray_QuickUnlock}" Click="MenuUnlock_OnClick" />
-                        <NativeMenuItemSeparator />
-                        <NativeMenuItem Header="{DynamicResource Tray_OpenLockSettings}" Click="MenuOpenLockSettings_OnClick" />
-                        <NativeMenuItem Header="{DynamicResource Tray_OpenSchedule}" Click="MenuOpenSchedule_OnClick" />
-                        <NativeMenuItemSeparator />
-                        <NativeMenuItem Header="{DynamicResource Tray_Exit}" Click="MenuExit_OnClick" />
-                    </NativeMenu>
-                </TrayIcon.Menu>
-            </TrayIcon>
-        </TrayIcons>
-    </TrayIcon.Icons>
 </Application>

@@ -81,6 +81,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public string Greeting { get; } = "欢迎使用 ClassScreenLock!";
     public string AppVersion { get; } = new AboutViewModel().AppVersion;
     
+    [ObservableProperty]
+    private bool _isMaximized;
+    
+    private Window? _mainWindow;
+    
     public MainWindowViewModel()
     {
         SidebarViewModel = new SidebarViewModel();
@@ -307,23 +312,66 @@ public partial class MainWindowViewModel : ViewModelBase
         Application.Current!.RequestedThemeVariant = CurrentTheme;
     }
     
+    public void SetMainWindow(Window window)
+    {
+        _mainWindow = window;
+    }
+    
+    public void UpdateMaximizedState(bool isMaximized)
+    {
+        IsMaximized = isMaximized;
+    }
+    
+    [RelayCommand]
+    private void Minimize()
+    {
+        if (_mainWindow != null)
+        {
+            _mainWindow.WindowState = WindowState.Minimized;
+        }
+    }
+    
+    [RelayCommand]
+    private void MaximizeRestore()
+    {
+        if (_mainWindow != null)
+        {
+            _mainWindow.WindowState = _mainWindow.WindowState == WindowState.Maximized 
+                ? WindowState.Normal 
+                : WindowState.Maximized;
+        }
+    }
+    
+    [RelayCommand]
+    private void Close()
+    {
+        _mainWindow?.Close();
+    }
+    
     protected override void Dispose(bool disposing)
     {
         if (!_disposed)
         {
             if (disposing)
             {
-                // 释放托管资源
                 SidebarViewModel?.Dispose();
+                HomeViewModel?.Dispose();
                 SettingsViewModel?.Dispose();
                 AppManagementViewModel?.Dispose();
+                NetworkManagementViewModel?.Dispose();
+                LogManagementViewModel?.Dispose();
+                ScheduleViewModel?.Dispose();
+                SecurityCenterViewModel?.Dispose();
+                ScreenshotHistoryViewModel?.Dispose();
+                WebcamHistoryViewModel?.Dispose();
+                AutomationViewModel?.Dispose();
+                OrganizationViewModel?.Dispose();
                 CurrentView = null;
             }
             
             _disposed = true;
         }
         
-        // 调用基类的Dispose方法
         base.Dispose(disposing);
     }
 }

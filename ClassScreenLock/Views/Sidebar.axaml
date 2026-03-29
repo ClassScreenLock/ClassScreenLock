@@ -2,17 +2,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
              xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
              xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
              mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="600"
              x:Class="ClassScreenLock.Views.Sidebar"
-             x:DataType="vm:SidebarViewModel">
+             x:DataType="vm:SidebarViewModel"
+             Classes="Sidebar">
 
     <Grid Background="Transparent">
         <Border CornerRadius="0,8,8,0"
                 Width="{Binding SidebarWidth}"
-                Background="{DynamicResource SystemControlBackgroundAltMediumLowBrush}"
+                Classes="sidebar-background"
                 ClipToBounds="True">
             <Border.Transitions>
                 <Transitions>
@@ -39,18 +40,15 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <icons:Icon Grid.Column="0"
-                                            Value="{Binding ToggleIcon}"
-                                            Width="20"
-                                            Height="20"
+                                <fluent:SymbolIcon Grid.Column="0"
+                                            Symbol="{Binding ToggleIcon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"
+                                            FontSize="16"
                                             VerticalAlignment="Center"
-                                            Margin="{Binding IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='0,0,8,0|0,0,0,0'}"
-                                            Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                                            Margin="{Binding IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='0,0,8,0|0,0,0,0'}" />
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding ToggleText}"
-                                           FontSize="14"
                                            VerticalAlignment="Center"
-                                           Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                           Classes="sidebar-text"
                                            Opacity="{Binding IsExpanded, Converter={x:Static Converters:BoolToOpacityConverter.Instance}}">
                                     <TextBlock.Transitions>
                                         <Transitions>
@@ -80,19 +78,16 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         
-                                        <icons:Icon Grid.Column="0"
-                                                    Value="{Binding Icon}"
-                                                    Width="20"
-                                                    Height="20"
+                                        <fluent:SymbolIcon Grid.Column="0"
+                                                    Symbol="{Binding Icon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"
+                                                    FontSize="16"
                                                     VerticalAlignment="Center"
-                                                    Margin="{Binding $parent[UserControl].DataContext.IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='0,0,8,0|0,0,0,0'}"
-                                                    Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                                                    Margin="{Binding $parent[UserControl].DataContext.IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='0,0,8,0|0,0,0,0'}" />
                                         
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Title}"
-                                                   FontSize="14"
                                                    VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                                   Classes="sidebar-text"
                                                    Opacity="{Binding $parent[UserControl].DataContext.IsExpanded, Converter={x:Static Converters:BoolToOpacityConverter.Instance}}">
                                             <TextBlock.Transitions>
                                                 <Transitions>
@@ -110,7 +105,7 @@
                 <!-- 底部固定项 -->
                 <StackPanel Grid.Row="2" Spacing="0" Margin="0,4,0,4">
                     <Border Height="1" 
-                            Background="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                            Classes="sidebar-divider"
                             Margin="12,4"
                             Opacity="0.2"/>
                     
@@ -126,18 +121,15 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <icons:Icon Grid.Column="0"
-                                        Value="{Binding SettingsMenuItem.Icon}"
-                                        Width="20"
-                                        Height="20"
+                            <fluent:SymbolIcon Grid.Column="0"
+                                        Symbol="{Binding SettingsMenuItem.Icon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"
+                                        FontSize="16"
                                         VerticalAlignment="Center"
-                                        Margin="{Binding IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='0,0,8,0|0,0,0,0'}"
-                                        Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                                        Margin="{Binding IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='0,0,8,0|0,0,0,0'}" />
                             <TextBlock Grid.Column="1"
                                        Text="{Binding SettingsMenuItem.Title}"
-                                       FontSize="14"
                                        VerticalAlignment="Center"
-                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                       Classes="sidebar-text"
                                        Opacity="{Binding IsExpanded, Converter={x:Static Converters:BoolToOpacityConverter.Instance}}">
                                 <TextBlock.Transitions>
                                     <Transitions>
@@ -160,18 +152,15 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <icons:Icon Grid.Column="0"
-                                        Value="{Binding AboutMenuItem.Icon}"
-                                        Width="20"
-                                        Height="20"
-                                        VerticalAlignment="Center"
-                                        Margin="{Binding IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='0,0,8,0|0,0,0,0'}"
-                                        Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                            <fluent:SymbolIcon Grid.Column="0"
+                                            Symbol="{Binding AboutMenuItem.Icon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"
+                                            FontSize="16"
+                                            VerticalAlignment="Center"
+                                            Margin="{Binding IsExpanded, Converter={x:Static Converters:BoolToMarginConverter.Instance}, ConverterParameter='0,0,8,0|0,0,0,0'}" />
                             <TextBlock Grid.Column="1"
                                        Text="{Binding AboutMenuItem.Title}"
-                                       FontSize="14"
                                        VerticalAlignment="Center"
-                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                       Classes="sidebar-text"
                                        Opacity="{Binding IsExpanded, Converter={x:Static Converters:BoolToOpacityConverter.Instance}}">
                                 <TextBlock.Transitions>
                                     <Transitions>
@@ -184,9 +173,8 @@
 
                     <!-- 版本信息 -->
                     <TextBlock Text="{Binding VersionInfo}"
-                               FontSize="14"
                                HorizontalAlignment="Center"
-                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                               Classes="sidebar-version"
                                IsVisible="{Binding IsExpanded}"
                                Margin="0,4,0,0"
                                Opacity="0.6"/>

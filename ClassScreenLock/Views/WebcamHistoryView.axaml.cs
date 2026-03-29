@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using ClassScreenLock.Models;
+using ClassScreenLock.Services;
 using ClassScreenLock.ViewModels;
 using System;
 using System.ComponentModel;
@@ -114,6 +115,13 @@ public partial class WebcamHistoryView : UserControl
                 {
                     DataContext = _vm
                 };
+                
+                // 根据设置应用 dark 类
+                if (SettingsService.General.DarkMode)
+                {
+                    viewerWindow.Classes.Add("dark");
+                }
+                
                 viewerWindow.Show();
             }
         }

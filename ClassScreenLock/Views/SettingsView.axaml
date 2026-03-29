@@ -20,7 +20,7 @@
                 <TextBlock Text="{DynamicResource Settings_Title}" Classes="h1" Margin="0,0,0,16"/>
                 
                 <!-- 外观设置 -->
-                <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                <Border Background="{DynamicResource #FAFAFA}" 
                         CornerRadius="8" Padding="24">
                     <StackPanel Spacing="16">
                         <TextBlock Text="{DynamicResource Settings_Appearance_Title}" Classes="h3"/>
@@ -29,7 +29,7 @@
                         <Grid ColumnDefinitions="Auto,*">
                             <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
                                 <TextBlock Text="{DynamicResource Settings_DarkMode}" Classes="subtitle"/>
-                                <TextBlock Text="选择应用的主题" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Settings_ThemeMode_Description}" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
                             <ComboBox Grid.Column="1" SelectedIndex="{Binding DarkMode, Converter={x:Static converters:BooleanToIntConverter.Instance}, ConverterParameter=Invert}" 
                                        Width="200" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -42,7 +42,7 @@
                         <Grid ColumnDefinitions="Auto,*">
                             <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
                                 <TextBlock Text="{DynamicResource Settings_FontSize}" Classes="subtitle"/>
-                                <TextBlock Text="调整应用的字体大小" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Settings_FontSize_Description}" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Spacing="8" HorizontalAlignment="Right">
                                 <Slider Minimum="10" Maximum="24" Value="{Binding FontSize}" 
@@ -52,11 +52,11 @@
                             </StackPanel>
                         </Grid>
                         
-                        <!-- 字体族 -->
+                        <!-- 字体 -->
                         <Grid ColumnDefinitions="Auto,*">
                             <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
                                 <TextBlock Text="{DynamicResource Settings_FontFamily}" Classes="subtitle"/>
-                                <TextBlock Text="选择应用的字体" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Settings_FontFamily_Description}" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Spacing="8" HorizontalAlignment="Right">
                                 <ComboBox ItemsSource="{Binding AvailableFontFamilies}" 
@@ -68,9 +68,9 @@
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
-                                <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                                <Border Background="{DynamicResource #FAFAFA}" 
                                         CornerRadius="4" Padding="12" Margin="0,8,0,0" 
-                                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                                        BorderBrush="{DynamicResource #CCCCCC}" 
                                         BorderThickness="1">
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="{DynamicResource Settings_FontPreview_Title}" Classes="caption" Opacity="0.7"/>
@@ -96,30 +96,30 @@
                         <Grid ColumnDefinitions="Auto,*">
                             <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
                                 <TextBlock Text="{DynamicResource Settings_AccentColor}" Classes="subtitle"/>
-                                <TextBlock Text="选择应用的强调色" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Settings_AccentColor_Description}" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Spacing="12" HorizontalAlignment="Right">
                                 <!-- 系统或自定义强调色选项 -->
                                 <Grid ColumnDefinitions="Auto,*">
                                     <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
-                                        <TextBlock Text="强调色来源" Classes="caption"/>
-                                        <TextBlock Text="选择使用系统颜色或自定义颜色" Classes="caption" Opacity="0.7" FontSize="10"/>
+                                        <TextBlock Text="{DynamicResource Settings_AccentColorSource}" Classes="caption"/>
+                                        <TextBlock Text="{DynamicResource Settings_AccentColorSource_Description}" Classes="caption" Opacity="0.7" FontSize="10"/>
                                     </StackPanel>
                                     <ComboBox Grid.Column="1" SelectedIndex="{Binding UseSystemAccentColor, Converter={x:Static converters:BooleanToIntConverter.Instance}}" 
                                                Width="200" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                         <ComboBoxItem Content="系统强调色" />
-                                         <ComboBoxItem Content="自定义颜色" />
+                                         <ComboBoxItem Content="{DynamicResource Settings_SystemAccentColor}" />
+                                         <ComboBoxItem Content="{DynamicResource Settings_CustomColor}" />
                                      </ComboBox>
                                 </Grid>
                                 
                                 <!-- 自定义颜色选择器 -->
                                 <Border IsVisible="{Binding !UseSystemAccentColor}" 
-                                        Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                                        Background="{DynamicResource #FAFAFA}" 
                                         CornerRadius="4" Padding="12" 
-                                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                                        BorderBrush="{DynamicResource #CCCCCC}" 
                                         BorderThickness="1">
                                     <StackPanel Spacing="8">
-                                        <TextBlock Text="选择颜色" Classes="caption" Margin="0,0,0,8"/>
+                                        <TextBlock Text="{DynamicResource Settings_SelectColor}" Classes="caption" Margin="0,0,0,8"/>
                                         
                                         <!-- 颜色选择器 -->
                                         <controls:ColorPicker 
@@ -129,7 +129,7 @@
                                         
                                         <!-- 当前颜色显示 -->
                                         <Grid ColumnDefinitions="Auto,*" Margin="0,8,0,0">
-                                            <TextBlock Text="当前颜色:" Grid.Column="0" VerticalAlignment="Center" Classes="caption"/>
+                                            <TextBlock Text="{DynamicResource Settings_CurrentColor}" Grid.Column="0" VerticalAlignment="Center" Classes="caption"/>
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0,0,0">
                                                 <Border Width="20" Height="20" CornerRadius="2" 
                                                         Background="{Binding CustomAccentColor, Converter={x:Static converters:StringToBrushConverter.Instance}}"/>
@@ -141,12 +141,12 @@
                                 
                                 <!-- 系统强调色显示 -->
                                 <Border IsVisible="{Binding UseSystemAccentColor}" 
-                                        Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                                        Background="{DynamicResource #FAFAFA}" 
                                         CornerRadius="4" Padding="12" 
-                                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                                        BorderBrush="{DynamicResource #CCCCCC}" 
                                         BorderThickness="1">
                                     <StackPanel Spacing="8">
-                                        <TextBlock Text="系统强调色" Classes="caption" Margin="0,0,0,8"/>
+                                        <TextBlock Text="{DynamicResource Settings_SystemAccentColor}" Classes="caption" Margin="0,0,0,8"/>
                                         <StackPanel Orientation="Horizontal" Spacing="8">
                                             <Border Width="20" Height="20" CornerRadius="2" 
                                                     Background="{Binding AccentColor, Converter={x:Static converters:StringToBrushConverter.Instance}}"/>
@@ -160,26 +160,16 @@
                 </Border>
                 
                 <!-- 行为设置 -->
-                <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                <Border Background="{DynamicResource #FAFAFA}" 
                         CornerRadius="8" Padding="24">
                     <StackPanel Spacing="16">
                         <TextBlock Text="{DynamicResource Settings_Behavior_Title}" Classes="h3"/>
-                        
-                        <!-- 开机自启动 -->
-                        <Grid ColumnDefinitions="Auto,*">
-                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
-                                <TextBlock Text="{DynamicResource Settings_Startup}" Classes="subtitle"/>
-                                <TextBlock Text="应用随系统启动" Classes="caption" Opacity="0.7"/>
-                            </StackPanel>
-                            <ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoStart}" 
-                                          HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                        </Grid>
                         
                         <!-- 显示通知 -->
                         <Grid ColumnDefinitions="Auto,*">
                             <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
                                 <TextBlock Text="{DynamicResource Settings_ShowNotifications}" Classes="subtitle"/>
-                                <TextBlock Text="显示应用通知" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Settings_ShowNotifications_Description}" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsChecked="{Binding ShowNotifications}" 
                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -205,7 +195,7 @@
                 </Border>
                 
                 <!-- 语言设置 -->
-                <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                <Border Background="{DynamicResource #FAFAFA}" 
                         CornerRadius="8" Padding="24">
                     <StackPanel Spacing="16">
                         <TextBlock Text="{DynamicResource Settings_Language_Title}" Classes="h3"/>

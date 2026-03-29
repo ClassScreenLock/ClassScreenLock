@@ -16,6 +16,9 @@ namespace ClassScreenLock.ViewModels;
 public partial class SecurityCenterViewModel : ViewModelBase
 {
     private bool _suppressLoginVerificationModeSave;
+    private bool _isInitializing;
+
+    private static string L(string key) => LocalizationService.Instance.GetString(key) ?? key;
 
     [ObservableProperty]
     private string _username = string.Empty;
@@ -93,12 +96,21 @@ public partial class SecurityCenterViewModel : ViewModelBase
     private bool _isTwoFactorConfigured;
 
     [ObservableProperty]
+    private bool _enableSoftwareSecurity = true;
+
+    [ObservableProperty]
+    private bool _enableLockStateFileCheck;
+
+    [ObservableProperty]
+    private int _lockStateFileCheckIntervalSeconds;
+
+    [ObservableProperty]
     private ObservableCollection<string> _loginVerificationModeOptions = new()
     {
-        "密码 + 双重验证码（全部都要）",
-        "密码 或 双重验证码（任意其一）",
-        "仅密码",
-        "仅双重验证码"
+        L("SecurityCenter_PasswordPlusTwoFactor"),
+        L("SecurityCenter_PasswordOrTwoFactor"),
+        L("SecurityCenter_PasswordOnly"),
+        L("SecurityCenter_TwoFactorOnly")
     };
 
     [ObservableProperty]
@@ -129,7 +141,12 @@ public partial class SecurityCenterViewModel : ViewModelBase
     private string _securityReportText = string.Empty;
 
     [ObservableProperty]
-    private ObservableCollection<string> _authorizationLevels = new() { "无", "普通用户", "管理员", "超级管理员" };
+    private ObservableCollection<string> _authorizationLevels = new() { 
+        L("SecurityCenter_None"), 
+        L("SecurityCenter_OrdinaryUser"), 
+        L("SecurityCenter_Administrator"), 
+        L("SecurityCenter_SuperAdministrator") 
+    };
 
     [ObservableProperty]
     private string _exitAppLevel = "无";
@@ -157,6 +174,8 @@ public partial class SecurityCenterViewModel : ViewModelBase
     [ObservableProperty]
     private string _sidebarSecurityCenterLevel = "无";
     [ObservableProperty]
+    private string _sidebarOrganizationLevel = "无";
+    [ObservableProperty]
     private string _sidebarSettingsLevel = "无";
     [ObservableProperty]
     private string _sidebarAboutLevel = "无";
@@ -179,6 +198,8 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
     public SecurityCenterViewModel()
     {
+        _isInitializing = true;
+        
         // 强制刷新设置以确保获取最新数据
         var settings = SecurityService.Instance.Settings;
         RemainingAttempts = Math.Max(0, 10 - settings.FailedCount);
@@ -188,7 +209,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         if (settings.LockoutUntil.HasValue && settings.LockoutUntil.Value > DateTime.Now)
         { 
             IsLocked = true;
-            LockoutMessage = $"账户已锁定，直到 {settings.LockoutUntil:yyyy-MM-dd HH:mm:ss}";
+            LockoutMessage = $"{L("SecurityCenter_Msg_AccountLocked")} {settings.LockoutUntil:yyyy-MM-dd HH:mm:ss}";
         }
 
         RefreshReport();
@@ -211,17 +232,37 @@ public partial class SecurityCenterViewModel : ViewModelBase
         SidebarWebcamHistoryLevel = ToLevelText(lockSettings.SidebarWebcamHistoryMinAccountType);
         SidebarAutomationLevel = ToLevelText(lockSettings.SidebarAutomationMinAccountType);
         SidebarSecurityCenterLevel = ToLevelText(lockSettings.SidebarSecurityCenterMinAccountType);
+        SidebarOrganizationLevel = ToLevelText(lockSettings.SidebarOrganizationMinAccountType);
         SidebarSettingsLevel = ToLevelText(lockSettings.SidebarSettingsMinAccountType);
         SidebarAboutLevel = ToLevelText(lockSettings.SidebarAboutMinAccountType);
 
         // 加载双重验证状态
         IsTwoFactorEnabled = SecurityService.Instance.Settings.IsTwoFactorEnabled;
         IsTwoFactorConfigured = IsTwoFactorEnabled;
+        EnableSoftwareSecurity = SecurityService.Instance.Settings.EnableSoftwareSecurity;
         _suppressLoginVerificationModeSave = true;
         SelectedLoginVerificationMode = ToLoginVerificationModeText(SecurityService.Instance.Settings.LoginVerificationMode);
         _suppressLoginVerificationModeSave = false;
         RefreshLoginFieldVisibility();
         LoadLockSettings();
+        
+        _isInitializing = false;
+    }
+
+    private void InitializeMaxLockDurationOptions()
+    {
+        if (_maxLockDurationOptions != null)
+        {
+            return;
+        }
+        
+        _maxLockDurationOptions = new ObservableCollection<string>();
+        _maxLockDurationOptions.Add(L("SecurityCenter_Unlimited"));
+        
+        for (int i = 6; i <= 120; i++)
+        {
+            _maxLockDurationOptions.Add($"{i} {L("SecurityCenter_Hours")}");
+        }
     }
 
     private void UpdateSuperAdminStatus()
@@ -229,45 +270,44 @@ public partial class SecurityCenterViewModel : ViewModelBase
         var current = AccountService.Instance.CurrentAccount;
         var securityLoggedIn = SecurityService.Instance.IsAuthenticated;
         
-        // 如果安全服务已登录，或者是 AccountService 中的管理员/超级管理员，则视为已授权访问安全中心
         IsAuthenticated = securityLoggedIn || (current != null && (current.AccountType == AccountType.SuperAdmin || current.AccountType == AccountType.Admin));
         IsSuperAdmin = (current != null && current.AccountType == AccountType.SuperAdmin) || securityLoggedIn;
         
         if (IsSuperAdmin)
         {
-            AccountTypeText = LocalizationService.Instance.GetString("Account_Type_SuperAdmin") ?? "超级管理员";
+            AccountTypeText = L("Account_Type_SuperAdmin");
         }
         else if (current != null)
         {
             AccountTypeText = current.AccountType switch
             {
-                AccountType.Admin => LocalizationService.Instance.GetString("Account_Type_Admin") ?? "管理员",
-                _ => LocalizationService.Instance.GetString("Account_Type_User") ?? "普通用户"
+                AccountType.Admin => L("Account_Type_Admin"),
+                _ => L("Account_Type_User")
             };
         }
         else
         {
-            AccountTypeText = "未知";
+            AccountTypeText = L("SecurityCenter_Unknown");
         }
 
-        // 更新登录状态和时间
         if (current != null)
         {
             Username = current.Username;
-            AccountStatusText = current.IsLocked ? "已锁定" : "已登录";
+            AccountStatusText = current.IsLocked ? L("SecurityCenter_Locked") : L("SecurityCenter_LoggedIn");
             var loginTime = AccountService.Instance.CurrentLoginTime;
-            LoginTimeText = loginTime.HasValue ? loginTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "未知";
+            LoginTimeText = loginTime.HasValue ? loginTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : L("SecurityCenter_Unknown");
         }
         else if (securityLoggedIn)
         {
-            Username = SecurityService.Instance.Settings.AdminUsername;
-            AccountStatusText = "已登录";
-            LoginTimeText = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"); // 安全中心管理员登录通常没有持久化登录时间，显示当前时间
+            var superAdmin = AccountService.Instance.Accounts.FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin && !a.IsDisabled);
+            Username = superAdmin?.Username ?? SecurityService.Instance.Settings.AdminUsername;
+            AccountStatusText = L("SecurityCenter_LoggedIn");
+            LoginTimeText = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         }
         else
         {
             Username = string.Empty;
-            AccountStatusText = "未登录";
+            AccountStatusText = L("SecurityCenter_NotLoggedIn");
             LoginTimeText = string.Empty;
         }
     }
@@ -285,7 +325,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
         if (!IsAuthenticated)
         {
-            NotificationService.Instance.ShowWarning("请先完成管理员登录");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_CompleteAdminLoginFirst"));
             _suppressLoginVerificationModeSave = true;
             SelectedLoginVerificationMode = ToLoginVerificationModeText(SecurityService.Instance.Settings.LoginVerificationMode);
             _suppressLoginVerificationModeSave = false;
@@ -329,25 +369,22 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
     private static AdminLoginVerificationMode ParseLoginVerificationMode(string text)
     {
-        return text switch
-        {
-            "密码 + 双重验证码（全部都要）" => AdminLoginVerificationMode.PasswordAndTwoFactor,
-            "密码 或 双重验证码（任意其一）" => AdminLoginVerificationMode.PasswordOrTwoFactor,
-            "仅密码" => AdminLoginVerificationMode.PasswordOnly,
-            "仅双重验证码" => AdminLoginVerificationMode.TwoFactorOnly,
-            _ => AdminLoginVerificationMode.PasswordAndTwoFactor
-        };
+        if (text == L("SecurityCenter_PasswordPlusTwoFactor")) return AdminLoginVerificationMode.PasswordAndTwoFactor;
+        if (text == L("SecurityCenter_PasswordOrTwoFactor")) return AdminLoginVerificationMode.PasswordOrTwoFactor;
+        if (text == L("SecurityCenter_PasswordOnly")) return AdminLoginVerificationMode.PasswordOnly;
+        if (text == L("SecurityCenter_TwoFactorOnly")) return AdminLoginVerificationMode.TwoFactorOnly;
+        return AdminLoginVerificationMode.PasswordAndTwoFactor;
     }
 
     private static string ToLoginVerificationModeText(AdminLoginVerificationMode mode)
     {
         return mode switch
         {
-            AdminLoginVerificationMode.PasswordAndTwoFactor => "密码 + 双重验证码（全部都要）",
-            AdminLoginVerificationMode.PasswordOrTwoFactor => "密码 或 双重验证码（任意其一）",
-            AdminLoginVerificationMode.PasswordOnly => "仅密码",
-            AdminLoginVerificationMode.TwoFactorOnly => "仅双重验证码",
-            _ => "密码 + 双重验证码（全部都要）"
+            AdminLoginVerificationMode.PasswordAndTwoFactor => L("SecurityCenter_PasswordPlusTwoFactor"),
+            AdminLoginVerificationMode.PasswordOrTwoFactor => L("SecurityCenter_PasswordOrTwoFactor"),
+            AdminLoginVerificationMode.PasswordOnly => L("SecurityCenter_PasswordOnly"),
+            AdminLoginVerificationMode.TwoFactorOnly => L("SecurityCenter_TwoFactorOnly"),
+            _ => L("SecurityCenter_PasswordPlusTwoFactor")
         };
     }
 
@@ -356,7 +393,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(Username))
         {
-            NotificationService.Instance.ShowWarning("请输入用户名");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_EnterUsername"));
             return;
         }
 
@@ -370,7 +407,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         {
             if (string.IsNullOrWhiteSpace(passwordCopy))
             {
-                NotificationService.Instance.ShowWarning("请输入密码");
+                NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_EnterPassword"));
                 return;
             }
         }
@@ -379,7 +416,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         {
             if (string.IsNullOrWhiteSpace(LoginTwoFactorCode))
             {
-                NotificationService.Instance.ShowWarning("请输入双重验证码");
+                NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_EnterTwoFactorCode"));
                 return;
             }
         }
@@ -387,7 +424,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         {
             if (string.IsNullOrWhiteSpace(passwordCopy) && string.IsNullOrWhiteSpace(LoginTwoFactorCode))
             {
-                NotificationService.Instance.ShowWarning("请输入密码或双重验证码");
+                NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_EnterPasswordOrTwoFactor"));
                 return;
             }
         }
@@ -399,7 +436,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
             {
                 IsTwoFactorRequired = true;
                 RefreshLoginFieldVisibility();
-                LoginMessage = "请输入双重验证码";
+                LoginMessage = L("SecurityCenter_Msg_EnterTwoFactorToContinue");
                 return;
             }
 
@@ -421,7 +458,6 @@ public partial class SecurityCenterViewModel : ViewModelBase
                     IsTwoFactorRequired = false;
                     LoginTwoFactorCode = string.Empty;
                     
-                    // 同步登录到 AccountService，确保可以进行账户管理
                     var accountLoggedIn = false;
                     if (!string.IsNullOrWhiteSpace(passwordCopy))
                     {
@@ -430,20 +466,28 @@ public partial class SecurityCenterViewModel : ViewModelBase
                     }
                     if (!accountLoggedIn)
                     {
-                        AccountService.Instance.LoginFromSecuritySession(Username);
+                        var securitySessionOk = AccountService.Instance.LoginFromSecuritySession(Username);
+                        if (!securitySessionOk)
+                        {
+                            SecurityService.Instance.Logout();
+                            IsAuthenticated = false;
+                            RemainingAttempts = result.RemainingAttempts;
+                            LoginMessage = L("SecurityCenter_Msg_AccountNotFoundOrDisabled");
+                            NotificationService.Instance.ShowWarning(LoginMessage);
+                            return;
+                        }
                     }
                     
                     UpdateSuperAdminStatus();
                     RefreshAccounts();
 
-                    // 登录成功后通知侧边栏刷新
                     if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                         desktop.MainWindow?.DataContext is MainWindowViewModel mainVm)
                     {
                         mainVm.SidebarViewModel.RefreshAccountInfo();
                     }
 
-                    NotificationService.Instance.ShowSuccess("管理员登录成功");
+                    NotificationService.Instance.ShowSuccess(L("SecurityCenter_Msg_AdminLoginSuccess"));
                 }
                 break;
             case PasswordVerificationStatus.LockedOut:
@@ -454,7 +498,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
                     LockoutMessage = result.Message;
                     if (result.LockoutUntil.HasValue)
                     {
-                        LockoutMessage += $"，解锁时间：{result.LockoutUntil:yyyy-MM-dd HH:mm:ss}";
+                        LockoutMessage += $"，{L("SecurityCenter_UnlockTime")}: {result.LockoutUntil:yyyy-MM-dd HH:mm:ss}";
                     }
                     NotificationService.Instance.ShowError(LockoutMessage);
                 }
@@ -482,15 +526,13 @@ public partial class SecurityCenterViewModel : ViewModelBase
                             var current = AccountService.Instance.CurrentAccount;
                             if (current != null && (current.AccountType == AccountType.Admin || current.AccountType == AccountType.SuperAdmin))
                             {
-                                // 成功登录子管理员账号，重置安全服务的失败计数
                                 SecurityService.Instance.ResetFailedAttempts();
                                 RemainingAttempts = 10;
                                 
                                 IsAuthenticated = true;
                                 LoginMessage = string.Empty;
-                                NotificationService.Instance.ShowSuccess("管理员登录成功");
+                                NotificationService.Instance.ShowSuccess(L("SecurityCenter_Msg_AdminLoginSuccess"));
                                 
-                                // 登录成功后通知侧边栏刷新
                                 if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                                     desktop.MainWindow?.DataContext is MainWindowViewModel mainVm)
                                 {
@@ -499,8 +541,8 @@ public partial class SecurityCenterViewModel : ViewModelBase
                             }
                             else
                             {
-                                NotificationService.Instance.ShowSuccess("账户登录成功，但权限不足以管理安全中心");
-                                LoginMessage = "已以账户登录，如需管理安全中心请使用管理员账户";
+                                NotificationService.Instance.ShowSuccess(L("SecurityCenter_Msg_AccountLoginSuccessLowPrivilege"));
+                                LoginMessage = L("SecurityCenter_Msg_LoggedInAsAccount");
                             }
                         }
                         else
@@ -519,7 +561,6 @@ public partial class SecurityCenterViewModel : ViewModelBase
     private void Logout()
     {
         SecurityService.Instance.Logout();
-        // 确保 AccountService 也同步登出，防止权限状态不一致
         AccountService.Instance.Logout();
         
         IsAuthenticated = false;
@@ -531,7 +572,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         CurrentPassword = string.Empty;
         NewPassword = string.Empty;
         ConfirmPassword = string.Empty;
-        LoginMessage = "已退出管理员登录";
+        LoginMessage = L("SecurityCenter_Msg_LoggedOut");
         Accounts.Clear();
 
         if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
@@ -545,22 +586,19 @@ public partial class SecurityCenterViewModel : ViewModelBase
     {
         return type switch
         {
-            AccountType.SuperAdmin => "超级管理员",
-            AccountType.Admin => "管理员",
-            AccountType.User => "普通用户",
-            _ => "无"
+            AccountType.SuperAdmin => L("SecurityCenter_SuperAdministrator"),
+            AccountType.Admin => L("SecurityCenter_Administrator"),
+            AccountType.User => L("SecurityCenter_OrdinaryUser"),
+            _ => L("SecurityCenter_None")
         };
     }
 
     private static AccountType? FromLevelText(string text)
     {
-        return text switch
-        {
-            "超级管理员" => AccountType.SuperAdmin,
-            "管理员" => AccountType.Admin,
-            "普通用户" => AccountType.User,
-            _ => null
-        };
+        if (text == L("SecurityCenter_SuperAdministrator")) return AccountType.SuperAdmin;
+        if (text == L("SecurityCenter_Administrator")) return AccountType.Admin;
+        if (text == L("SecurityCenter_OrdinaryUser")) return AccountType.User;
+        return null;
     }
 
     private static AccountType ResolveRequired(AccountType? configured)
@@ -579,7 +617,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
     {
         if (!IsAuthenticated && !IsSuperAdmin)
         {
-            NotificationService.Instance.ShowWarning("权限不足，无法修改权限配置");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_InsufficientPermission"));
             return;
         }
 
@@ -633,7 +671,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         LogPermissionChange("SidebarSettings", before.SidebarSettingsMinAccountType, sbSettings);
         LogPermissionChange("SidebarAbout", before.SidebarAboutMinAccountType, sbAbout);
 
-        NotificationService.Instance.ShowSuccess("权限配置已更新");
+        NotificationService.Instance.ShowSuccess(L("SecurityCenter_Msg_PermissionsUpdated"));
     }
 
     private void LogPermissionChange(string name, AccountType? oldValue, AccountType? newValue)
@@ -664,6 +702,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
             SidebarWebcamHistoryLevel = ToLevelText(lockSettings.SidebarWebcamHistoryMinAccountType);
             SidebarAutomationLevel = ToLevelText(lockSettings.SidebarAutomationMinAccountType);
             SidebarSecurityCenterLevel = ToLevelText(lockSettings.SidebarSecurityCenterMinAccountType);
+            SidebarOrganizationLevel = ToLevelText(lockSettings.SidebarOrganizationMinAccountType);
             SidebarSettingsLevel = ToLevelText(lockSettings.SidebarSettingsMinAccountType);
             SidebarAboutLevel = ToLevelText(lockSettings.SidebarAboutMinAccountType);
             return;
@@ -681,6 +720,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         var sbWebcam = FromLevelText(SidebarWebcamHistoryLevel);
         var sbAutomation = FromLevelText(SidebarAutomationLevel);
         var sbSec = FromLevelText(SidebarSecurityCenterLevel);
+        var sbOrg = FromLevelText(SidebarOrganizationLevel);
         var sbSettings = FromLevelText(SidebarSettingsLevel);
         var sbAbout = FromLevelText(SidebarAboutLevel);
 
@@ -697,6 +737,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
             s.SidebarWebcamHistoryMinAccountType = sbWebcam;
             s.SidebarAutomationMinAccountType = sbAutomation;
             s.SidebarSecurityCenterMinAccountType = sbSec;
+            s.SidebarOrganizationMinAccountType = sbOrg;
             s.SidebarSettingsMinAccountType = sbSettings;
             s.SidebarAboutMinAccountType = sbAbout;
         });
@@ -712,6 +753,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         LogPermissionChange("SidebarWebcamHistory", before.SidebarWebcamHistoryMinAccountType, sbWebcam);
         LogPermissionChange("SidebarAutomation", before.SidebarAutomationMinAccountType, sbAutomation);
         LogPermissionChange("SidebarSecurityCenter", before.SidebarSecurityCenterMinAccountType, sbSec);
+        LogPermissionChange("SidebarOrganization", before.SidebarOrganizationMinAccountType, sbOrg);
         LogPermissionChange("SidebarSettings", before.SidebarSettingsMinAccountType, sbSettings);
         LogPermissionChange("SidebarAbout", before.SidebarAboutMinAccountType, sbAbout);
     }
@@ -747,6 +789,25 @@ public partial class SecurityCenterViewModel : ViewModelBase
     private double _lockTextShadowBlurRadius;
 
     [ObservableProperty]
+    private int _maxLockDurationHours = 48;
+
+    [ObservableProperty]
+    private int _maxLockDurationIndex = 19;
+
+    private ObservableCollection<string>? _maxLockDurationOptions;
+    public ObservableCollection<string> MaxLockDurationOptions 
+    { 
+        get
+        {
+            if (_maxLockDurationOptions == null)
+            {
+                InitializeMaxLockDurationOptions();
+            }
+            return _maxLockDurationOptions!;
+        }
+    }
+
+    [ObservableProperty]
     private string _newAllowedApp = string.Empty;
 
     [ObservableProperty]
@@ -772,6 +833,10 @@ public partial class SecurityCenterViewModel : ViewModelBase
             settings.LockTextShadowOpacity = LockTextShadowOpacity;
             settings.LockTextShadowBlurRadius = LockTextShadowBlurRadius;
         });
+        SettingsService.UpdateGeneral(settings =>
+        {
+            settings.MaxLockDurationHours = MaxLockDurationHours;
+        });
         NotificationService.Instance.ShowSuccess(LocalizationService.Instance.GetString("Notify_SettingsSaved") ?? "设置已保存");
         if (!ShowFloatingLockWidget)
         {
@@ -796,6 +861,8 @@ public partial class SecurityCenterViewModel : ViewModelBase
         LockTextShadowOpacity = settings.LockTextShadowOpacity;
         LockTextShadowBlurRadius = settings.LockTextShadowBlurRadius;
 
+        MaxLockDurationHours = SettingsService.General.MaxLockDurationHours;
+
         AllowedTopmostApps.Clear();
         foreach (var app in settings.AllowedTopmostApps)
         {
@@ -807,6 +874,10 @@ public partial class SecurityCenterViewModel : ViewModelBase
         {
             ForcedTopmostApps.Add(app);
         }
+
+        EnableLockStateFileCheck = settings.EnableLockStateFileCheck;
+        LockStateFileCheckIntervalSeconds = settings.LockStateFileCheckIntervalSeconds;
+
         CanEditBreakTimeLock = settings.BreakTimeLockSettingsMinAccountType == null
                                || SecurityService.Instance.IsAuthenticated
                                || AccountService.Instance.HasPermission(settings.BreakTimeLockSettingsMinAccountType.Value);
@@ -852,8 +923,62 @@ public partial class SecurityCenterViewModel : ViewModelBase
     partial void OnSidebarNetworkInterceptionLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
     partial void OnSidebarSecurityLogsLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
     partial void OnSidebarSecurityCenterLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
+    partial void OnSidebarOrganizationLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
     partial void OnSidebarSettingsLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
     partial void OnSidebarAboutLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
+
+    partial void OnEnableSoftwareSecurityChanged(bool value)
+    {
+        if (_isInitializing)
+        {
+            return;
+        }
+        
+        if (!IsAuthenticated)
+        {
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_CompleteAdminLoginFirst"));
+            EnableSoftwareSecurity = !value;
+            return;
+        }
+
+        WindowProtectionService.Instance.SetSoftwareSecurityEnabled(value);
+        NotificationService.Instance.ShowSuccess($"{L("SecurityCenter_SoftwareSecurity")} {(value ? L("SecurityCenter_Enabled") : L("SecurityCenter_Disabled"))}");
+    }
+
+    partial void OnEnableLockStateFileCheckChanged(bool value)
+    {
+        if (!IsAuthenticated) return;
+
+        SettingsService.UpdateLock(settings => settings.EnableLockStateFileCheck = value);
+        if (value)
+        {
+            LockScreenService.Instance.StartLockStateFileCheck();
+        }
+        else
+        {
+            LockScreenService.Instance.StopLockStateFileCheck();
+        }
+        NotificationService.Instance.ShowSuccess($"{L("SecurityCenter_LockStateFileCheck")} {(value ? L("SecurityCenter_Enabled") : L("SecurityCenter_Disabled"))}");
+    }
+
+    partial void OnLockStateFileCheckIntervalSecondsChanged(int value)
+    {
+        if (!IsAuthenticated) return;
+
+        var clampedValue = Math.Clamp(value, 1, 60);
+        if (clampedValue != value)
+        {
+            LockStateFileCheckIntervalSeconds = clampedValue;
+            return;
+        }
+
+        SettingsService.UpdateLock(settings => settings.LockStateFileCheckIntervalSeconds = clampedValue);
+        if (EnableLockStateFileCheck)
+        {
+            LockScreenService.Instance.StopLockStateFileCheck();
+            LockScreenService.Instance.StartLockStateFileCheck();
+        }
+    }
 
     [RelayCommand]
     private void ExitApp()
@@ -861,7 +986,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         var required = SettingsService.Lock.ExitAppMinAccountType;
         if (required != null && !HasPrivilege(required.Value))
         {
-            NotificationService.Instance.ShowWarning("权限不足，无法退出应用");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_InsufficientPermission"));
             return;
         }
 
@@ -887,13 +1012,13 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
         if (string.IsNullOrWhiteSpace(NewAccountUsername))
         {
-            NotificationService.Instance.ShowWarning("请输入用户名");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_EnterUsername"));
             return;
         }
 
         if (string.IsNullOrWhiteSpace(NewAccountPassword))
         {
-            NotificationService.Instance.ShowWarning("请输入密码");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_EnterPassword"));
             return;
         }
 
@@ -925,13 +1050,13 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
         if (account.AccountType == AccountType.SuperAdmin)
         {
-            NotificationService.Instance.ShowWarning("不能删除超级管理员账号");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_CannotDeleteSuperAdmin"));
             return;
         }
 
         var confirmed = await NotificationService.Instance.ShowConfirmAsync(
-            $"确定要删除账户 \"{account.Username}\" 吗？",
-            "删除确认");
+            $"{L("SecurityCenter_Msg_DeleteAccountConfirm")} \"{account.Username}\"?",
+            L("SecurityCenter_DeleteConfirm"));
 
         if (!confirmed) return;
 
@@ -941,7 +1066,6 @@ public partial class SecurityCenterViewModel : ViewModelBase
             NotificationService.Instance.ShowSuccess(result.message);
             RefreshAccounts();
             
-            // 通知侧边栏
             if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                 desktop.MainWindow?.DataContext is MainWindowViewModel mainVm)
             {
@@ -959,7 +1083,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
     {
         if (!IsAuthenticated && !string.IsNullOrWhiteSpace(SecurityService.Instance.Settings.PasswordHash))
         {
-            NotificationService.Instance.ShowWarning("请先完成管理员登录");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_CompleteAdminLoginFirst"));
             return;
         }
 
@@ -971,14 +1095,14 @@ public partial class SecurityCenterViewModel : ViewModelBase
             NewPassword = string.Empty;
             ConfirmPassword = string.Empty;
             PasswordValidationErrors = string.Empty;
-            PasswordStrengthLabel = "无";
+            PasswordStrengthLabel = L("SecurityCenter_None");
             PasswordStrengthScore = 0;
             NotificationService.Instance.ShowSuccess(result.Message);
         }
         else
         {
             PasswordValidationErrors = string.Join("；", result.Errors);
-            NotificationService.Instance.ShowWarning(string.IsNullOrEmpty(result.Message) ? "修改密码失败" : result.Message);
+            NotificationService.Instance.ShowWarning(string.IsNullOrEmpty(result.Message) ? L("SecurityCenter_Msg_PasswordChangeFailed") : result.Message);
         }
 
         RefreshReport();
@@ -1019,11 +1143,11 @@ public partial class SecurityCenterViewModel : ViewModelBase
         var success = await NotificationService.Instance.TrySetClipboardTextAsync(password);
         if (success)
         {
-            NotificationService.Instance.ShowInfo("已生成强密码并复制到剪贴板，请使用密码管理器保存");
+            NotificationService.Instance.ShowInfo(L("SecurityCenter_Msg_StrongPasswordCopied"));
         }
         else
         {
-            NotificationService.Instance.ShowWarning("无法访问剪贴板，但已在输入框中填入强密码");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_ClipboardAccessFailed"));
         }
     }
 
@@ -1032,7 +1156,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
     {
         if (!IsAuthenticated)
         {
-            NotificationService.Instance.ShowWarning("请先完成管理员登录");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_CompleteAdminLoginFirst"));
             IsSettingUpTwoFactor = false;
             IsTwoFactorEnabled = SecurityService.Instance.Settings.IsTwoFactorEnabled;
             IsTwoFactorConfigured = IsTwoFactorEnabled;
@@ -1055,12 +1179,12 @@ public partial class SecurityCenterViewModel : ViewModelBase
             // 想要禁用
             if (string.IsNullOrWhiteSpace(CurrentPassword))
             {
-                NotificationService.Instance.ShowWarning("请在“修改管理员密码”处输入当前密码以确认身份");
-                IsTwoFactorEnabled = true; // 恢复 UI 状态
+                NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_EnterCurrentPasswordToConfirm"));
+                IsTwoFactorEnabled = true;
                 return;
             }
 
-            var confirmed = await NotificationService.Instance.ShowConfirmAsync("确定要禁用双重验证吗？", "安全警告");
+            var confirmed = await NotificationService.Instance.ShowConfirmAsync(L("SecurityCenter_Msg_ConfirmDisableTwoFactor"), L("SecurityCenter_SecurityWarning"));
             if (confirmed)
             {
                 var result = await SecurityService.Instance.DisableTwoFactorAsync(CurrentPassword);
@@ -1071,17 +1195,17 @@ public partial class SecurityCenterViewModel : ViewModelBase
                     IsTwoFactorRequired = false;
                     LoginTwoFactorCode = string.Empty;
                     RefreshLoginFieldVisibility();
-                    NotificationService.Instance.ShowSuccess("双重验证已禁用");
+                    NotificationService.Instance.ShowSuccess(L("SecurityCenter_Msg_TwoFactorDisabled"));
                 }
                 else
                 {
                     NotificationService.Instance.ShowError(result.Message);
-                    IsTwoFactorEnabled = true; // 恢复 UI 状态
+                    IsTwoFactorEnabled = true;
                 }
             }
             else
             {
-                IsTwoFactorEnabled = true; // 恢复 UI 状态
+                IsTwoFactorEnabled = true;
             }
             return;
         }
@@ -1114,7 +1238,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
     {
         if (!IsAuthenticated)
         {
-            NotificationService.Instance.ShowWarning("请先完成管理员登录");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_CompleteAdminLoginFirst"));
             return;
         }
 
@@ -1129,12 +1253,11 @@ public partial class SecurityCenterViewModel : ViewModelBase
             RefreshLoginFieldVisibility();
             IsSettingUpTwoFactor = false;
             TwoFactorInputCode = string.Empty;
-            NotificationService.Instance.ShowSuccess("双重验证已成功启用");
+            NotificationService.Instance.ShowSuccess(L("SecurityCenter_Msg_TwoFactorSetupSuccess"));
         }
         else
         {
             NotificationService.Instance.ShowError(result.Message);
-            // 验证失败不需要立即恢复 IsTwoFactorEnabled，因为用户还在设置界面中
         }
     }
 
@@ -1143,7 +1266,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
     {
         if (!IsAuthenticated)
         {
-            NotificationService.Instance.ShowWarning("请先完成管理员登录");
+            NotificationService.Instance.ShowWarning(L("SecurityCenter_Msg_CompleteAdminLoginFirst"));
         }
 
         IsSettingUpTwoFactor = false;
@@ -1173,7 +1296,27 @@ public partial class SecurityCenterViewModel : ViewModelBase
         var policy = SecurityService.Instance.ValidatePolicy(value ?? string.Empty);
         PasswordStrengthScore = policy.Score;
         PasswordStrengthLabel = policy.StrengthLabel;
-        PasswordValidationErrors = string.Join("；", policy.Errors);
+        PasswordValidationErrors = string.Join(",", policy.Errors);
+    }
+
+    partial void OnMaxLockDurationIndexChanged(int value)
+    {
+        MaxLockDurationHours = value switch
+        {
+            0 => 0,
+            >= 1 and <= 115 => value + 5,
+            _ => 48
+        };
+    }
+
+    partial void OnMaxLockDurationHoursChanged(int value)
+    {
+        MaxLockDurationIndex = value switch
+        {
+            0 => 0,
+            >= 6 and <= 120 => value - 5,
+            _ => 19
+        };
     }
 
     private static string GenerateStrongPassword()

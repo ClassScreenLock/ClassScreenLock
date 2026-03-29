@@ -56,6 +56,12 @@ public partial class LockSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string _newForcedApp = string.Empty;
 
+    [ObservableProperty]
+    private bool _enableLockStateFileCheck;
+
+    [ObservableProperty]
+    private int _lockStateFileCheckIntervalSeconds;
+
     public ObservableCollection<string> AllowedTopmostApps { get; } = new();
     public ObservableCollection<string> ForcedTopmostApps { get; } = new();
 
@@ -90,6 +96,9 @@ public partial class LockSettingsViewModel : ViewModelBase
             ForcedTopmostApps.Add(app);
         }
 
+        EnableLockStateFileCheck = settings.EnableLockStateFileCheck;
+        LockStateFileCheckIntervalSeconds = settings.LockStateFileCheckIntervalSeconds;
+
         CanEditBreakTimeLock = settings.BreakTimeLockSettingsMinAccountType == null
                                 || SecurityService.Instance.IsAuthenticated
                                 || AccountService.Instance.HasPermission(settings.BreakTimeLockSettingsMinAccountType.Value);
@@ -117,7 +126,13 @@ public partial class LockSettingsViewModel : ViewModelBase
             settings.LockBackgroundOpacity = LockBackgroundOpacity;
             settings.LockTextShadowOpacity = LockTextShadowOpacity;
             settings.LockTextShadowBlurRadius = LockTextShadowBlurRadius;
+
+            settings.EnableLockStateFileCheck = EnableLockStateFileCheck;
+            settings.LockStateFileCheckIntervalSeconds = LockStateFileCheckIntervalSeconds;
         });
+        
+        LockScreenService.Instance.StopLockStateFileCheck();
+        LockScreenService.Instance.StartLockStateFileCheck();
         
         if (showNotification)
         {

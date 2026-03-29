@@ -1,9 +1,9 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
              xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
              xmlns:services="clr-namespace:ClassScreenLock.Services"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -18,14 +18,20 @@
         <TextBlock Grid.Row="0" Text="安全日志" Classes="h1" Margin="24,24,24,8"/>
         
         <!-- 第一行：搜索与筛选 -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" Margin="24,0,24,8">
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="24,0,24,8">
             <TextBox Grid.Column="0" Text="{Binding SearchText}" Watermark="搜索操作、来源或详情..." Margin="0,0,8,0"/>
             <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableTypes}" SelectedItem="{Binding SelectedType}" Width="140" Margin="0,0,8,0"/>
             <ComboBox Grid.Column="2" ItemsSource="{Binding AvailableSources}" SelectedItem="{Binding SelectedSource}" Width="160" Margin="0,0,8,0"/>
-            <Button Grid.Column="3" Command="{Binding RefreshLogsCommand}" Classes="outline" Width="100">
+            <Button Grid.Column="3" Command="{Binding RefreshLogsCommand}" Classes="outline" Width="100" Margin="0,0,8,0">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <PathIcon Data="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" Width="14" Height="14"/>
+                    <PathIcon Data="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" FontSize="14"/>
                     <TextBlock Text="刷新"/>
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="4" Command="{Binding ToggleDisplayModeCommand}" Classes="outline" Width="140">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <fluent:SymbolIcon Symbol="{Binding IsTableView, Converter={x:Static Converters:BoolToIconConverter.Instance}}" FontSize="14"/>
+                    <TextBlock Text="{Binding IsTableView, Converter={x:Static Converters:BoolToStringConverter.Instance}, ConverterParameter='表格视图|文本视图'}"/>
                 </StackPanel>
             </Button>
         </Grid>
@@ -34,37 +40,39 @@
         <WrapPanel Grid.Row="2" Margin="24,0,24,12" ItemSpacing="8">
             <Button Command="{Binding ExportCsvAskPathCommand}" Classes="accent">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <PathIcon Data="M3 3H21V7H3V3M3 9H21V13H3V9M3 15H21V19H3V15Z" Width="14" Height="14"/>
+                    <PathIcon Data="M3 3H21V7H3V3M3 9H21V13H3V9M3 15H21V19H3V15Z" FontSize="14"/>
                     <TextBlock Text="导出 CSV"/>
                 </StackPanel>
             </Button>
             <Button Command="{Binding ExportJsonAskPathCommand}" Classes="accent">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <PathIcon Data="M5,3L19,3A2,2 0 0,1 21,5L21,19A2,2 0 0,1 19,21L5,21A2,2 0 0,1 3,19L3,5A2,2 0 0,1 5,3M7,7V17H9V7H7M11,7V17H13V7H11M15,7V17H17V7H15Z" Width="14" Height="14"/>
+                    <PathIcon Data="M5,3L19,3A2,2 0 0,1 21,5L21,19A2,2 0 0,1 19,21L5,21A2,2 0 0,1 3,19L3,5A2,2 0 0,1 5,3M7,7V17H9V7H7M11,7V17H13V7H11M15,7V17H17V7H15Z" FontSize="14"/>
                     <TextBlock Text="导出 JSON"/>
                 </StackPanel>
             </Button>
             <Button Command="{Binding ExportCsvBySourceCommand}" Classes="accent">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <PathIcon Data="M3,3H21V9H3V3M3,11H21V21H3V11Z" Width="14" Height="14"/>
+                    <PathIcon Data="M3,3H21V9H3V3M3,11H21V21H3V11Z" FontSize="14"/>
                     <TextBlock Text="按来源分包 CSV"/>
                 </StackPanel>
             </Button>
             <Button Command="{Binding ExportJsonBySourceCommand}" Classes="accent">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <PathIcon Data="M12,3A9,9 0 1,0 21,12A9,9 0 0,0 12,3M7,17V7H9V17H7M11,17V7H13V17H11M15,17V7H17V17H15Z" Width="14" Height="14"/>
+                    <PathIcon Data="M12,3A9,9 0 1,0 21,12A9,9 0 0,0 12,3M7,17V7H9V17H7M11,17V7H13V17H11M15,17V7H17V17H15Z" FontSize="14"/>
                     <TextBlock Text="按来源分包 JSON"/>
                 </StackPanel>
             </Button>
             <Button Command="{Binding ClearLogsCommand}" Classes="danger">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <PathIcon Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" Width="14" Height="14"/>
+                    <PathIcon Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" FontSize="14"/>
                     <TextBlock Text="清除"/>
                 </StackPanel>
             </Button>
         </WrapPanel>
 
+        <!-- 表格视图 -->
         <DataGrid Grid.Row="3" 
+                  IsVisible="{Binding IsTableView}"
                   ItemsSource="{Binding DisplayLogs}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
@@ -76,13 +84,13 @@
                   HorizontalScrollBarVisibility="Auto"
                   Margin="24,0,24,24">
             <DataGrid.Styles>
-                <Style Selector="DataGridRow" x:DataType="services:LogEntry">
+                <Style Selector="DataGridRow" x:DataType="vm:LogEntryWrapper">
                     <Setter Property="Background" Value="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}, ConverterParameter=0.06}"/>
                 </Style>
-                <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle" x:DataType="services:LogEntry">
+                <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle" x:DataType="vm:LogEntryWrapper">
                     <Setter Property="Fill" Value="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}, ConverterParameter=0.12}"/>
                 </Style>
-                <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle" x:DataType="services:LogEntry">
+                <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle" x:DataType="vm:LogEntryWrapper">
                     <Setter Property="Fill" Value="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}, ConverterParameter=0.20}"/>
                 </Style>
             </DataGrid.Styles>
@@ -90,8 +98,8 @@
                 <DataGridTemplateColumn Header="" Width="42">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <icons:Icon Value="{Binding Type, Converter={x:Static Converters:LogTypeToIconConverter.Instance}}" 
-                                        Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            <fluent:SymbolIcon Symbol="{Binding Type, Converter={x:Static Converters:LogTypeToIconConverter.Instance}}" 
+                                        FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"
                                         Foreground="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -144,5 +152,75 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+
+        <!-- 文本视图 -->
+        <Grid Grid.Row="3" IsVisible="{Binding IsTableView, Converter={x:Static Converters:BoolToInverseBoolConverter.Instance}}" Margin="24,0,24,24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <!-- 操作按钮 -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+                <Button Command="{Binding CopySelectedLogsCommand}" Classes="accent" Width="100">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="M16,1H4A2,2 0 0,0 2,3V17H4V3H16M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M19,21H8V7H19V21Z" FontSize="14"/>
+                        <TextBlock Text="复制选中"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding SelectAllLogsCommand}" Classes="outline" Width="100">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z" FontSize="14"/>
+                        <TextBlock Text="全选"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding DeselectAllLogsCommand}" Classes="outline" Width="100">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="M18,14V17H15V14H18M18,7V10H15V7H18M11,14V17H8V14H11M11,7V10H8V7H11M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" FontSize="14"/>
+                        <TextBlock Text="取消全选"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            
+            <!-- 日志列表 -->
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="4">
+                    <ItemsControl ItemsSource="{Binding DisplayLogs}">
+                        <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LogEntryWrapper">
+                            <Border Background="{Binding Type, Converter={x:Static Converters:LogTypeToBrushConverter.Instance}, ConverterParameter=0.06}" 
+                                    Padding="12" 
+                                    CornerRadius="4" 
+                                    Margin="0,2">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap">
+                                        <Run Text="["/>
+                                        <Run Text="{Binding Timestamp, StringFormat={}{0:yyyy/MM/dd HH:mm:ss}}"/>
+                                        <Run Text="] "/>
+                                        <Run Text="{Binding Target}"/>
+                                        <Run Text=":"/>
+                                    </TextBlock>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Details}" 
+                                               FontSize="13" 
+                                               TextWrapping="Wrap" 
+                                               Margin="0,4,0,0"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

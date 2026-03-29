@@ -37,7 +37,7 @@
                     
                     <!-- 开发者信息 -->
                     <StackPanel Spacing="8">
-                        <TextBlock Text="开发者" Classes="h3"
+                        <TextBlock Text="{DynamicResource About_Developer}" Classes="h3"
                                    Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
                         <TextBlock Text="{Binding Developer}" 
                                    Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
@@ -45,7 +45,7 @@
                     
                     <!-- 许可证信息 -->
                     <StackPanel Spacing="8">
-                        <TextBlock Text="许可证" Classes="h3"
+                        <TextBlock Text="{DynamicResource About_License}" Classes="h3"
                                    Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
                         <TextBlock Text="{Binding License}" 
                                    Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>

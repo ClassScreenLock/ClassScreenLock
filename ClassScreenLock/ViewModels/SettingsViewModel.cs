@@ -35,9 +35,6 @@ public partial class SettingsViewModel : ViewModelBase
     private string _fontFamily = "Microsoft YaHei UI";
     
     [ObservableProperty]
-    private bool _autoStart = false;
-    
-    [ObservableProperty]
     private bool _darkMode = false;
     
     [ObservableProperty]
@@ -174,7 +171,6 @@ public partial class SettingsViewModel : ViewModelBase
         {
             FontFamily = Settings.FontFamily;
         }
-        AutoStart = Settings.AutoStart;
         DarkMode = Settings.DarkMode;
         AccentColor = Settings.AccentColor;
         ShowNotifications = Settings.ShowNotifications;
@@ -275,14 +271,6 @@ public partial class SettingsViewModel : ViewModelBase
     {
         if (_suppressSettingSideEffects) return;
         ApplyFontFamilyChange(value);
-    }
-    
-    partial void OnAutoStartChanged(bool value)
-    {
-        if (_suppressSettingSideEffects) return;
-        UpdateSetting(s => s.AutoStart = value);
-        // 立即应用自启动更改
-        SetAutoStart(value);
     }
     
     partial void OnDarkModeChanged(bool value)
@@ -401,6 +389,25 @@ public partial class SettingsViewModel : ViewModelBase
     {
         var theme = isDarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
         Application.Current!.RequestedThemeVariant = theme;
+        
+        // 更新所有窗口的 dark 类
+        if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            foreach (var window in desktop.Windows)
+            {
+                if (isDarkMode)
+                {
+                    if (!window.Classes.Contains("dark"))
+                    {
+                        window.Classes.Add("dark");
+                    }
+                }
+                else
+                {
+                    window.Classes.Remove("dark");
+                }
+            }
+        }
     }
     
     private void ApplyFontSizeChange(double fontSize)
@@ -595,7 +602,6 @@ public partial class SettingsViewModel : ViewModelBase
 
             FontSize = defaultSettings.FontSize;
             FontFamily = defaultSettings.FontFamily;
-            AutoStart = defaultSettings.AutoStart;
             DarkMode = defaultSettings.DarkMode;
             UseSystemAccentColor = defaultSettings.UseSystemAccentColor;
             CustomAccentColor = defaultSettings.AccentColor;
@@ -620,7 +626,6 @@ public partial class SettingsViewModel : ViewModelBase
         }
         ApplyAccentColorChange(AccentColor);
 
-        SetAutoStart(AutoStart);
         NotificationService.Instance.UpdateNotificationSettings(ShowNotifications);
         ApplyLanguageChange(Language, false);
         
@@ -687,11 +692,6 @@ public partial class SettingsViewModel : ViewModelBase
             System.Diagnostics.Debug.WriteLine($"重启失败: {ex.Message}");
             NotificationService.Instance.ShowError($"重启失败: {ex.Message}", true);
         }
-    }
-    
-    private void SetAutoStart(bool enable)
-    {
-        ClassScreenLock.Helpers.AutoStartHelper.SetAutoStart(enable);
     }
     
     private bool _disposed = false;

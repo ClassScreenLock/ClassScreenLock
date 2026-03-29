@@ -1269,4 +1269,15 @@ public partial class AutomationViewModel : ViewModelBase
         SelectedWorkflow.RecoveryActions.Remove(act);
         SaveSettings();
     }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _checkTimer?.Stop();
+            _checkTimer?.Dispose();
+            try { SettingsService.GeneralChanged -= OnGeneralChanged; } catch { }
+        }
+        base.Dispose(disposing);
+    }
 }

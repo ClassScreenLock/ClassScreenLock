@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,7 +6,7 @@
         mc:Ignorable="d"
         x:Class="ClassScreenLock.Views.FloatingLockWidget"
         x:DataType="vm:FloatingLockWidgetViewModel"
-        Title="仅防护管控"
+        Title="仅防护管理"
         Width="360" Height="170"
         WindowStartupLocation="Manual"
         SystemDecorations="None"
@@ -24,24 +24,24 @@
                 VerticalAlignment="Stretch">
             <StackPanel Spacing="8">
                 <TextBlock Text="当前电脑已被管控"
-                           FontSize="16"
+                           Width="16" Height="16"
                            FontWeight="Bold"
                            Foreground="White"/>
 
                 <TextBlock Text="{Binding InfoText}"
                            TextWrapping="Wrap"
-                           FontSize="12"
+                           Width="12" Height="12"
                            Foreground="White"
                            Opacity="0.9"/>
 
                 <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
                     <TextBox Width="120"
-                             Watermark="管理员账号"
+                             Watermark="管理员账户"
                              Text="{Binding Username, Mode=TwoWay}"/>
                     <TextBox Width="120"
                              Watermark="密码"
                              Text="{Binding Password, Mode=TwoWay}"
-                             PasswordChar="●"/>
+                             PasswordChar="*"/>
                     <Button Width="70"
                             Content="解除管控"
                             Command="{Binding UnlockCommand}"/>
@@ -49,7 +49,7 @@
 
                 <TextBlock Text="{Binding ErrorMessage}"
                            Foreground="#FFE81123"
-                           FontSize="12"
+                           Width="12" Height="12"
                            TextWrapping="Wrap"/>
             </StackPanel>
         </Border>

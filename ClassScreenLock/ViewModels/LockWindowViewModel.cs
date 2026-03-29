@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Globalization;
@@ -75,6 +76,20 @@ public partial class LockWindowViewModel : ViewModelBase
     [ObservableProperty]
     private double _lockTextShadowBlurRadius;
 
+    [ObservableProperty]
+    private bool _isShutdownDialogVisible;
+
+    [ObservableProperty]
+    private bool _isShutdownCountdownActive;
+
+    [ObservableProperty]
+    private int _shutdownCountdown;
+
+    [ObservableProperty]
+    private string _shutdownCountdownText = string.Empty;
+
+    private DispatcherTimer? _shutdownTimer;
+
     public bool IsLetterModeVisible => !IsSymbolModeEnabled;
 
     public char PasswordChar => IsPasswordVisible ? '\0' : '*';
@@ -87,6 +102,80 @@ public partial class LockWindowViewModel : ViewModelBase
         IsPasswordVisible = !IsPasswordVisible;
         OnPropertyChanged(nameof(PasswordChar));
         OnPropertyChanged(nameof(PasswordIcon));
+    }
+
+    [RelayCommand]
+    private void ShowShutdownDialog()
+    {
+        IsShutdownDialogVisible = true;
+        IsShutdownCountdownActive = false;
+        ShutdownCountdown = 0;
+        ShutdownCountdownText = string.Empty;
+    }
+
+    [RelayCommand]
+    private void CancelShutdown()
+    {
+        IsShutdownDialogVisible = false;
+        IsShutdownCountdownActive = false;
+        ShutdownCountdown = 0;
+        ShutdownCountdownText = string.Empty;
+        StopShutdownTimer();
+    }
+
+    [RelayCommand]
+    private void ConfirmShutdown()
+    {
+        IsShutdownCountdownActive = true;
+        ShutdownCountdown = 5;
+        ShutdownCountdownText = $"系统将在 {ShutdownCountdown} 秒后关机";
+
+        _shutdownTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Normal, OnShutdownTimerTick);
+        _shutdownTimer.Start();
+    }
+
+    private void OnShutdownTimerTick(object? sender, EventArgs e)
+    {
+        ShutdownCountdown--;
+        if (ShutdownCountdown > 0)
+        {
+            ShutdownCountdownText = $"系统将在 {ShutdownCountdown} 秒后关机";
+        }
+        else
+        {
+            StopShutdownTimer();
+            ExecuteShutdown();
+        }
+    }
+
+    private void StopShutdownTimer()
+    {
+        if (_shutdownTimer != null)
+        {
+            _shutdownTimer.Stop();
+            _shutdownTimer = null;
+        }
+    }
+
+    private static void ExecuteShutdown()
+    {
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "shutdown.exe",
+                    Arguments = "/s /t 0",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                }
+            };
+            process.Start();
+        }
+        catch (Exception)
+        {
+        }
     }
 
     [RelayCommand]
@@ -103,12 +192,12 @@ public partial class LockWindowViewModel : ViewModelBase
             return;
         }
 
-        var field = ResolveFocusedField();
-
-        if (text.Length == 1 && char.IsLetter(text[0]) && IsCapsLockEnabled)
+        if (IsCapsLockEnabled && text.Any(char.IsLetter))
         {
-            text = text.ToUpper(CultureInfo.CurrentCulture);
+            text = new string(text.Select(ch => char.IsLetter(ch) ? char.ToUpper(ch) : ch).ToArray());
         }
+
+        var field = ResolveFocusedField();
 
         if (field == "Username")
         {
@@ -221,12 +310,15 @@ public partial class LockWindowViewModel : ViewModelBase
     private static bool IsSecurityAdminUsername(string username)
     {
         if (string.IsNullOrWhiteSpace(username)) return false;
-        var settingsName = SecurityService.Instance.Settings.AdminUsername;
-        if (string.Equals(username, settingsName, StringComparison.OrdinalIgnoreCase)) return true;
-
-        var superAdminName = AccountService.Instance.Accounts.FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin)?.Username;
-        if (string.IsNullOrWhiteSpace(superAdminName)) return false;
-        return string.Equals(username, superAdminName, StringComparison.OrdinalIgnoreCase);
+        
+        // 检查是否是账户列表中的超级管理员
+        var superAdmin = AccountService.Instance.Accounts.FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin && !a.IsDisabled);
+        if (superAdmin != null && string.Equals(username, superAdmin.Username, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+        
+        return false;
     }
 
     private void RefreshLoginFieldVisibility()
@@ -406,6 +498,15 @@ public partial class LockWindowViewModel : ViewModelBase
 
         if (isSecurityAdmin)
         {
+            // 获取实际的超级管理员账户进行验证
+            var superAdmin = AccountService.Instance.Accounts.FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin && !a.IsDisabled);
+            if (superAdmin == null)
+            {
+                ErrorMessage = "系统中没有可用的超级管理员账户";
+                return;
+            }
+            
+            // 使用超级管理员的用户名进行验证
             var mode = SecurityService.Instance.GetEffectiveLoginVerificationMode();
             var is2FAEnabled = SecurityService.Instance.Settings.IsTwoFactorEnabled;
 
@@ -441,7 +542,7 @@ public partial class LockWindowViewModel : ViewModelBase
                 // 如果还没有显示 2FA 输入框，先验证密码，然后要求 2FA
                 if (!IsTwoFactorRequired && !string.IsNullOrWhiteSpace(Password))
                 {
-                    var passwordOnly = await SecurityService.Instance.VerifyPasswordOnlyAsync(Username, Password);
+                    var passwordOnly = await SecurityService.Instance.VerifyPasswordOnlyAsync(superAdmin.Username, Password);
                     if (passwordOnly.Status == PasswordVerificationStatus.Success)
                     {
                         IsTwoFactorRequired = true;
@@ -463,14 +564,14 @@ public partial class LockWindowViewModel : ViewModelBase
                 }
             }
 
-            securityResult = await SecurityService.Instance.VerifyPasswordAsync(Username, Password, TwoFactorCode);
+            securityResult = await SecurityService.Instance.VerifyPasswordAsync(superAdmin.Username, Password, TwoFactorCode);
             if (securityResult.Status != PasswordVerificationStatus.Success)
             {
                 ErrorMessage = securityResult.Message;
                 return;
             }
 
-            var accountLoaded = AccountService.Instance.LoginFromSecuritySession(Username);
+            var accountLoaded = AccountService.Instance.LoginFromSecuritySession(superAdmin.Username);
             if (!accountLoaded)
             {
                 ErrorMessage = "验证成功，但无法加载账户权限";
@@ -519,5 +620,15 @@ public partial class LockWindowViewModel : ViewModelBase
     {
         _timer?.Stop();
         _timer = null;
+        StopShutdownTimer();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            StopTimer();
+        }
+        base.Dispose(disposing);
     }
 }

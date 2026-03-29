@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+        xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
         xmlns:system="clr-namespace:System;assembly=System.Runtime">
     
     <!-- Projektanker.Icons.Avalonia默认样式 -->
@@ -8,6 +9,11 @@
         <Setter Property="Width" Value="24" />
         <Setter Property="Height" Value="24" />
         <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+      </Style>
+    
+    <!-- Projektanker.Icons.Avalonia深色模式样式 -->
+      <Style Selector="Window.dark icons|Icon">
+        <Setter Property="Foreground" Value="#FFFFFF" />
       </Style>
     
     <Style Selector="Button">
@@ -23,127 +29,163 @@
     </Style>
     
     <Style Selector="Button:pointerover">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}"/>
+        <Setter Property="Background" Value="#E0E0E0"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Opacity" Value="0.96"/>
     </Style>
     
     <Style Selector="Button:pressed">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseMediumBrush}"/>
+        <Setter Property="Background" Value="#D0D0D0"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Opacity" Value="0.92"/>
+    </Style>
+    
+    <!-- 深色模式按钮样式 -->
+    <Style Selector="Window.dark Button">
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+    
+    <Style Selector="Window.dark Button:pointerover">
+        <Setter Property="Background" Value="#3A3A3A"/>
+    </Style>
+    
+    <Style Selector="Window.dark Button:pressed">
+        <Setter Property="Background" Value="#2A2A2A"/>
     </Style>
     
     <!-- 自定义按钮样式 -->
     <Style Selector="Button.accent">
         <Setter Property="Height" Value="40"/>
         <Setter Property="MinWidth" Value="120"/>
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
-        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+        <Setter Property="Background" Value="#0078D4"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Border Name="PART_Border"
-                        Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="{TemplateBinding CornerRadius}"
-                        Padding="{TemplateBinding Padding}"
-                        UseLayoutRounding="True"
-                        ClipToBounds="True">
-                    <Border.Transitions>
-                        <Transitions>
-                            <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
-                        </Transitions>
-                    </Border.Transitions>
-                    <ContentPresenter Name="PART_ContentPresenter"
-                                      Content="{TemplateBinding Content}"
-                                      ContentTemplate="{TemplateBinding ContentTemplate}"
-                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                </Border>
-            </ControlTemplate>
-        </Setter>
+        <Setter Property="BorderBrush" Value="#0078D4"/>
     </Style>
     
     <!-- 按钮悬停效果 -->
     <Style Selector="Button.accent:pointerover">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentDarkBrush}"/>
+        <Setter Property="Background" Value="#006CBE"/>
+        <Setter Property="BorderBrush" Value="#006CBE"/>
     </Style>
     
     <!-- 按钮按下效果 -->
     <Style Selector="Button.accent:pressed">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentDarkerBrush}"/>
+        <Setter Property="Background" Value="#005A9E"/>
+        <Setter Property="BorderBrush" Value="#005A9E"/>
     </Style>
     
-    <!-- 轮廓按钮样式 -->
+    <!-- 轮廓按钮样式 - 浅色主题 -->
     <Style Selector="Button.outline">
         <Setter Property="Height" Value="40"/>
         <Setter Property="MinWidth" Value="120"/>
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+        <Setter Property="BorderBrush" Value="#6E6E6E"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Border Name="PART_Border"
-                        Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="{TemplateBinding CornerRadius}"
-                        Padding="{TemplateBinding Padding}"
-                        UseLayoutRounding="True"
-                        ClipToBounds="True">
-                    <Border.Transitions>
-                        <Transitions>
-                            <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
-                        </Transitions>
-                    </Border.Transitions>
-                    <ContentPresenter Name="PART_ContentPresenter"
-                                      Content="{TemplateBinding Content}"
-                                      ContentTemplate="{TemplateBinding ContentTemplate}"
-                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                </Border>
-            </ControlTemplate>
-        </Setter>
+        <Setter Property="Foreground" Value="#000000"/>
     </Style>
     
     <Style Selector="Button.outline:pointerover">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+        <Setter Property="Background" Value="#E0E0E0"/>
+        <Setter Property="BorderBrush" Value="#000000"/>
     </Style>
     
     <Style Selector="Button.outline:pressed">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseMediumBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+        <Setter Property="Background" Value="#D0D0D0"/>
+        <Setter Property="BorderBrush" Value="#000000"/>
+    </Style>
+    
+    <!-- 轮廓按钮样式 - 深色主题 -->
+    <Style Selector="Window.dark Button.outline">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="#808080"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+    
+    <Style Selector="Window.dark Button.outline:pointerover">
+        <Setter Property="Background" Value="#3A3A3A"/>
+        <Setter Property="BorderBrush" Value="#FFFFFF"/>
+    </Style>
+    
+    <Style Selector="Window.dark Button.outline:pressed">
+        <Setter Property="Background" Value="#2A2A2A"/>
+        <Setter Property="BorderBrush" Value="#FFFFFF"/>
     </Style>
 
-    <!-- 危险操作按钮样式 (更符合 Fluent UI 的微调) -->
+    <!-- 危险操作按钮样式 - 浅色主题 -->
     <Style Selector="Button.danger">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="#E81123"/>
         <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="Padding" Value="8"/>
     </Style>
 
     <Style Selector="Button.danger:pointerover">
         <Setter Property="Background" Value="#15E81123"/>
         <Setter Property="Foreground" Value="#E81123"/>
+        <Setter Property="BorderBrush" Value="#15E81123"/>
     </Style>
 
     <Style Selector="Button.danger:pressed">
         <Setter Property="Background" Value="#30E81123"/>
         <Setter Property="Foreground" Value="#C40F1F"/>
+        <Setter Property="BorderBrush" Value="#30E81123"/>
     </Style>
     
-    <!-- 窗口样式 -->
+    <!-- 危险操作按钮样式 - 深色主题 -->
+    <Style Selector="Window.dark Button.danger">
+        <Setter Property="Foreground" Value="#FF6B68"/>
+    </Style>
+    
+    <Style Selector="Window.dark Button.danger:pointerover">
+        <Setter Property="Background" Value="#20FF6B68"/>
+        <Setter Property="Foreground" Value="#FF6B68"/>
+        <Setter Property="BorderBrush" Value="#20FF6B68"/>
+    </Style>
+    
+    <Style Selector="Window.dark Button.danger:pressed">
+        <Setter Property="Background" Value="#40FF6B68"/>
+        <Setter Property="Foreground" Value="#FF8A87"/>
+        <Setter Property="BorderBrush" Value="#40FF6B68"/>
+    </Style>
+    
+    <!-- 窗口样式 - 浅色主题 -->
     <Style Selector="Window">
-        <Setter Property="Background" Value="{DynamicResource SystemControlAcrylicWindowBrush}"/>
+        <Setter Property="Background" Value="#F5F5F5"/>
+        <Setter Property="Foreground" Value="#000000"/>
+    </Style>
+    
+    <!-- 窗口样式 - 深色主题 -->
+    <Style Selector="Window.dark">
+        <Setter Property="Background" Value="#1F1F1F"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+    
+    <!-- 主内容区域样式 - 浅色主题 -->
+    <Style Selector="Window Grid.main-content-grid">
+        <Setter Property="Background" Value="#F5F5F5"/>
+    </Style>
+    
+    <Style Selector="Window Grid.main-content-grid Border.main-content-border">
+        <Setter Property="Background" Value="#FFFFFF"/>
+    </Style>
+    
+    <!-- 主内容区域样式 - 深色主题 -->
+    <Style Selector="Window.dark Grid.main-content-grid">
+        <Setter Property="Background" Value="#1F1F1F"/>
+    </Style>
+    
+    <Style Selector="Window.dark Grid.main-content-grid Border.main-content-border">
+        <Setter Property="Background" Value="#252525"/>
+    </Style>
+    
+    <!-- 文本块样式 - 使用系统资源自动适应主题 -->
+    <Style Selector="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
     </Style>
     
-    <!-- 文本块样式 -->
+    <!-- 文本块样式 - 使用系统资源自动适应主题 -->
     <Style Selector="TextBlock.title">
         <Setter Property="FontSize" Value="24"/>
         <Setter Property="FontWeight" Value="{DynamicResource GlobalFontWeight}"/>
@@ -188,74 +230,130 @@
         <Setter Property="Padding" Value="0" />
     </Style>
     
-    <!-- 侧边栏按钮样式 -->
+    <!-- 窗口标题栏按钮样式 -->
+    <Style Selector="Button.WindowTitleButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Width" Value="46" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Foreground" Value="#1A1A1A" />
+    </Style>
+    
+    <Style Selector="Button.WindowTitleButton:pointerover">
+        <Setter Property="Background" Value="#E5E5E5" />
+    </Style>
+    
+    <Style Selector="Button.WindowTitleButton:pressed">
+        <Setter Property="Background" Value="#D0D0D0" />
+    </Style>
+    
+    <Style Selector="Button.WindowTitleButton.CloseButton:pointerover">
+        <Setter Property="Background" Value="#E81123" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    
+    <Style Selector="Button.WindowTitleButton.CloseButton:pressed">
+        <Setter Property="Background" Value="#C50F1F" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    
+    <!-- 深色模式窗口标题栏按钮样式 -->
+    <Style Selector="Window.dark Button.WindowTitleButton">
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    
+    <Style Selector="Window.dark Button.WindowTitleButton:pointerover">
+        <Setter Property="Background" Value="#3A3A3A" />
+    </Style>
+    
+    <Style Selector="Window.dark Button.WindowTitleButton:pressed">
+        <Setter Property="Background" Value="#4A4A4A" />
+    </Style>
+    
+    <Style Selector="Window.dark Button.WindowTitleButton.CloseButton:pointerover">
+        <Setter Property="Background" Value="#E81123" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    
+    <Style Selector="Window.dark Button.WindowTitleButton.CloseButton:pressed">
+        <Setter Property="Background" Value="#C50F1F" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    
+    <!-- 侧边栏按钮样式 - 高对比度设计 -->
     <Style Selector="Button.SidebarButton">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Margin" Value="0,2" />
         <Setter Property="Padding" Value="16,12" />
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Border Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="8"
-                        UseLayoutRounding="True">
-                    <ContentPresenter Content="{TemplateBinding Content}"
-                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                      Padding="{TemplateBinding Padding}" />
-                </Border>
-            </ControlTemplate>
-        </Setter>
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Foreground" Value="#1A1A1A" />
     </Style>
     
     <Style Selector="Button.SidebarButton:pointerover">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListLowBrush}" />
+        <Setter Property="Background" Value="#E5E5E5" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
     
     <Style Selector="Button.SidebarButton:pressed">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}" />
+        <Setter Property="Background" Value="#D0D0D0" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
     
-    <!-- 侧边栏切换按钮样式 -->
+    <!-- 深色模式侧边栏按钮样式 -->
+    <Style Selector="Window.dark Button.SidebarButton">
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    
+    <Style Selector="Window.dark Button.SidebarButton:pointerover">
+        <Setter Property="Background" Value="#3A3A3A" />
+    </Style>
+    
+    <Style Selector="Window.dark Button.SidebarButton:pressed">
+        <Setter Property="Background" Value="#4A4A4A" />
+    </Style>
+    
+    <!-- 侧边栏切换按钮样式 - 高对比度设计 -->
     <Style Selector="Button.SidebarToggleButton">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}" />
+        <Setter Property="Background" Value="#F0F0F0" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Border Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="0,8,8,0"
-                        UseLayoutRounding="True">
-                    <ContentPresenter Content="{TemplateBinding Content}"
-                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                      Padding="{TemplateBinding Padding}" />
-                </Border>
-            </ControlTemplate>
-        </Setter>
+        <Setter Property="CornerRadius" Value="0,8,8,0" />
+        <Setter Property="Foreground" Value="#1A1A1A" />
     </Style>
     
     <Style Selector="Button.SidebarToggleButton:pointerover">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListLowBrush}" />
+        <Setter Property="Background" Value="#E0E0E0" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
     
     <Style Selector="Button.SidebarToggleButton:pressed">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}" />
+        <Setter Property="Background" Value="#D0D0D0" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
-    <!-- 卡片样式 -->
+    
+    <!-- 深色模式侧边栏切换按钮样式 -->
+    <Style Selector="Window.dark Button.SidebarToggleButton">
+        <Setter Property="Background" Value="#2D2D2D" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    
+    <Style Selector="Window.dark Button.SidebarToggleButton:pointerover">
+        <Setter Property="Background" Value="#3A3A3A" />
+    </Style>
+    
+    <Style Selector="Window.dark Button.SidebarToggleButton:pressed">
+        <Setter Property="Background" Value="#4A4A4A" />
+    </Style>
+    
+    <!-- 卡片样式 - 使用系统资源自动适应主题 -->
     <Style Selector="Border.card">
-        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BoxShadow" Value="0 2 8 0 #10000000"/>
+        <Setter Property="BoxShadow" Value="0 2 8 0 #20000000"/>
         <Setter Property="Transitions">
             <Transitions>
                 <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
@@ -265,14 +363,74 @@
 
     <Style Selector="Border.account-card:pointerover">
         <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListLowBrush}"/>
-        <Setter Property="BoxShadow" Value="0 4 12 0 #20000000"/>
+        <Setter Property="BoxShadow" Value="0 4 12 0 #30000000"/>
+    </Style>
+    
+    <!-- 侧边栏样式 - 高对比度设计 -->
+    <Style Selector="Border.sidebar-background">
+        <Setter Property="Background" Value="#F5F5F5"/>
+    </Style>
+    
+    <!-- 深色模式侧边栏背景 -->
+    <Style Selector="Window.dark Border.sidebar-background">
+        <Setter Property="Background" Value="#1F1F1F"/>
+    </Style>
+    
+    <!-- 侧边栏文本样式 - 高对比度设计 -->
+    <Style Selector="TextBlock.sidebar-text">
+        <Setter Property="Foreground" Value="#1A1A1A"/>
+    </Style>
+    
+    <!-- 深色模式侧边栏文本 -->
+    <Style Selector="Window.dark TextBlock.sidebar-text">
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+    
+    <!-- 侧边栏版本信息样式 - 高对比度设计 -->
+    <Style Selector="TextBlock.sidebar-version">
+        <Setter Property="Foreground" Value="#505050"/>
+    </Style>
+    
+    <!-- 深色模式侧边栏版本信息 -->
+    <Style Selector="Window.dark TextBlock.sidebar-version">
+        <Setter Property="Foreground" Value="#B0B0B0"/>
+    </Style>
+    
+    <!-- 侧边栏分隔线样式 - 高对比度设计 -->
+    <Style Selector="Border.sidebar-divider">
+        <Setter Property="Background" Value="#C0C0C0"/>
+    </Style>
+    
+    <!-- 深色模式侧边栏分隔线 -->
+    <Style Selector="Window.dark Border.sidebar-divider">
+        <Setter Property="Background" Value="#505050"/>
+    </Style>
+    
+    <!-- 侧边栏图标样式 - 高对比度设计 -->
+    <Style Selector="Button.SidebarButton fluent|SymbolIcon">
+        <Setter Property="Foreground" Value="#1A1A1A"/>
+    </Style>
+    
+    <!-- 深色模式侧边栏图标 -->
+    <Style Selector="Window.dark Button.SidebarButton fluent|SymbolIcon">
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+    
+    <!-- 深色模式图标样式 -->
+    <Style Selector="Window.dark fluent|SymbolIcon">
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="Window.dark Border.account-card:pointerover">
+        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
     </Style>
 
     <!-- 无边框输入框 -->
     <Style Selector="TextBox.clear">
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Padding" Value="0,8"/>
+        <Setter Property="Padding" Value="4,8"/>
+        <Setter Property="MinHeight" Value="32"/>
     </Style>
     <Style Selector="TextBox.clear:focus /template/ Border#PART_Border">
         <Setter Property="Background" Value="Transparent"/>
@@ -288,19 +446,19 @@
     <!-- 全局输入框底线样式（Fluent Underline） -->
     <Style Selector="TextBox /template/ Border">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+        <Setter Property="BorderBrush" Value="#8A8A8A"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
     </Style>
     <Style Selector="TextBox /template/ Border#PART_Border">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+        <Setter Property="BorderBrush" Value="#8A8A8A"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
     </Style>
     <Style Selector="TextBox:pointerover /template/ Border">
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"/>
+        <Setter Property="BorderBrush" Value="#606060"/>
     </Style>
     <Style Selector="TextBox:pointerover /template/ Border#PART_Border">
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"/>
+        <Setter Property="BorderBrush" Value="#606060"/>
     </Style>
     <Style Selector="TextBox:focus /template/ Border">
         <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
@@ -309,6 +467,30 @@
     <Style Selector="TextBox:focus /template/ Border#PART_Border">
         <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
         <Setter Property="BorderThickness" Value="0,0,0,2"/>
+    </Style>
+    
+    <!-- 深色模式输入框边框 -->
+    <Style Selector="Window.dark TextBox /template/ Border">
+        <Setter Property="BorderBrush" Value="#707070"/>
+    </Style>
+    <Style Selector="Window.dark TextBox /template/ Border#PART_Border">
+        <Setter Property="BorderBrush" Value="#707070"/>
+    </Style>
+    <Style Selector="Window.dark TextBox:pointerover /template/ Border">
+        <Setter Property="BorderBrush" Value="#909090"/>
+    </Style>
+    <Style Selector="Window.dark TextBox:pointerover /template/ Border#PART_Border">
+        <Setter Property="BorderBrush" Value="#909090"/>
+    </Style>
+    
+    <!-- 水印文字样式 -->
+    <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="#808080"/>
+    </Style>
+    
+    <Style Selector="Window.dark TextBox /template/ TextBlock#PART_Watermark">
+        <Setter Property="Foreground" Value="#A0A0A0"/>
     </Style>
 
     <!-- 文本样式 -->
@@ -352,20 +534,17 @@
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="FontFamily" Value="{DynamicResource GlobalFontFamily}"/>
         <Setter Property="Padding" Value="0,6"/>
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
         <Setter Property="Transitions">
             <Transitions>
                 <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
             </Transitions>
         </Setter>
     </Style>
-    
-    <!-- 解决水印文字居中 -->
-    <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
-        <Setter Property="VerticalAlignment" Value="Center"/>
-    </Style>
 
     <Style Selector="ComboBox">
         <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
     </Style>
     
     <!-- FluentTabControl 样式 -->
@@ -393,10 +572,13 @@
 
     <Style Selector="ListBox">
         <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
     </Style>
+    
     <Style Selector="ListBoxItem">
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
         <Setter Property="Transitions">
             <Transitions>
                 <DoubleTransition Property="Opacity" Duration="0:0:0.1" />

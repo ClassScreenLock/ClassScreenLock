@@ -135,6 +135,8 @@ public partial class SidebarViewModel : ViewModelBase
 
         [ObservableProperty]
         private bool _isLoggedIn;
+        
+        public bool IsDarkMode => SettingsService.General.DarkMode;
 
         public void RefreshAccountInfo()
         {
@@ -358,7 +360,7 @@ public partial class SidebarViewModel : ViewModelBase
             "WebcamHistory" => s.SidebarWebcamHistoryMinAccountType,
             "Automation" => s.SidebarAutomationMinAccountType,
             "SecurityCenter" => s.SidebarSecurityCenterMinAccountType,
-            "Organization" => s.SidebarNetworkInterceptionMinAccountType, // 使用与网络拦截相同的权限
+            "Organization" => s.SidebarOrganizationMinAccountType,
             "Settings" => s.SidebarSettingsMinAccountType,
             "About" => s.SidebarAboutMinAccountType,
             _ => null

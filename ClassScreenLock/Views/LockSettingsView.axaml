@@ -1,10 +1,10 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
              xmlns:models="clr-namespace:ClassScreenLock.Models"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
              x:Class="ClassScreenLock.Views.LockSettingsView"
              x:DataType="vm:LockSettingsViewModel">
@@ -23,7 +23,7 @@
                         Padding="16,8"
                         VerticalAlignment="Top">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <icons:Icon Value="fas fa-save" Width="16" Height="16"/>
+                        <fluent:SymbolIcon Symbol="Save" Width="16" Height="16"/>
                         <TextBlock Text="{DynamicResource Btn_Save}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
@@ -34,7 +34,7 @@
             <Border Classes="card" Padding="20">
                 <StackPanel Spacing="20">
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <icons:Icon Value="fas fa-font" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                        <fluent:SymbolIcon Symbol="TextFont" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
                         <TextBlock Text="锁屏文字显示效果" Classes="h2" VerticalAlignment="Center"/>
                     </StackPanel>
 
@@ -91,7 +91,7 @@
                                                               Opacity="{Binding LockTextShadowOpacity}"/>
                                         </TextBlock.Effect>
                                     </TextBlock>
-                                    <TextBlock Text="距离下节课: 10:00" FontSize="18" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
+                                    <TextBlock Text="距离下节课：10:00" FontSize="18" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
                                         <TextBlock.Effect>
                                             <DropShadowEffect Color="#CC000000"
                                                               BlurRadius="{Binding LockTextShadowBlurRadius}"
@@ -105,13 +105,43 @@
                 </StackPanel>
             </Border>
 
+            <!-- 锁屏状态文件保护设置 -->
+            <Border Classes="card" Padding="20">
+                <StackPanel Spacing="20">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <fluent:SymbolIcon Symbol="ShieldKeyhole" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                        <TextBlock Text="锁屏状态文件保护" Classes="h2" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Text="通过创建锁屏状态文件，在程序异常退出后自动恢复锁屏状态。适用于防止学生强制结束进程绕过锁屏。" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="12">
+                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <TextBlock Text="启用状态文件检查" Classes="subtitle"/>
+                            <TextBlock Text="定时检查锁屏状态文件，如果检测到文件存在则触发锁屏" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ToggleSwitch Grid.Row="0" Grid.Column="1" IsChecked="{Binding EnableLockStateFileCheck}" VerticalAlignment="Center"/>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4" IsEnabled="{Binding EnableLockStateFileCheck}">
+                            <TextBlock Text="检查间隔（秒）" Classes="subtitle"/>
+                            <TextBlock Text="每隔多少秒检查一次状态文件，间隔越短响应越快但CPU占用略高" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <NumericUpDown Grid.Row="1" Grid.Column="1" 
+                                       Value="{Binding LockStateFileCheckIntervalSeconds}"
+                                       Minimum="1" Maximum="60" Increment="1"
+                                       Width="120" VerticalAlignment="Center"
+                                       IsEnabled="{Binding EnableLockStateFileCheck}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
             <!-- 程序豁免与置顶设置 -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
                 <!-- 置顶豁免设置 -->
                 <Border Grid.Column="0" Classes="card" Padding="20">
                     <StackPanel Spacing="16">
                         <StackPanel Orientation="Horizontal" Spacing="12">
-                            <icons:Icon Value="fas fa-shield" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                            <fluent:SymbolIcon Symbol="Shield" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
                             <TextBlock Text="{DynamicResource LockSettings_TopmostExempt}" Classes="h3" VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock Text="{DynamicResource LockSettings_TopmostExempt_Desc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
@@ -119,7 +149,7 @@
                         <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
                             <TextBox Text="{Binding NewAllowedApp}" Watermark="{DynamicResource LockSettings_AddApp_Watermark}" Margin="0,0,8,0"/>
                             <Button Grid.Column="1" Command="{Binding AddAllowedAppCommand}" Classes="accent" Width="40" Height="40" Padding="0">
-                                <icons:Icon Value="fas fa-plus" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="Add" Width="16" Height="16"/>
                             </Button>
                         </Grid>
 
@@ -137,12 +167,12 @@
                                             CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
                                         <Grid ColumnDefinitions="*,Auto">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <icons:Icon Value="fas fa-window-maximize" Width="14" Height="14" Opacity="0.5"/>
+                                                <fluent:SymbolIcon Symbol="Maximize" Width="14" Height="14" Opacity="0.5"/>
                                                 <TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="13"/>
                                             </StackPanel>
                                             <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveAllowedAppCommand}" 
                                                     CommandParameter="{Binding}" Classes="transparent" Width="32" Height="32" Padding="0">
-                                                <icons:Icon Value="fas fa-times" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                                <fluent:SymbolIcon Symbol="Dismiss" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
                                             </Button>
                                         </Grid>
                                     </Border>
@@ -156,7 +186,7 @@
                 <Border Grid.Column="1" Classes="card" Padding="20">
                     <StackPanel Spacing="16">
                         <StackPanel Orientation="Horizontal" Spacing="12">
-                            <icons:Icon Value="fas fa-thumbtack" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                            <fluent:SymbolIcon Symbol="Pin" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
                             <TextBlock Text="{DynamicResource LockSettings_ForcedTopmost}" Classes="h3" VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock Text="{DynamicResource LockSettings_ForcedTopmost_Desc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
@@ -164,7 +194,7 @@
                         <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
                             <TextBox Text="{Binding NewForcedApp}" Watermark="{DynamicResource AppManagement_Name}" Margin="0,0,8,0"/>
                             <Button Grid.Column="1" Command="{Binding AddForcedAppCommand}" Classes="accent" Width="40" Height="40" Padding="0">
-                                <icons:Icon Value="fas fa-plus" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="Add" Width="16" Height="16"/>
                             </Button>
                         </Grid>
 
@@ -182,12 +212,12 @@
                                             CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
                                         <Grid ColumnDefinitions="*,Auto">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <icons:Icon Value="fas fa-arrow-up" Width="14" Height="14" Opacity="0.5"/>
+                                                <fluent:SymbolIcon Symbol="ArrowUp" Width="14" Height="14" Opacity="0.5"/>
                                                 <TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="13"/>
                                             </StackPanel>
                                             <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveForcedAppCommand}" 
                                                     CommandParameter="{Binding}" Classes="transparent" Width="32" Height="32" Padding="0">
-                                                <icons:Icon Value="fas fa-times" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                                <fluent:SymbolIcon Symbol="Dismiss" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
                                             </Button>
                                         </Grid>
                                     </Border>

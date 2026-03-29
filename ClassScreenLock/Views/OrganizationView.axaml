@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
              x:Class="ClassScreenLock.Views.OrganizationView"
              x:DataType="vm:OrganizationViewModel">
@@ -13,10 +13,10 @@
             <!-- 标题部分 -->
             <StackPanel Spacing="8">
                 <TextBlock 
-                    Text="组织管理" 
+                    Text="{DynamicResource Organization_Title}" 
                     FontSize="26" FontWeight="SemiBold"/>
                 <TextBlock 
-                    Text="加入集控端组织，实现集中化管理与配置同步" 
+                    Text="{DynamicResource Organization_Description}" 
                     FontSize="14" Opacity="0.7"/>
             </StackPanel>
 
@@ -29,11 +29,11 @@
                     <StackPanel Spacing="20">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                             <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SystemControlBackgroundAccentBrush}">
-                                <icons:Icon Value="fas fa-check-circle" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <fluent:SymbolIcon Symbol="CheckmarkCircle" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
-                                <TextBlock Text="已加入组织" FontSize="20" FontWeight="SemiBold"/>
-                                <TextBlock Text="设备已连接到集控端，配置将自动同步" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Organization_Joined}" FontSize="20" FontWeight="SemiBold"/>
+                                <TextBlock Text="{DynamicResource Organization_Joined_Description}" Opacity="0.7"/>
                             </StackPanel>
                         </Grid>
 
@@ -42,27 +42,27 @@
                             <StackPanel Spacing="12">
                                 <Grid ColumnDefinitions="120,*">
                                     <TextBlock Text="组织名称：" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding OrganizationName}" FontSize="15"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding OrganizationName}"/>
                                 </Grid>
                                 <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1" Margin="0,4"/>
                                 <Grid ColumnDefinitions="120,*">
                                     <TextBlock Text="组织描述：" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding OrganizationDescription}" FontSize="15"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding OrganizationDescription}"/>
                                 </Grid>
                                 <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1" Margin="0,4"/>
                                 <Grid ColumnDefinitions="120,*">
                                     <TextBlock Text="组织 ID：" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding OrganizationId}" FontSize="15" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding OrganizationId}" FontFamily="Consolas"/>
                                 </Grid>
                                 <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1" Margin="0,4"/>
                                 <Grid ColumnDefinitions="120,*">
                                     <TextBlock Text="加入时间：" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding JoinedAtText}" FontSize="15"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding JoinedAtText}"/>
                                 </Grid>
                                 <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1" Margin="0,4"/>
                                 <Grid ColumnDefinitions="120,*">
                                     <TextBlock Text="最后同步：" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding LastSyncTimeText}" FontSize="15"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding LastSyncTimeText}"/>
                                 </Grid>
                                 <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1" Margin="0,4"/>
                             </StackPanel>
@@ -70,29 +70,26 @@
 
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Button 
-                                Content="同步配置" 
+                                Content="{DynamicResource Organization_SyncConfiguration}" 
                                 Command="{Binding SyncConfigurationCommand}"
                                 Classes="accent"
                                 Padding="24,12"
-                                FontSize="15"
                                 IsEnabled="{Binding !IsLoading}"/>
                             <Button 
-                                Content="退出组织" 
+                                Content="{DynamicResource Organization_LeaveOrganization}" 
                                 Command="{Binding LeaveOrganizationCommand}"
                                 Background="#a80000"
                                 Foreground="White"
                                 Padding="24,12"
-                                FontSize="15"
                                 IsEnabled="{Binding !IsLoading}"/>
                         </StackPanel>
                     </StackPanel>
                     
-                    <icons:Icon Grid.Column="1" Value="fas fa-network-wired" Width="120" Height="120" 
+                    <fluent:SymbolIcon Grid.Column="1" Symbol="Building" Width="120" Height="120" 
                                 Opacity="0.05" VerticalAlignment="Top" Margin="0,20,20,0"/>
                 </Grid>
             </Border>
 
-            <!-- 加入组织表单 -->
             <Border 
                 IsVisible="{Binding !HasJoinedOrganization}"
                 Background="{DynamicResource SystemControlBackgroundListLowBrush}"
@@ -101,71 +98,66 @@
                     <StackPanel Spacing="24">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                             <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource SystemControlBackgroundAccentBrush}">
-                                <icons:Icon Value="fas fa-users" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <fluent:SymbolIcon Symbol="People" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
-                                <TextBlock Text="加入组织" FontSize="20" FontWeight="SemiBold"/>
-                                <TextBlock Text="填写以下信息以加入集控端组织" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource Organization_Join}" FontSize="20" FontWeight="SemiBold"/>
+                                <TextBlock Text="{DynamicResource Organization_Join_Description}" Opacity="0.7"/>
                             </StackPanel>
                         </Grid>
 
                         <TextBlock 
-                            Text="使用说明：在 Web 端（localhost:5173）创建组织后，在此处输入集控端的后端 API 地址（默认 http://localhost:5000），然后填写组织 ID 和相关信息即可加入。"
+                            Text="{DynamicResource Organization_Usage_Instruction}"
                             TextWrapping="Wrap" Opacity="0.7" Margin="0,8,0,0"/>
 
                         <StackPanel Margin="0,16,0,0">
-                            <TextBlock Text="服务器地址" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBlock Text="{DynamicResource Organization_ServerUrl}" FontWeight="SemiBold" Margin="0,0,0,8"/>
                             <TextBox 
                                 Text="{Binding ServerUrl}"
-                                Watermark="输入集控端后端API地址（如：http://localhost:5000）"
+                                Watermark="{DynamicResource Organization_ServerUrl_Watermark}"
                                 Height="48"
-                                FontSize="15"
                                 VerticalContentAlignment="Center"
                                 Padding="12,8"/>
-                            <TextBlock Text="注意：请输入后端 API 地址（默认端口 5000），不是前端地址（端口 5173）" 
-                                       FontSize="12" Opacity="0.6" Margin="0,4,0,0"/>
+                            <TextBlock Text="{DynamicResource Organization_ServerUrl_Note}" 
+                                       Opacity="0.6" Margin="0,4,0,0"/>
                         </StackPanel>
 
                         <StackPanel>
-                            <TextBlock Text="组织 ID" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBlock Text="{DynamicResource Organization_OrganizationId}" FontWeight="SemiBold" Margin="0,0,0,8"/>
                             <TextBox 
                                 Text="{Binding OrganizationId}"
-                                Watermark="输入组织 ID"
+                                Watermark="{DynamicResource Organization_OrganizationId_Watermark}"
                                 Height="48"
-                                FontSize="15"
                                 VerticalContentAlignment="Center"
                                 Padding="12,8"/>
                         </StackPanel>
 
                         <StackPanel>
-                            <TextBlock Text="联系电话" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBlock Text="{DynamicResource Organization_ContactPhone}" FontWeight="SemiBold" Margin="0,0,0,8"/>
                             <TextBox 
                                 Text="{Binding ContactPhone}"
-                                Watermark="输入联系电话"
+                                Watermark="{DynamicResource Organization_ContactPhone_Watermark}"
                                 Height="48"
-                                FontSize="15"
                                 VerticalContentAlignment="Center"
                                 Padding="12,8"/>
                         </StackPanel>
 
                         <StackPanel>
-                            <TextBlock Text="班级" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBlock Text="{DynamicResource Organization_ClassName}" FontWeight="SemiBold" Margin="0,0,0,8"/>
                             <TextBox 
                                 Text="{Binding ClassName}"
-                                Watermark="例如：三年二班"
+                                Watermark="{DynamicResource Organization_ClassName_Watermark}"
                                 Height="48"
-                                FontSize="15"
                                 VerticalContentAlignment="Center"
                                 Padding="12,8"/>
                         </StackPanel>
 
                         <StackPanel>
-                            <TextBlock Text="负责人" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBlock Text="{DynamicResource Organization_PersonInCharge}" FontWeight="SemiBold" Margin="0,0,0,8"/>
                             <TextBox 
                                 Text="{Binding PersonInCharge}"
-                                Watermark="输入负责人姓名"
+                                Watermark="{DynamicResource Organization_PersonInCharge_Watermark}"
                                 Height="48"
-                                FontSize="15"
                                 VerticalContentAlignment="Center"
                                 Padding="12,8"/>
                         </StackPanel>
@@ -174,7 +166,6 @@
                                 Text="{Binding ErrorMessage}"
                                 Foreground="#a80000"
                                 TextWrapping="Wrap"
-                                FontSize="14"
                                 IsVisible="{Binding HasError}"
                                 Margin="0,8,0,0"/>
 
@@ -182,58 +173,54 @@
                                 Text="{Binding SuccessMessage}"
                                 Foreground="#008000"
                                 TextWrapping="Wrap"
-                                FontSize="14"
                                 IsVisible="{Binding HasSuccess}"
                                 Margin="0,8,0,0"/>
 
                             <Button 
-                                Content="加入组织" 
+                                Content="{DynamicResource Organization_JoinOrganization}" 
                                 Command="{Binding JoinOrganizationCommand}"
                                 Classes="accent"
                                 Padding="32,12"
-                                FontSize="16"
                                 HorizontalAlignment="Left"
                                 MinWidth="160"
                                 IsEnabled="{Binding !IsLoading}"/>
                     </StackPanel>
                     
-                    <icons:Icon Grid.Column="1" Value="fas fa-user-plus" Width="120" Height="120" 
+                    <fluent:SymbolIcon Grid.Column="1" Symbol="PersonAdd" Width="120" Height="120" 
                                 Opacity="0.05" VerticalAlignment="Top" Margin="0,20,20,0"/>
                 </Grid>
             </Border>
 
-            <!-- 加载状态 -->
             <Border 
                 IsVisible="{Binding IsLoading}"
                 Background="{DynamicResource SystemControlBackgroundListLowBrush}"
                 CornerRadius="12" Padding="24">
                 <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
                     <ProgressBar IsIndeterminate="True" Width="24" Height="24"/>
-                    <TextBlock Text="正在处理，请稍候..." FontSize="15" VerticalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Organization_Processing}" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>
 
-            <!-- 说明信息 -->
             <Border 
                 Background="{DynamicResource SystemControlBackgroundListLowBrush}"
                 CornerRadius="12" Padding="24">
                 <StackPanel Spacing="12">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                        <icons:Icon Value="fas fa-info-circle" Foreground="{DynamicResource SystemControlBackgroundAccentBrush}" Width="20" Height="20" VerticalAlignment="Center"/>
-                        <TextBlock Text="使用说明" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <fluent:SymbolIcon Symbol="Info" Foreground="{DynamicResource SystemControlBackgroundAccentBrush}" Width="20" Height="20" VerticalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource Organization_Usage_Title}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     </Grid>
                     <StackPanel Spacing="8" Margin="8,0,0,0">
                         <TextBlock 
-                            Text="• 加入组织后，软件将在每次启动时自动从服务器获取安全中心配置和网络拦截配置"
+                            Text="{DynamicResource Organization_Usage_1}"
                             TextWrapping="Wrap"/>
                         <TextBlock 
-                            Text="• 配置会自动应用到本地，无需手动操作"
+                            Text="{DynamicResource Organization_Usage_2}"
                             TextWrapping="Wrap"/>
                         <TextBlock 
-                            Text="• 可以点击「同步配置」按钮手动更新配置"
+                            Text="{DynamicResource Organization_Usage_3}"
                             TextWrapping="Wrap"/>
                         <TextBlock 
-                            Text="• 退出组织后，所有配置将恢复为本地设置"
+                            Text="{DynamicResource Organization_Usage_4}"
                             TextWrapping="Wrap"/>
                     </StackPanel>
                 </StackPanel>

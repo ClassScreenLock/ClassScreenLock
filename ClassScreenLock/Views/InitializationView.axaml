@@ -7,7 +7,7 @@
              xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
              xmlns:ctrls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls"
              xmlns:animations="clr-namespace:Avalonia.Animation;assembly=Avalonia.Animation"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
              xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="ClassScreenLock.Views.InitializationView"
@@ -24,7 +24,7 @@
                 <Grid ColumnDefinitions="* , Auto, Auto">
                     <StackPanel Grid.Column="0">
                         <TextBlock Text="{DynamicResource Initialization_Title}" FontSize="26" FontWeight="SemiBold"/>
-                        <TextBlock Text="{DynamicResource Initialization_Subtitle}" FontSize="14" Opacity="0.7"/>
+                        <TextBlock Text="{DynamicResource Initialization_Subtitle}" Opacity="0.7"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
                         <TextBlock Text="{DynamicResource Initialization_Steps}"/>
@@ -50,7 +50,7 @@
                                     <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="12" Padding="20">
                                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                                             <Border Width="44" Height="44" CornerRadius="8" Background="{DynamicResource SystemControlBackgroundAccentBrush}">
-                                                <icons:Icon Value="fa-solid fa-handshake" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <fluent:SymbolIcon Symbol="Handshake" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
                                             <StackPanel Grid.Column="1" Spacing="4">
                                                 <TextBlock Text="欢迎使用 ClassScreenLock" FontSize="20" FontWeight="SemiBold"/>
@@ -66,7 +66,7 @@
                                         <Border Background="{DynamicResource SystemControlBackgroundListLowBrush}" CornerRadius="8" Padding="16" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1">
                                             <StackPanel Spacing="12">
                                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                                    <icons:Icon Value="fa-solid fa-circle-info" Foreground="{DynamicResource SystemControlBackgroundAccentBrush}" Width="16" Height="16" VerticalAlignment="Center"/>
+                                                    <fluent:SymbolIcon Symbol="Info" FontSize="16" VerticalAlignment="Center"/>
                                                     <TextBlock Grid.Column="1" Text="请阅读并同意用户协议与隐私政策以继续：" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                                 </Grid>
                                                 
@@ -78,7 +78,7 @@
                                                         BorderThickness="0">
                                                     <StackPanel Orientation="Horizontal" Spacing="4">
                                                         <TextBlock Text="查看用户协议与隐私政策" Foreground="{DynamicResource SystemControlBackgroundAccentBrush}" TextDecorations="Underline"/>
-                                                        <icons:Icon Value="fa-solid fa-arrow-up-right-from-square" FontSize="10" Foreground="{DynamicResource SystemControlBackgroundAccentBrush}" VerticalAlignment="Center"/>
+                                                        <fluent:SymbolIcon Symbol="ArrowSquareUpRight" FontSize="10" VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Button>
                                             </StackPanel>
@@ -97,7 +97,6 @@
                                 </StackPanel>
                                 <Border Classes="card" Padding="24" Margin="0,0,0,8">
                                     <StackPanel Orientation="Horizontal" Spacing="32" HorizontalAlignment="Center">
-                                        <ToggleSwitch Content="{DynamicResource Settings_Startup}" IsChecked="{Binding AutoStart}"/>
                                         <ToggleSwitch Content="{DynamicResource Settings_DarkMode}" IsChecked="{Binding DarkMode}"/>
                                         <ToggleSwitch Content="{DynamicResource Settings_UseSystemAccentColor}" IsChecked="{Binding UseSystemAccentColor}"/>
                                     </StackPanel>
@@ -133,15 +132,15 @@
                                 </StackPanel>
                                 <Border Classes="card" Padding="24">
                                     <StackPanel Orientation="Horizontal" Spacing="32" HorizontalAlignment="Center">
-                                        <StackPanel Width="300" Spacing="8">
-                                            <TextBlock Text="{DynamicResource Settings_FontSize}"/>
-                                            <NumericUpDown Minimum="10" Maximum="32" Value="{Binding FontSize}" HorizontalAlignment="Stretch"/>
+                                            <StackPanel Width="300" Spacing="8">
+                                                <TextBlock Text="{DynamicResource Settings_FontSize}"/>
+                                                <NumericUpDown Minimum="10" Maximum="32" Value="{Binding FontSize}" HorizontalAlignment="Stretch"/>
+                                            </StackPanel>
+                                            <StackPanel Width="300" Spacing="8">
+                                                <TextBlock Text="{DynamicResource Settings_FontFamily}"/>
+                                                <TextBox Text="{Binding FontFamily}" Watermark="{DynamicResource Init_FontFamily_Watermark}" HorizontalAlignment="Stretch"/>
+                                            </StackPanel>
                                         </StackPanel>
-                                        <StackPanel Width="300" Spacing="8">
-                                            <TextBlock Text="{DynamicResource Settings_FontFamily}"/>
-                                            <TextBox Text="{Binding FontFamily}" Watermark="{DynamicResource Init_FontFamily_Watermark}"/>
-                                        </StackPanel>
-                                    </StackPanel>
                                 </Border>
                                 <Border Classes="card" Padding="24">
                                     <ToggleSwitch Content="{DynamicResource Settings_ShowNotifications}" IsChecked="{Binding ShowNotifications}" HorizontalAlignment="Center"/>
@@ -159,8 +158,8 @@
                                 <Border Classes="card" Padding="24">
                                     <StackPanel Spacing="16">
                                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                            <icons:Icon Value="fa-solid fa-desktop" FontSize="20"/>
-                                            <TextBlock Text="屏幕截图设置" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Desktop" FontSize="20"/>
+                                            <TextBlock Text="屏幕截图设置" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,8,0,0">
                                             <ToggleSwitch Grid.Row="0" Grid.Column="0" Content="上课期间启用屏幕截图" IsChecked="{Binding EnableClassScreenshot}"/>
@@ -181,8 +180,8 @@
                                 <Border Classes="card" Padding="24">
                                     <StackPanel Spacing="16">
                                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                            <icons:Icon Value="fa-solid fa-camera" FontSize="20"/>
-                                            <TextBlock Text="摄像头拍照设置" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"/>
+                                            <fluent:SymbolIcon Symbol="Camera" FontSize="20"/>
+                                            <TextBlock Text="摄像头拍照设置" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="选择摄像头"/>
@@ -231,8 +230,8 @@
                                         </StackPanel>
                                         <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" CornerRadius="4" Padding="12">
                                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                                <icons:Icon Value="fa-solid fa-circle-info" VerticalAlignment="Center" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
-                                                <TextBlock Text="{DynamicResource Init_2FA_BindingTip}" FontSize="12" Opacity="0.8" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                                <fluent:SymbolIcon Symbol="Info" VerticalAlignment="Center" FontSize="16"/>
+                                                <TextBlock Text="{DynamicResource Init_2FA_BindingTip}" Opacity="0.8" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Border>
                                     </StackPanel>
@@ -262,7 +261,7 @@
                                             <TextBlock Text="{DynamicResource Account_ConfirmPassword}"/>
                                             <TextBox Text="{Binding ConfirmPassword}" PasswordChar="●" Watermark="{DynamicResource Init_ConfirmPassword_Watermark}" Classes="clear"/>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding ValidationMessage}" FontSize="12" Foreground="#E81123" TextWrapping="Wrap" IsVisible="{Binding !!ValidationMessage}"/>
+                                        <TextBlock Text="{Binding ValidationMessage}" Foreground="#E81123" TextWrapping="Wrap" IsVisible="{Binding !!ValidationMessage}"/>
                                     </StackPanel>
                                 </Border>
                                 
@@ -292,7 +291,7 @@
                                          </MultiBinding>
                                      </Border.IsVisible>
                                     <StackPanel Spacing="16" HorizontalAlignment="Center">
-                                        <icons:Icon Value="fa-solid fa-check-circle" FontSize="48" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center"/>
+                                        <fluent:SymbolIcon Symbol="CheckmarkCircle" FontSize="48" HorizontalAlignment="Center"/>
                                         <TextBlock Text="管理员账户已配置" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                                         <TextBlock Text="您已完成管理员账户设置，可以继续下一步。" Opacity="0.7" HorizontalAlignment="Center"/>
                                     </StackPanel>
@@ -308,7 +307,7 @@
                                 </StackPanel>
                                 <Border Classes="card" Padding="32">
                                     <StackPanel Spacing="24">
-                                        <Border CornerRadius="8" Background="White" Padding="16" HorizontalAlignment="Center" BoxShadow="0 4 12 0 #20000000">
+                                        <Border CornerRadius="8" Background="{DynamicResource SystemControlBackgroundAltHighBrush}" Padding="16" HorizontalAlignment="Center" BoxShadow="0 4 12 0 #20000000">
                                             <Image Source="{Binding QrCodeBitmap}" Width="200" Height="200"/>
                                         </Border>
                                         
@@ -326,7 +325,7 @@
                                         
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="{DynamicResource Init_TwoFactorCode}" FontWeight="SemiBold"/>
-                                            <TextBox Text="{Binding TwoFactorInputCode}" Watermark="{DynamicResource Init_TwoFactorCode_Watermark}" Classes="clear" FontSize="18" HorizontalContentAlignment="Center"/>
+                                            <TextBox Text="{Binding TwoFactorInputCode}" Watermark="{DynamicResource Init_TwoFactorCode_Watermark}" Classes="clear" HorizontalContentAlignment="Center" Width="200"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -366,7 +365,7 @@
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="{DynamicResource Init_BlockDomains_Label}" FontWeight="SemiBold"/>
                                             <TextBox Text="{Binding NetworkDomainsText}" Watermark="{DynamicResource Init_BlockDomains_Watermark}" Height="100" AcceptsReturn="True" TextWrapping="Wrap"/>
-                                            <TextBlock Text="{DynamicResource Init_ApplyRulesNextStep_Tip}" FontSize="12" Opacity="0.7"/>
+                                            <TextBlock Text="{DynamicResource Init_ApplyRulesNextStep_Tip}" Opacity="0.7"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -380,13 +379,13 @@
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
                         <Button Command="{Binding OpenRepositoryCommand}" Classes="outline">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icons:Icon Value="fab fa-github" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="Code" FontSize="16"/>
                                 <TextBlock Text="{DynamicResource About_Repository}"/>
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding OpenUserAgreementCommand}" Classes="outline">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icons:Icon Value="fas fa-file-contract" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="Document" FontSize="16"/>
                                 <TextBlock Text="{DynamicResource About_UserAgreement}"/>
                             </StackPanel>
                         </Button>
@@ -456,7 +455,7 @@
                                     </Style>
                                 </TextBlock.Styles>
                             </TextBlock>
-                            <TextBlock Text="正在准备配置引导，请稍后..." FontSize="18" Opacity="0.8" HorizontalAlignment="Center">
+                            <TextBlock Text="正在准备配置引导，请稍后..." Opacity="0.8" HorizontalAlignment="Center">
                                 <TextBlock.Styles>
                                     <Style Selector="TextBlock">
                                         <Style.Animations>

@@ -8,6 +8,7 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using ClassScreenLock.Helpers;
+using ClassScreenLock.Services;
 
 namespace ClassScreenLock;
 
@@ -93,15 +94,6 @@ sealed class Program
 
         try
         {
-            // 启用进程保护
-            ProcessProtector.EnableProtection();
-            
-            // 启动看门狗进程（仅在非重启时启动）
-            if (!isRestart)
-            {
-                StartWatchdogProcess();
-            }
-
             // 全局未处理异常捕获
             AppDomain.CurrentDomain.UnhandledException += (s, e) => 
             {
@@ -143,7 +135,7 @@ sealed class Program
         }
     }
 
-    private static void StartWatchdogProcess()
+    public static void StartWatchdogProcess()
     {
         try
         {

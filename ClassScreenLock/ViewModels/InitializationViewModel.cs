@@ -71,9 +71,6 @@ public partial class InitializationViewModel : ViewModelBase
     private int _passwordStrength;
 
     [ObservableProperty]
-    private bool _autoStart;
-
-    [ObservableProperty]
     private bool _darkMode;
 
     [ObservableProperty]
@@ -221,7 +218,6 @@ public partial class InitializationViewModel : ViewModelBase
         IsAgreementConnectionSuccessful = true;
 
         var general = SettingsService.General;
-        AutoStart = general.AutoStart;
         DarkMode = general.DarkMode;
         AccentColor = string.IsNullOrWhiteSpace(general.AccentColor) ? "#0078D4" : general.AccentColor;
         Language = string.IsNullOrWhiteSpace(general.Language) ? "zh-CN" : general.Language;
@@ -344,12 +340,6 @@ public partial class InitializationViewModel : ViewModelBase
         NotificationService.Instance.UpdateNotificationSettings(value);
     }
 
-    partial void OnAutoStartChanged(bool value)
-    {
-        SettingsService.UpdateGeneral(s => s.AutoStart = value);
-        SetAutoStart(value);
-    }
-
     partial void OnLanguageChanged(string value)
     {
         SettingsService.UpdateGeneral(s => s.Language = value);
@@ -400,7 +390,6 @@ public partial class InitializationViewModel : ViewModelBase
                 }
                 SettingsService.UpdateGeneral(s =>
                 {
-                    s.AutoStart = AutoStart;
                     s.DarkMode = DarkMode;
                     s.AccentColor = AccentColor;
                     s.Language = Language;
@@ -796,11 +785,6 @@ public partial class InitializationViewModel : ViewModelBase
         catch
         {
         }
-    }
-
-    private void SetAutoStart(bool enable)
-    {
-        ClassScreenLock.Helpers.AutoStartHelper.SetAutoStart(enable);
     }
 
     [ObservableProperty]

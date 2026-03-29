@@ -1,0 +1,120 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ClassScreenLock.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="ClassScreenLock.Views.ServiceManagementView"
+             x:DataType="vm:ServiceManagementViewModel">
+
+    <ScrollViewer>
+        <StackPanel Margin="20" Spacing="20">
+            <TextBlock Text="Windows 服务管理" 
+                      Width="24" Height="24" 
+                      FontWeight="Bold" 
+                      Margin="0,0,0,10"/>
+
+            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                   CornerRadius="8"
+                   Padding="16"
+                   Margin="0,0,0,16">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="服务状态" 
+                              Width="18" Height="18" 
+                              FontWeight="SemiBold"/>
+                    
+                    <StackPanel Orientation="Horizontal" Spacing="20">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Width="12" Height="12" 
+                                    Fill="{Binding LockScreenServiceRunning, Converter={StaticResource BoolToBrushConverter}}"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Text="锁屏服务" 
+                                      VerticalAlignment="Center"/>
+                            <TextBlock VerticalAlignment="Center">
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource StringFormatConverter}" ConverterParameter="{}{0} - {1}">
+                                        <Binding Path="LockScreenServiceInstalled" Converter="{StaticResource BoolToStringConverter}" ConverterParameter="已安装|未安装"/>
+                                        <Binding Path="LockScreenServiceRunning" Converter="{StaticResource BoolToStringConverter}" ConverterParameter="运行中|已停止"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Width="12" Height="12" 
+                                    Fill="{Binding MonitorServiceRunning, Converter={StaticResource BoolToBrushConverter}}"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Text="监控服务" 
+                                      VerticalAlignment="Center"/>
+                            <TextBlock VerticalAlignment="Center">
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource StringFormatConverter}" ConverterParameter="{}{0} - {1}">
+                                        <Binding Path="MonitorServiceInstalled" Converter="{StaticResource BoolToStringConverter}" ConverterParameter="已安装|未安装"/>
+                                        <Binding Path="MonitorServiceRunning" Converter="{StaticResource BoolToStringConverter}" ConverterParameter="运行中|已停止"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding ServiceStatusText}" 
+                              FontStyle="Italic"
+                              Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                   CornerRadius="8"
+                   Padding="16">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="服务操作" 
+                              Width="18" Height="18" 
+                              FontWeight="SemiBold"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Content="安装服务" 
+                               Command="{Binding InstallServicesCommand}"
+                               IsEnabled="{Binding !IsBusy}"
+                               Classes="Accent"/>
+                        
+                        <Button Content="卸载服务" 
+                               Command="{Binding UninstallServicesCommand}"
+                               IsEnabled="{Binding !IsBusy}"/>
+                        
+                        <Button Content="重启服务" 
+                               Command="{Binding RestartServicesCommand}"
+                               IsEnabled="{Binding !IsBusy}"/>
+                        
+                        <Button Content="刷新状态" 
+                               Command="{Binding RefreshServiceStatusCommand}"
+                               IsEnabled="{Binding !IsBusy}"/>
+                    </StackPanel>
+
+                    <CheckBox Content="随系统自动启动服务" 
+                             IsChecked="{Binding AutoStartServices}"
+                             Margin="0,8,0,0"/>
+
+                    <TextBlock Text="说明" 
+                              FontWeight="SemiBold"
+                              Margin="0,8,0,4"/>
+                    
+                    <TextBlock Text="• 锁屏服务：负责管理锁屏界面，确保在用户注销或系统重启后自动恢复" 
+                              TextWrapping="Wrap"
+                              Width="13" Height="13"/>
+                    
+                    <TextBlock Text="• 监控服务：每 30 秒检查锁屏服务状态，发现停止则自动重启" 
+                              TextWrapping="Wrap"
+                              Width="13" Height="13"/>
+                    
+                    <TextBlock Text="• 两个服务均配置了 Windows 服务恢复选项：第一次失败 1 分钟后重启，第二次失败 2 分钟后重启，后续失败 5 分钟后重启" 
+                              TextWrapping="Wrap"
+                              Width="13" Height="13"/>
+                    
+                    <TextBlock Text="• 服务以 LocalSystem 账户运行，具有系统级权限" 
+                              TextWrapping="Wrap"
+                              Width="13" Height="13"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

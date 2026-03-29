@@ -1,10 +1,11 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
              xmlns:m="clr-namespace:ClassScreenLock.Models"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="ClassScreenLock.Views.AutomationView"
              x:DataType="vm:AutomationViewModel"
@@ -42,7 +43,7 @@
                     <StackPanel Spacing="8">
                         <Button Command="{Binding AddWorkflowCommand}" HorizontalAlignment="Stretch" Classes="accent" Height="40">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icons:Icon Value="fas fa-plus"/>
+                                <fluent:SymbolIcon Symbol="Add"/>
                                 <TextBlock Text="{DynamicResource Automation_AddWorkflow}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -63,7 +64,7 @@
                             <Border Padding="12,12" CornerRadius="4">
                                 <Grid ColumnDefinitions="Auto,*,Auto">
                                     <Border Grid.Column="0" Width="32" Height="32" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" Margin="0,0,12,0">
-                                        <icons:Icon Value="fas fa-bolt" Foreground="{DynamicResource SystemAccentColor}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        <fluent:SymbolIcon Symbol="Flash" Foreground="{DynamicResource SystemAccentColor}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </Border>
                                     
                                     <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
@@ -79,18 +80,18 @@
 
                 <Border Grid.Row="2" Padding="16">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="操作" Classes="caption" Opacity="0.5" Margin="4,0"/>
+                        <TextBlock Text="{DynamicResource Automation_Operations}" Classes="caption" Opacity="0.5" Margin="4,0"/>
                         <Grid ColumnDefinitions="*,*">
                             <Button Grid.Column="0" Command="{Binding DuplicateWorkflowCommand}" HorizontalAlignment="Stretch" Margin="0,0,4,0" Height="36" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <icons:Icon Value="fas fa-copy"/>
-                                    <TextBlock Text="复制" VerticalAlignment="Center"/>
+                                    <fluent:SymbolIcon Symbol="Copy"/>
+                                    <TextBlock Text="{DynamicResource Automation_Duplicate}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                             <Button Grid.Column="1" Command="{Binding DeleteWorkflowCommand}" HorizontalAlignment="Stretch" Classes="danger" Margin="4,0,0,0" Height="36">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <icons:Icon Value="fas fa-trash"/>
-                                    <TextBlock Text="删除" VerticalAlignment="Center"/>
+                                    <fluent:SymbolIcon Symbol="Delete"/>
+                                    <TextBlock Text="{DynamicResource Automation_Delete}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -130,24 +131,24 @@
                     <!-- 顶部方案管理区块（与配置风格不同） -->
                     <Border Classes="Card" Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
                         <StackPanel Spacing="12">
-                            <TextBlock Text="方案管理" Classes="SectionHeader"/>
-                            <TextBlock Text="在当前配置下切换或新增方案；左侧将按方案过滤工作流" Classes="caption" Opacity="0.6"/>
+                            <TextBlock Text="{DynamicResource Automation_SchemeManagement}" Classes="SectionHeader"/>
+                            <TextBlock Text="{DynamicResource Automation_SchemeManagement_Description}" Classes="caption" Opacity="0.6"/>
                             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="当前方案" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Automation_CurrentScheme}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                 <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding AvailableSchemes}" SelectedItem="{Binding CurrentAutomationScheme, Mode=TwoWay}" Width="220"/>
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="新增方案" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource Automation_NewScheme}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left">
-                                    <TextBox Text="{Binding NewSchemeName}" Watermark="方案名称" Width="180"/>
+                                    <TextBox Text="{Binding NewSchemeName}" Watermark="{DynamicResource Automation_SchemeName_Watermark}" Width="180"/>
                                     <Button Command="{Binding AddSchemeCommand}" Classes="accent" Padding="12,6">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <icons:Icon Value="fas fa-plus"/>
-                                            <TextBlock Text="添加方案"/>
+                                            <fluent:SymbolIcon Symbol="Add"/>
+                                            <TextBlock Text="{DynamicResource Automation_AddScheme}"/>
                                         </StackPanel>
                                     </Button>
                                     <Button Command="{Binding RemoveSchemeCommand}" CommandParameter="{Binding CurrentAutomationScheme}" Classes="danger" Padding="12,6">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <icons:Icon Value="fas fa-trash"/>
-                                            <TextBlock Text="删除当前方案"/>
+                                            <fluent:SymbolIcon Symbol="Delete"/>
+                                            <TextBlock Text="{DynamicResource Automation_DeleteCurrentScheme}"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -162,11 +163,11 @@
                                     <!-- 基本信息 -->
                                     <Border Classes="Card">
                                         <StackPanel Spacing="16">
-                                            <TextBlock Text="基本设置" Classes="SectionHeader"/>
+                                            <TextBlock Text="{DynamicResource Automation_BasicSettings}" Classes="SectionHeader"/>
                                             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" HorizontalAlignment="Stretch">
                                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Automation_Name}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                                 <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" MaxWidth="360" HorizontalAlignment="Left"/>
-                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="总触发次数" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource Automation_TriggerCount}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                                 <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TriggerCount}" VerticalAlignment="Center"/>
                                             </Grid>
                                         </StackPanel>
@@ -178,65 +179,65 @@
                                             <Grid ColumnDefinitions="*,Auto,Auto">
                                                 <TextBlock Text="{DynamicResource Automation_TriggerSection}" Classes="SectionHeader"/>
                                                 <Menu Grid.Column="1" Background="Transparent">
-                                                    <MenuItem Header="添加触发器" Classes="accent">
+                                                    <MenuItem Header="{DynamicResource Automation_AddTrigger}" Classes="accent">
                                                         <MenuItem.Icon>
-                                                            <icons:Icon Value="fas fa-plus"/>
+                                                            <fluent:SymbolIcon Symbol="Add"/>
                                                         </MenuItem.Icon>
-                                                        <MenuItem Header="每日时间" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="DailyTime">
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_DailyTime}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="DailyTime">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-clock"/>
+                                                                <fluent:SymbolIcon Symbol="Clock"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="循环间隔" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="Interval">
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_Interval}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="Interval">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-redo"/>
+                                                                <fluent:SymbolIcon Symbol="ArrowSync"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="启动程序时" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="OnStartup">
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_OnStartup}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="OnStartup">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-power-off"/>
+                                                                <fluent:SymbolIcon Symbol="Power"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                    <MenuItem Header="运行特定程序时" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="ProcessRunning">
+                                                    <MenuItem Header="{DynamicResource Automation_Trigger_ProcessRunning}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="ProcessRunning">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-window-restore"/>
+                                                                <fluent:SymbolIcon Symbol="Apps"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                    <MenuItem Header="程序正在运行" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="ProcessRunning">
+                                                    <MenuItem Header="{DynamicResource Automation_Trigger_ProcessRunning}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="ProcessRunning">
                                                         <MenuItem.Icon>
-                                                            <icons:Icon Value="fas fa-window-restore"/>
+                                                            <fluent:SymbolIcon Symbol="Apps"/>
                                                         </MenuItem.Icon>
                                                     </MenuItem>
-                                                        <MenuItem Header="进程未运行时" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="ProcessNotRunning">
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_ProcessNotRunning}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="ProcessNotRunning">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-window-minimize"/>
+                                                                <fluent:SymbolIcon Symbol="Folder"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="网络可用时" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="NetworkAvailable">
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_NetworkAvailable}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="NetworkAvailable">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-wifi"/>
+                                                                <fluent:SymbolIcon Symbol="Globe"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="网络不可用时" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="NetworkUnavailable">
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_NetworkUnavailable}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="NetworkUnavailable">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-wifi"/>
+                                                                <fluent:SymbolIcon Symbol="Globe"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="文件存在时" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="FileExists">
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_FileExists}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="FileExists">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-file"/>
+                                                                <fluent:SymbolIcon Symbol="Document"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
                                                     </MenuItem>
                                                 </Menu>
                                                 <Button Grid.Column="2" Command="{Binding $parent[UserControl].DataContext.RunAutomationCheckCommand}" Classes="accent" Padding="12,6">
                                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                                        <icons:Icon Value="fas fa-play"/>
-                                                        <TextBlock Text="立即检测"/>
+                                                        <fluent:SymbolIcon Symbol="Play"/>
+                                                        <TextBlock Text="{DynamicResource Automation_CheckNow}"/>
                                                     </StackPanel>
                                                 </Button>
                                             </Grid>
-                                            <TextBlock Text="说明：满足任一触发器时，将继续校验条件" Opacity="0.6"/>
+                                            <TextBlock Text="{DynamicResource Automation_TriggerDescription}" Opacity="0.6"/>
 
                                             <ItemsControl ItemsSource="{Binding Triggers}">
                                                 <ItemsControl.ItemTemplate>
@@ -244,14 +245,14 @@
                                                         <Border Background="{DynamicResource SystemControlBackgroundChromeLowBrush}" CornerRadius="6" Padding="12,8" Margin="0,0,0,8">
                                                             <Grid ColumnDefinitions="Auto,*,36">
                                                                     <Panel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center" Width="20">
-                                                                    <icons:Icon Value="fas fa-clock" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}"/>
-                                                                    <icons:Icon Value="fas fa-redo" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}"/>
-                                                                    <icons:Icon Value="fas fa-power-off" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
-                                                                    <icons:Icon Value="fas fa-window-restore" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
-                                                                        <icons:Icon Value="fas fa-window-minimize" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}"/>
-                                                                        <icons:Icon Value="fas fa-wifi" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
-                                                                        <icons:Icon Value="fas fa-wifi" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
-                                                                        <icons:Icon Value="fas fa-file" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
+                                                                    <fluent:SymbolIcon Symbol="Clock" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}"/>
+                                                                    <fluent:SymbolIcon Symbol="ArrowSync" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}"/>
+                                                                    <fluent:SymbolIcon Symbol="Power" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
+                                                                    <fluent:SymbolIcon Symbol="Apps" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
+                                                                        <fluent:SymbolIcon Symbol="Folder" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}"/>
+                                                                        <fluent:SymbolIcon Symbol="Globe" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
+                                                                        <fluent:SymbolIcon Symbol="Globe" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
+                                                                        <fluent:SymbolIcon Symbol="Document" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
                                                                 </Panel>
                                                                 <Grid Grid.Column="1" ColumnDefinitions="Auto,*" VerticalAlignment="Center" Margin="0,0,12,0" HorizontalAlignment="Left">
                                                                     <ComboBox SelectedItem="{Binding Type}" Width="130" Margin="0,0,12,0" VerticalAlignment="Center">
@@ -259,24 +260,24 @@
                                                                             <DataTemplate>
                                                                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                                                                     <Panel Width="16">
-                                                                                        <icons:Icon Value="fas fa-clock" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}"/>
-                                                                                        <icons:Icon Value="fas fa-redo" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}"/>
-                                                                                        <icons:Icon Value="fas fa-power-off" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
-                                                                                        <icons:Icon Value="fas fa-window-restore" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
-                                                                                        <icons:Icon Value="fas fa-window-minimize" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}"/>
-                                                                                        <icons:Icon Value="fas fa-wifi" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
-                                                                                        <icons:Icon Value="fas fa-wifi" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
-                                                                                        <icons:Icon Value="fas fa-file" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Clock" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}"/>
+                                                                                        <fluent:SymbolIcon Symbol="ArrowSync" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Power" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Apps" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Folder" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Globe" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Globe" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Document" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
                                                                                     </Panel>
                                                                                     <Panel>
-                                                                                        <TextBlock Text="每日时间" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}"/>
-                                                                                        <TextBlock Text="循环间隔" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}"/>
-                                                                                        <TextBlock Text="程序启动" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
-                                                                                        <TextBlock Text="程序运行" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
-                                                                                        <TextBlock Text="进程未运行" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}"/>
-                                                                                        <TextBlock Text="网络可用" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
-                                                                                        <TextBlock Text="网络不可用" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
-                                                                                        <TextBlock Text="文件存在" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_DailyTime}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_Interval}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_OnStartup}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_ProcessRunning}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_ProcessNotRunning}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_NetworkAvailable}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_NetworkUnavailable}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_FileExists}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
                                                                                     </Panel>
                                                                                 </StackPanel>
                                                                             </DataTemplate>
@@ -296,7 +297,7 @@
                                                                         <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}">
                                                                             <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableHours}"
                                                                                       SelectedItem="{Binding Hour}" Width="65"/>
-                                                                            <TextBlock Text="时" VerticalAlignment="Center" Classes="caption"/>
+                                                                            <TextBlock Text="{DynamicResource Automation_Time_Hour}" VerticalAlignment="Center" Classes="caption"/>
                                                                             <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableMinutes}"
                                                                                       SelectedItem="{Binding Minute}" Width="65">
                                                                                 <ComboBox.ItemTemplate>
@@ -305,46 +306,46 @@
                                                                                     </DataTemplate>
                                                                                 </ComboBox.ItemTemplate>
                                                                             </ComboBox>
-                                                                            <TextBlock Text="分" VerticalAlignment="Center" Classes="caption"/>
+                                                                            <TextBlock Text="{DynamicResource Automation_Time_Minute}" VerticalAlignment="Center" Classes="caption"/>
                                                                         </StackPanel>
-                                                                        
+                                                                         
                                                                         <!-- 间隔分钟输入 -->
                                                                         <StackPanel Orientation="Horizontal" Spacing="8" 
                                                                                     IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}">
                                                                             <NumericUpDown Value="{Binding IntervalMinutes}" Minimum="1" Maximum="1440" Width="120"/>
-                                                                            <TextBlock Text="分钟" VerticalAlignment="Center" Classes="caption"/>
+                                                                            <TextBlock Text="{DynamicResource Automation_Time_Minutes}" VerticalAlignment="Center" Classes="caption"/>
                                                                         </StackPanel>
-                                                                        
-                                                                        <TextBlock Text="程序启动时立即执行" VerticalAlignment="Center" Opacity="0.6"
+                                                                         
+                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_OnStartup_Description}" VerticalAlignment="Center" Opacity="0.6"
                                                                                    IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
 
                                                                         <!-- 运行特定程序编辑：输入 + 浏览 + 筛选列表 -->
                                                                         <StackPanel Orientation="Vertical" Spacing="6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}">
                                                                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                                <TextBlock Text="检查间隔(秒)" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                                <TextBlock Text="{DynamicResource Automation_CheckInterval_Seconds}" VerticalAlignment="Center" Opacity="0.6"/>
                                                                                 <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableCheckIntervals}"
                                                                                           SelectedItem="{Binding CheckIntervalSeconds, Mode=TwoWay}"
                                                                                           Width="140">
                                                                                     <ComboBox.ItemTemplate>
                                                                                         <DataTemplate>
-                                                                                            <TextBlock Text="{Binding StringFormat={}{0} 秒}"/>
+                                                                                            <TextBlock Text="{Binding StringFormat={}{0} {DynamicResource Automation_Time_Seconds}}"/>
                                                                                         </DataTemplate>
                                                                                     </ComboBox.ItemTemplate>
                                                                                 </ComboBox>
                                                                             </StackPanel>
                                                                             <WrapPanel>
-                                                                                <TextBlock Text="进程运行中" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,8"/>
-                                                                                <TextBox x:Name="TriggerFilterBox" Text="{Binding $parent[UserControl].DataContext.ProcessFilterText}" Watermark="输入进程关键字（智能匹配）" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                                <TextBlock Text="{DynamicResource Automation_Trigger_ProcessRunning_Description}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,8"/>
+                                                                                <TextBox x:Name="TriggerFilterBox" Text="{Binding $parent[UserControl].DataContext.ProcessFilterText}" Watermark="{DynamicResource Automation_ProcessFilter_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
                                                                                 <Button Command="{Binding $parent[UserControl].DataContext.RefreshProcessesCommand}" Padding="12,6" Margin="0,0,8,8">
                                                                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                                                                        <icons:Icon Value="fas fa-rotate"/>
-                                                                                        <TextBlock Text="刷新"/>
+                                                                                        <fluent:SymbolIcon Symbol="ArrowSync"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Refresh}"/>
                                                                                     </StackPanel>
                                                                                 </Button>
                                                                                 <Button Command="{Binding $parent[UserControl].DataContext.UseFilterTextForTriggerCommand}" CommandParameter="{Binding}" Padding="12,6" Margin="0,0,8,8">
                                                                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                                                                        <icons:Icon Value="fas fa-check"/>
-                                                                                        <TextBlock Text="填入"/>
+                                                                                        <fluent:SymbolIcon Symbol="Checkmark"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Fill}"/>
                                                                                     </StackPanel>
                                                                                 </Button>
                                                                             </WrapPanel>
@@ -355,7 +356,7 @@
                                                                                         <ListBox.ItemTemplate>
                                                                                             <DataTemplate>
                                                                                                 <Grid ColumnDefinitions="Auto,*" Margin="0,2" Tapped="OnTriggerSuggestionTapped">
-                                                                                                    <icons:Icon Grid.Column="0" Value="{Binding Icon}"/>
+                                                                                                    <fluent:SymbolIcon Grid.Column="0" Symbol="{Binding Icon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"/>
                                                                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                                                                                                         <TextBlock Text="{Binding Name}"/>
                                                                                                         <TextBlock Text="{Binding Path}" Classes="caption" Opacity="0.6" TextTrimming="CharacterEllipsis"/>
@@ -367,14 +368,14 @@
                                                                                 </Border>
                                                                             </Popup>
                                                                         <WrapPanel>
-                                                                            <TextBox Text="{Binding ProcessName}" Watermark="进程名称（可选）" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                            <TextBox Text="{Binding ProcessName}" Watermark="{DynamicResource Automation_ProcessName_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
                                                                         </WrapPanel>
                                                                             <WrapPanel>
-                                                                                <TextBox Text="{Binding FilePath}" Watermark="可执行文件路径（可选）" Width="360" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                                <TextBox Text="{Binding FilePath}" Watermark="{DynamicResource Automation_FilePath_Watermark}" Width="360" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
                                                                                 <Button Command="{Binding $parent[UserControl].DataContext.PickTriggerExeCommand}" CommandParameter="{Binding}" Padding="12,6" Classes="accent" Margin="0,0,8,8">
                                                                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                                                                        <icons:Icon Value="fas fa-folder-open"/>
-                                                                                        <TextBlock Text="浏览…"/>
+                                                                                        <fluent:SymbolIcon Symbol="FolderOpen"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Browse}"/>
                                                                                     </StackPanel>
                                                                                 </Button>
                                                                             </WrapPanel>
@@ -382,16 +383,16 @@
                                                                         <!-- 进程未运行（编辑）：输入 + 弹出建议 -->
                                                                         <StackPanel Orientation="Vertical" Spacing="6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}">
                                                                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                                <TextBlock Text="检查间隔(秒)" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                                <TextBlock Text="{DynamicResource Automation_CheckInterval_Seconds}" VerticalAlignment="Center" Opacity="0.6"/>
                                                                                 <NumericUpDown Value="{Binding CheckIntervalSeconds}" Minimum="1" Maximum="60" Width="120"/>
                                                                             </StackPanel>
                                                                             <WrapPanel>
-                                                                                <TextBlock Text="进程未运行" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,8"/>
-                                                                                <TextBox x:Name="NotRunningFilterBox" Text="{Binding $parent[UserControl].DataContext.ProcessFilterText}" Watermark="输入进程关键字（智能匹配）" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                                <TextBlock Text="{DynamicResource Automation_Trigger_ProcessNotRunning_Description}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,8"/>
+                                                                                <TextBox x:Name="NotRunningFilterBox" Text="{Binding $parent[UserControl].DataContext.ProcessFilterText}" Watermark="{DynamicResource Automation_ProcessFilter_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
                                                                                 <Button Command="{Binding $parent[UserControl].DataContext.RefreshProcessesCommand}" Padding="12,6" Margin="0,0,8,8">
                                                                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                                                                        <icons:Icon Value="fas fa-rotate"/>
-                                                                                        <TextBlock Text="刷新"/>
+                                                                                        <fluent:SymbolIcon Symbol="ArrowSync"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Refresh}"/>
                                                                                     </StackPanel>
                                                                                 </Button>
                                                                             </WrapPanel>
@@ -402,7 +403,7 @@
                                                                                         <ListBox.ItemTemplate>
                                                                                             <DataTemplate>
                                                                                                 <Grid ColumnDefinitions="Auto,*" Margin="0,2" Tapped="OnTriggerSuggestionTapped">
-                                                                                                    <icons:Icon Grid.Column="0" Value="{Binding Icon}"/>
+                                                                                                    <fluent:SymbolIcon Grid.Column="0" Symbol="{Binding Icon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"/>
                                                                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                                                                                                         <TextBlock Text="{Binding Name}"/>
                                                                                                         <TextBlock Text="{Binding Path}" Classes="caption" Opacity="0.6" TextTrimming="CharacterEllipsis"/>
@@ -414,30 +415,30 @@
                                                                                 </Border>
                                                                             </Popup>
                                                                             <WrapPanel>
-                                                                                <TextBox Text="{Binding ProcessName}" Watermark="进程名称（可选）" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                                <TextBox Text="{Binding ProcessName}" Watermark="{DynamicResource Automation_ProcessName_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
                                                                             </WrapPanel>
                                                                             <WrapPanel>
-                                                                                <TextBox Text="{Binding FilePath}" Watermark="可执行文件路径（可选）" Width="360" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                                <TextBox Text="{Binding FilePath}" Watermark="{DynamicResource Automation_FilePath_Watermark}" Width="360" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
                                                                                 <Button Command="{Binding $parent[UserControl].DataContext.PickTriggerExeCommand}" CommandParameter="{Binding}" Padding="12,6" Classes="accent" Margin="0,0,8,8">
                                                                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                                                                        <icons:Icon Value="fas fa-folder-open"/>
-                                                                                        <TextBlock Text="浏览…"/>
+                                                                                        <fluent:SymbolIcon Symbol="FolderOpen"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Browse}"/>
                                                                                     </StackPanel>
                                                                                 </Button>
                                                                             </WrapPanel>
                                                                         </StackPanel>
                                                                         <!-- 文件存在（编辑） -->
                                                                         <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}">
-                                                                            <TextBlock Text="文件存在" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
-                                                                            <TextBox Text="{Binding FilePath}" Watermark="文件路径" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                            <TextBlock Text="{DynamicResource Automation_Trigger_FileExists_Description}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                            <TextBox Text="{Binding FilePath}" Watermark="{DynamicResource Automation_FilePath_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left"/>
                                                                         </StackPanel>
                                                                         <!-- 网络可用/不可用提示 -->
-                                                                        <TextBlock Text="网络状态触发" VerticalAlignment="Center" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
-                                                                        <TextBlock Text="网络状态触发" VerticalAlignment="Center" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_Network_Description}" VerticalAlignment="Center" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_Network_Description}" VerticalAlignment="Center" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
                                                                     </Panel>
                                                                 </Grid>
                                                                 <Button Grid.Column="2" Command="{Binding $parent[UserControl].DataContext.RemoveTriggerCommand}" CommandParameter="{Binding}" Classes="danger" Padding="8,4" Width="32" Height="32">
-                                                                    <icons:Icon Value="fas fa-times"/>
+                                                                    <fluent:SymbolIcon Symbol="Dismiss"/>
                                                                 </Button>
                                                             </Grid>
                                                         </Border>
@@ -453,51 +454,51 @@
                                             <Grid ColumnDefinitions="*,Auto,Auto">
                                                 <TextBlock Text="{DynamicResource Automation_ConditionsSection}" Classes="SectionHeader"/>
                                                 <Menu Grid.Column="1" Background="Transparent">
-                                                    <MenuItem Header="添加条件">
+                                                    <MenuItem Header="{DynamicResource Automation_AddCondition}">
                                                         <MenuItem.Icon>
-                                                            <icons:Icon Value="fas fa-plus"/>
+                                                            <fluent:SymbolIcon Symbol="Add"/>
                                                         </MenuItem.Icon>
-                                                        <MenuItem Header="锁定状态" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="IsLocked">
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_IsLocked}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="IsLocked">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-lock"/>
+                                                                <fluent:SymbolIcon Symbol="LockClosed"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="时间范围" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="TimeRange">
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_TimeRange}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="TimeRange">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-calendar-days"/>
+                                                                <fluent:SymbolIcon Symbol="Calendar"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="指定星期" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="DayOfWeek">
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_DayOfWeek}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="DayOfWeek">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-calendar-week"/>
+                                                                <fluent:SymbolIcon Symbol="CalendarWeekNumbers"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
                                                         <Separator/>
-                                                        <MenuItem Header="应用拦截已启用" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="AppBlockingEnabled">
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_AppBlockingEnabled}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="AppBlockingEnabled">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-ban"/>
+                                                                <fluent:SymbolIcon Symbol="Prohibited"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="网络拦截已启用" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="NetworkLockEnabled">
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_NetworkLockEnabled}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="NetworkLockEnabled">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-shield-halved"/>
+                                                                <fluent:SymbolIcon Symbol="Shield"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="进程运行中" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="ProcessRunning">
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_ProcessRunning}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="ProcessRunning">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-window-restore"/>
+                                                                <fluent:SymbolIcon Symbol="Apps"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="文件存在" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="FileExists">
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_FileExists}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="FileExists">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-file"/>
+                                                                <fluent:SymbolIcon Symbol="Document"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
                                                     </MenuItem>
                                                 </Menu>
-                                                <ToggleSwitch Grid.Column="2" IsChecked="{Binding ConditionsEnabled}" OnContent="启用规则" OffContent="禁用规则"/>
+                                                <ToggleSwitch Grid.Column="2" IsChecked="{Binding ConditionsEnabled}" OnContent="{DynamicResource Automation_Conditions_Enable}" OffContent="{DynamicResource Automation_Conditions_Disable}"/>
                                             </Grid>
-                                            <TextBlock Text="说明：启用条件后需全部满足才会执行操作" Opacity="0.6"/>
+                                            <TextBlock Text="{DynamicResource Automation_Conditions_Description}" Opacity="0.6"/>
 
                                             <ItemsControl ItemsSource="{Binding Conditions}">
                                                 <ItemsControl.ItemTemplate>
@@ -505,17 +506,17 @@
                                                         <Border Background="{DynamicResource SystemControlBackgroundChromeLowBrush}" CornerRadius="4" Padding="12,8" Margin="0,0,0,8">
                                                             <Grid ColumnDefinitions="Auto,*,36">
                                                                     <Panel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center" Width="20">
-                                                                    <icons:Icon Value="fas fa-lock" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=IsLocked}"/>
-                                                                    <icons:Icon Value="fas fa-calendar-days" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=TimeRange}"/>
-                                                                    <icons:Icon Value="fas fa-calendar-week" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=DayOfWeek}"/>
-                                                                        <icons:Icon Value="fas fa-ban" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockingEnabled}"/>
-                                                                        <icons:Icon Value="fas fa-shield-halved" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockEnabled}"/>
-                                                                        <icons:Icon Value="fas fa-window-restore" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
-                                                                        <icons:Icon Value="fas fa-file" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
+                                                                    <fluent:SymbolIcon Symbol="LockClosed" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=IsLocked}"/>
+                                                                    <fluent:SymbolIcon Symbol="Calendar" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=TimeRange}"/>
+                                                                    <fluent:SymbolIcon Symbol="CalendarWeekNumbers" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=DayOfWeek}"/>
+                                                                        <fluent:SymbolIcon Symbol="Prohibited" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockingEnabled}"/>
+                                                                        <fluent:SymbolIcon Symbol="Shield" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockEnabled}"/>
+                                                                        <fluent:SymbolIcon Symbol="Apps" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
+                                                                        <fluent:SymbolIcon Symbol="Document" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
                                                                 </Panel>
                                                                 <Panel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0" HorizontalAlignment="Left">
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=TimeRange}">
-                                                                        <TextBlock Text="时间范围" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_TimeRange}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
                                                                         
                                                                         <!-- 开始时间 -->
                                                                         <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableHours}"
@@ -530,7 +531,7 @@
                                                                             </ComboBox.ItemTemplate>
                                                                         </ComboBox>
 
-                                                                        <TextBlock Text="至" VerticalAlignment="Center" Margin="8,0"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_TimeRange_To}" VerticalAlignment="Center" Margin="8,0"/>
 
                                                                         <!-- 结束时间 -->
                                                                         <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableHours}"
@@ -547,39 +548,39 @@
                                                                     </StackPanel>
                                                                     <!-- 锁定状态 -->
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=IsLocked}">
-                                                                        <TextBlock Text="锁定状态" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
-                                                                        <ToggleSwitch IsChecked="{Binding Bool}" OnContent="已锁定" OffContent="未锁定"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_IsLocked}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <ToggleSwitch IsChecked="{Binding Bool}" OnContent="{DynamicResource Automation_Condition_IsLocked_On}" OffContent="{DynamicResource Automation_Condition_IsLocked_Off}"/>
                                                                     </StackPanel>
                                                                     <!-- 应用拦截已启用 -->
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockingEnabled}">
-                                                                        <TextBlock Text="应用拦截" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
-                                                                        <ToggleSwitch IsChecked="{Binding Bool}" OnContent="开启" OffContent="关闭"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_AppBlocking}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <ToggleSwitch IsChecked="{Binding Bool}" OnContent="{DynamicResource Automation_Condition_Enabled}" OffContent="{DynamicResource Automation_Condition_Disabled}"/>
                                                                     </StackPanel>
                                                                     <!-- 网络拦截已启用 -->
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockEnabled}">
-                                                                        <TextBlock Text="网络拦截" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
-                                                                        <ToggleSwitch IsChecked="{Binding Bool}" OnContent="开启" OffContent="关闭"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_NetworkLock}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <ToggleSwitch IsChecked="{Binding Bool}" OnContent="{DynamicResource Automation_Condition_Enabled}" OffContent="{DynamicResource Automation_Condition_Disabled}"/>
                                                                     </StackPanel>
                                                                     <!-- 星期 -->
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=DayOfWeek}">
-                                                                        <TextBlock Text="指定星期" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
-                                                                        <TextBlock Text="已启用多天限制" VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_DayOfWeek}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_DayOfWeek_Description}" VerticalAlignment="Center"/>
                                                                     </StackPanel>
                                                                     <!-- 进程运行中（条件）：输入 + 浏览 + 筛选列表 -->
                                                                     <StackPanel Orientation="Vertical" Spacing="6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}">
                                                                         <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                            <TextBlock Text="进程运行中" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
-                                                                            <TextBox x:Name="ConditionFilterBox" Text="{Binding $parent[UserControl].DataContext.ProcessFilterText}" Watermark="输入进程关键字（智能匹配）" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                            <TextBlock Text="{DynamicResource Automation_Condition_ProcessRunning}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                            <TextBox x:Name="ConditionFilterBox" Text="{Binding $parent[UserControl].DataContext.ProcessFilterText}" Watermark="{DynamicResource Automation_ProcessFilter_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left"/>
                                                                             <Button Command="{Binding $parent[UserControl].DataContext.RefreshProcessesCommand}" Padding="12,6">
                                                                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                                                                    <icons:Icon Value="fas fa-rotate"/>
-                                                                                    <TextBlock Text="刷新"/>
+                                                                                    <fluent:SymbolIcon Symbol="ArrowSync"/>
+                                                                                    <TextBlock Text="{DynamicResource Automation_Refresh}"/>
                                                                                 </StackPanel>
                                                                             </Button>
                                                                             <Button Command="{Binding $parent[UserControl].DataContext.UseFilterTextForConditionCommand}" CommandParameter="{Binding}" Padding="12,6">
                                                                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                                                                    <icons:Icon Value="fas fa-check"/>
-                                                                                    <TextBlock Text="填入"/>
+                                                                                    <fluent:SymbolIcon Symbol="Checkmark"/>
+                                                                                    <TextBlock Text="{DynamicResource Automation_Fill}"/>
                                                                                 </StackPanel>
                                                                             </Button>
                                                                         </StackPanel>
@@ -590,7 +591,7 @@
                                                                                     <ListBox.ItemTemplate>
                                                                                         <DataTemplate>
                                                                                             <Grid ColumnDefinitions="Auto,*" Margin="0,2" Tapped="OnConditionSuggestionTapped">
-                                                                                                <icons:Icon Grid.Column="0" Value="{Binding Icon}"/>
+                                                                                                <fluent:SymbolIcon Grid.Column="0" Symbol="{Binding Icon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"/>
                                                                                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                                                                                                     <TextBlock Text="{Binding Name}"/>
                                                                                                     <TextBlock Text="{Binding Path}" Classes="caption" Opacity="0.6" TextTrimming="CharacterEllipsis"/>
@@ -602,26 +603,26 @@
                                                                             </Border>
                                                                         </Popup>
                                                                         <WrapPanel>
-                                                                            <TextBox Text="{Binding ProcessName}" Watermark="进程名称（可选）" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                            <TextBox Text="{Binding ProcessName}" Watermark="{DynamicResource Automation_ProcessName_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
                                                                         </WrapPanel>
                                                                         <WrapPanel>
-                                                                            <TextBox Text="{Binding FilePath}" Watermark="可执行文件路径（可选）" Width="360" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                            <TextBox Text="{Binding FilePath}" Watermark="{DynamicResource Automation_FilePath_Watermark}" Width="360" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
                                                                             <Button Command="{Binding $parent[UserControl].DataContext.PickConditionExeCommand}" CommandParameter="{Binding}" Padding="12,6" Classes="accent" Margin="0,0,8,8">
                                                                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                                                                    <icons:Icon Value="fas fa-folder-open"/>
-                                                                                    <TextBlock Text="浏览…"/>
+                                                                                    <fluent:SymbolIcon Symbol="FolderOpen"/>
+                                                                                    <TextBlock Text="{DynamicResource Automation_Browse}"/>
                                                                                 </StackPanel>
                                                                             </Button>
                                                                         </WrapPanel>
                                                                     </StackPanel>
                                                                     <!-- 文件存在（条件） -->
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}">
-                                                                        <TextBlock Text="文件存在" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
-                                                                        <TextBox Text="{Binding FilePath}" Watermark="文件路径" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_FileExists}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <TextBox Text="{Binding FilePath}" Watermark="{DynamicResource Automation_FilePath_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left"/>
                                                                     </StackPanel>
                                                                 </Panel>
                                                                 <Button Grid.Column="2" Command="{Binding $parent[UserControl].DataContext.RemoveConditionCommand}" CommandParameter="{Binding}" Classes="danger" Padding="8,4" Width="32" Height="32">
-                                                                    <icons:Icon Value="fas fa-times"/>
+                                                                    <fluent:SymbolIcon Symbol="Dismiss"/>
                                                                 </Button>
                                                             </Grid>
                                                         </Border>
@@ -637,88 +638,88 @@
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <TextBlock Text="{DynamicResource Automation_ActionsSection}" Classes="SectionHeader"/>
                                                 <Menu Grid.Column="1" Background="Transparent">
-                                                    <MenuItem Header="添加行动" Classes="accent">
+                                                    <MenuItem Header="{DynamicResource Automation_AddAction}" Classes="accent">
                                                         <MenuItem.Icon>
-                                                            <icons:Icon Value="fas fa-bolt"/>
+                                                            <fluent:SymbolIcon Symbol="Flash"/>
                                                         </MenuItem.Icon>
-                                                        <MenuItem Header="系统：锁屏" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="LockFull">
+                                                        <MenuItem Header="{DynamicResource Automation_Action_LockFull}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="LockFull">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-user-lock"/>
+                                                                <fluent:SymbolIcon Symbol="PersonLock"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="系统：关机" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="Shutdown">
+                                                        <MenuItem Header="{DynamicResource Automation_Action_Shutdown}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="Shutdown">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-power-off"/>
+                                                                <fluent:SymbolIcon Symbol="Power"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="系统：重启" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="Restart">
+                                                        <MenuItem Header="{DynamicResource Automation_Action_Restart}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="Restart">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-arrows-rotate"/>
-                                                            </MenuItem.Icon>
-                                                        </MenuItem>
-                                                        <Separator/>
-                                                        <MenuItem Header="安全：开启网络拦截" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="NetworkLockOn">
-                                                            <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-shield-halved"/>
-                                                            </MenuItem.Icon>
-                                                        </MenuItem>
-                                                        <MenuItem Header="安全：关闭网络拦截" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="NetworkLockOff">
-                                                            <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-unlock"/>
-                                                            </MenuItem.Icon>
-                                                        </MenuItem>
-                                                        <MenuItem Header="安全：开启应用拦截" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="AppBlockOn">
-                                                            <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-ban"/>
-                                                            </MenuItem.Icon>
-                                                        </MenuItem>
-                                                        <MenuItem Header="安全：关闭应用拦截" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="AppBlockOff">
-                                                            <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-check-circle"/>
+                                                                <fluent:SymbolIcon Symbol="ArrowSync"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
                                                         <Separator/>
-                                                        <MenuItem Header="多媒体：摄像头抓拍" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="WebcamCapture">
+                                                        <MenuItem Header="{DynamicResource Automation_Action_NetworkLockOn}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="NetworkLockOn">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-camera"/>
+                                                                <fluent:SymbolIcon Symbol="Shield"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="多媒体：屏幕截图" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="ScreenShot">
+                                                        <MenuItem Header="{DynamicResource Automation_Action_NetworkLockOff}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="NetworkLockOff">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-image"/>
+                                                                <fluent:SymbolIcon Symbol="LockOpen"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="多媒体：播放提示音" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="PlaySound">
+                                                        <MenuItem Header="{DynamicResource Automation_Action_AppBlockOn}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="AppBlockOn">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-volume-high"/>
+                                                                <fluent:SymbolIcon Symbol="Prohibited"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <Separator/>
-                                                        <MenuItem Header="系统：打开网址" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="OpenUrl">
+                                                        <MenuItem Header="{DynamicResource Automation_Action_AppBlockOff}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="AppBlockOff">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-link"/>
-                                                            </MenuItem.Icon>
-                                                        </MenuItem>
-                                                        <MenuItem Header="系统：运行程序" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="RunProcess">
-                                                            <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-play"/>
+                                                                <fluent:SymbolIcon Symbol="CheckmarkCircle"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
                                                         <Separator/>
-                                                        <MenuItem Header="安全：开启基础防护" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="BasicProtectionOn">
+                                                        <MenuItem Header="{DynamicResource Automation_Action_WebcamCapture}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="WebcamCapture">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-shield"/>
+                                                                <fluent:SymbolIcon Symbol="Camera"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-                                                        <MenuItem Header="安全：关闭基础防护" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="BasicProtectionOff">
+                                                        <MenuItem Header="{DynamicResource Automation_Action_ScreenShot}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="ScreenShot">
                                                             <MenuItem.Icon>
-                                                                <icons:Icon Value="fas fa-shield"/>
+                                                                <fluent:SymbolIcon Symbol="Image"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_PlaySound}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="PlaySound">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Speaker2"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <Separator/>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_OpenUrl}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="OpenUrl">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Link"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_RunProcess}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="RunProcess">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Play"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <Separator/>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_BasicProtectionOn}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="BasicProtectionOn">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Shield"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_BasicProtectionOff}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="BasicProtectionOff">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Shield"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
                                                     </MenuItem>
                                                 </Menu>
                                             </Grid>
-                                            <TextBlock Text="说明：触发器与条件成立后，将按顺序执行下列操作" Opacity="0.6"/>
+                                            <TextBlock Text="{DynamicResource Automation_Actions_Description}" Opacity="0.6"/>
 
                                             <ItemsControl ItemsSource="{Binding Actions}">
                                                 <ItemsControl.ItemTemplate>
@@ -726,41 +727,41 @@
                                                         <Border Background="{DynamicResource SystemControlBackgroundChromeLowBrush}" CornerRadius="6" Padding="12,8" Margin="0,0,0,8">
                                                             <Grid ColumnDefinitions="Auto,*,36">
                                                                 <Panel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center" Width="20">
-                                                                    <icons:Icon Value="fas fa-user-lock" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=LockFull}"/>
-                                                                    <icons:Icon Value="fas fa-power-off" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Shutdown}"/>
-                                                                    <icons:Icon Value="fas fa-arrows-rotate" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Restart}"/>
-                                                                    <icons:Icon Value="fas fa-shield-halved" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOn}"/>
-                                                                    <icons:Icon Value="fas fa-unlock" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOff}"/>
-                                                                    <icons:Icon Value="fas fa-ban" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOn}"/>
-                                                                    <icons:Icon Value="fas fa-check-circle" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOff}"/>
-                                                                    <icons:Icon Value="fas fa-camera" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=WebcamCapture}"/>
-                                                                        <icons:Icon Value="fas fa-image" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ScreenShot}"/>
-                                                                        <icons:Icon Value="fas fa-volume-high" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=PlaySound}"/>
-                                                                        <icons:Icon Value="fas fa-link" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OpenUrl}"/>
-                                                                        <icons:Icon Value="fas fa-play" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=RunProcess}"/>
-                                                                        <icons:Icon Value="fas fa-shield" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOn}"/>
-                                                                        <icons:Icon Value="fas fa-shield" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOff}"/>
+                                                                    <fluent:SymbolIcon Symbol="PersonLock" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=LockFull}"/>
+                                                                    <fluent:SymbolIcon Symbol="Power" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Shutdown}"/>
+                                                                    <fluent:SymbolIcon Symbol="ArrowSync" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Restart}"/>
+                                                                    <fluent:SymbolIcon Symbol="Shield" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOn}"/>
+                                                                    <fluent:SymbolIcon Symbol="LockOpen" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOff}"/>
+                                                                    <fluent:SymbolIcon Symbol="Prohibited" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOn}"/>
+                                                                    <fluent:SymbolIcon Symbol="CheckmarkCircle" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOff}"/>
+                                                                    <fluent:SymbolIcon Symbol="Camera" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=WebcamCapture}"/>
+                                                                        <fluent:SymbolIcon Symbol="Image" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ScreenShot}"/>
+                                                                        <fluent:SymbolIcon Symbol="Speaker2" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=PlaySound}"/>
+                                                                        <fluent:SymbolIcon Symbol="Link" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OpenUrl}"/>
+                                                                        <fluent:SymbolIcon Symbol="Play" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=RunProcess}"/>
+                                                                        <fluent:SymbolIcon Symbol="Shield" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOn}"/>
+                                                                        <fluent:SymbolIcon Symbol="Shield" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOff}"/>
                                                                 </Panel>
                                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0" HorizontalAlignment="Left" Spacing="8">
                                                                     <!-- 文本说明 -->
-                                                                    <TextBlock Text="系统：立即锁屏" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=LockFull}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="系统：关闭电脑" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Shutdown}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="系统：重启电脑" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Restart}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="安全：开启网络拦截" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOn}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="安全：关闭网络拦截" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOff}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="安全：开启应用拦截" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOn}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="安全：关闭应用拦截" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOff}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="安全：开启基础防护" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOn}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="安全：关闭基础防护" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOff}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="多媒体：摄像头抓拍" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=WebcamCapture}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="多媒体：屏幕截图" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ScreenShot}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="多媒体：播放提示音" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=PlaySound}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="网络：打开网页" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OpenUrl}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="系统：运行程序" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=RunProcess}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="通知：发送消息" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Notify}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_LockFull_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=LockFull}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_Shutdown_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Shutdown}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_Restart_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Restart}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_NetworkLockOn_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOn}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_NetworkLockOff_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOff}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_AppBlockOn_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOn}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_AppBlockOff_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOff}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_BasicProtectionOn_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOn}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_BasicProtectionOff_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOff}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_WebcamCapture_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=WebcamCapture}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_ScreenShot_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ScreenShot}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_PlaySound_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=PlaySound}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_OpenUrl_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OpenUrl}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_RunProcess_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=RunProcess}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_Notify_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Notify}" VerticalAlignment="Center" FontWeight="SemiBold"/>
 
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=WebcamCapture}">
-                                                                        <TextBlock Text="延时(秒)" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Delay_Seconds}" VerticalAlignment="Center" Opacity="0.6"/>
                                                                         <ComboBox ItemsSource="{Binding #AutomationRoot.DataContext.AvailableCaptureDelays}" SelectedItem="{Binding DelaySeconds}" Width="100">
                                                                             <ComboBox.ItemTemplate>
                                                                                 <DataTemplate>
@@ -770,7 +771,7 @@
                                                                         </ComboBox>
                                                                     </StackPanel>
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ScreenShot}">
-                                                                        <TextBlock Text="延时(秒)" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Delay_Seconds}" VerticalAlignment="Center" Opacity="0.6"/>
                                                                         <ComboBox ItemsSource="{Binding #AutomationRoot.DataContext.AvailableCaptureDelays}" SelectedItem="{Binding DelaySeconds}" Width="100">
                                                                             <ComboBox.ItemTemplate>
                                                                                 <DataTemplate>
@@ -780,26 +781,26 @@
                                                                         </ComboBox>
                                                                     </StackPanel>
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Notify}">
-                                                                        <TextBlock Text="通知" VerticalAlignment="Center" Opacity="0.6"/>
-                                                                        <TextBox Text="{Binding Text}" Watermark="通知内容" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Action_Notify_Label}" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                        <TextBox Text="{Binding Text}" Watermark="{DynamicResource Automation_Action_Notify_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left"/>
                                                                     </StackPanel>
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OpenUrl}">
-                                                                        <TextBlock Text="网址" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Action_OpenUrl_Label}" VerticalAlignment="Center" Opacity="0.6"/>
                                                                         <TextBox Text="{Binding Text}" Watermark="https://" Width="300" Classes="clear" HorizontalAlignment="Left"/>
                                                                     </StackPanel>
                                                                     <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=RunProcess}">
-                                                                        <TextBlock Text="程序路径" VerticalAlignment="Center" Opacity="0.6"/>
-                                                                        <TextBox Text="{Binding Text}" Watermark="C:\\path\\app.exe 或任何文件" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Action_RunProcess_Label}" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                        <TextBox Text="{Binding Text}" Watermark="{DynamicResource Automation_Action_RunProcess_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left"/>
                                                                         <Button Command="{Binding $parent[UserControl].DataContext.PickRunProcessExeCommand}" CommandParameter="{Binding}" Padding="12,6" Classes="accent">
                                                                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                                                                <icons:Icon Value="fas fa-folder-open"/>
-                                                                                <TextBlock Text="浏览…"/>
+                                                                                <fluent:SymbolIcon Symbol="FolderOpen"/>
+                                                                                <TextBlock Text="{DynamicResource Automation_Browse}"/>
                                                                             </StackPanel>
                                                                         </Button>
                                                                     </StackPanel>
                                                                 </StackPanel>
                                                                 <Button Grid.Column="2" Command="{Binding $parent[UserControl].DataContext.RemoveActionCommand}" CommandParameter="{Binding}" Classes="danger" Padding="8,4" Width="32" Height="32">
-                                                                    <icons:Icon Value="fas fa-times"/>
+                                                                    <fluent:SymbolIcon Symbol="Dismiss"/>
                                                                 </Button>
                                                             </Grid>
                                                         </Border>
@@ -818,8 +819,8 @@
                     <Border IsVisible="{Binding SelectedWorkflow, Converter={StaticResource IsNullConverter}}" 
                             VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,100,0,0">
                         <StackPanel Spacing="16" HorizontalAlignment="Center">
-                            <icons:Icon Value="fas fa-robot" FontSize="64" Opacity="0.1"/>
-                            <TextBlock Text="请在左侧选择或创建一个工作流" Opacity="0.4" FontSize="16"/>
+                            <fluent:SymbolIcon Symbol="Bot" Width="64" Height="64" Opacity="0.1"/>
+                            <TextBlock Text="{DynamicResource Automation_SelectWorkflow_Prompt}" Opacity="0.4" FontSize="16"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -834,12 +835,12 @@
                 IsVisible="{Binding !IsAutomationEnabled}" Padding="16,10">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <StackPanel Orientation="Horizontal" Spacing="12">
-                    <icons:Icon Value="fas fa-circle-exclamation" Foreground="{DynamicResource SystemFillColorCautionBrush}" FontSize="16" VerticalAlignment="Center"/>
-                    <TextBlock Text="自动化引擎目前已禁用，所有的工作流将不会生效。请在上方开启自动化以恢复功能。" 
-                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" FontSize="13" VerticalAlignment="Center"/>
+                    <fluent:SymbolIcon Symbol="Warning" Foreground="{DynamicResource SystemFillColorCautionBrush}" Width="16" Height="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Automation_Disabled_Warning}" 
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" Width="13" Height="13" VerticalAlignment="Center"/>
                 </StackPanel>
                 <Button Grid.Column="2" Content="立即开启" Command="{Binding ToggleAutomationCommand}" 
-                        Classes="accent" Padding="12,4" FontSize="12" IsVisible="True"/>
+                        Classes="accent" Padding="12,4" Width="12" Height="12" IsVisible="True"/>
             </Grid>
         </Border>
     </Grid>

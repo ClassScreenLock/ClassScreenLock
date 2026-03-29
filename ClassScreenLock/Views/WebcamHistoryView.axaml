@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
              xmlns:converters="clr-namespace:ClassScreenLock.Converters"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="ClassScreenLock.Views.WebcamHistoryView"
              x:DataType="vm:WebcamHistoryViewModel"
@@ -25,12 +25,12 @@
             <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
                 <Border Background="{DynamicResource SystemAccentColorLightBrush}"
                         Width="48" Height="48" CornerRadius="8">
-                    <icons:Icon Value="fas fa-video" Width="24" Height="24"
+                    <fluent:SymbolIcon Symbol="Video" Width="24" Height="24"
                                 Foreground="{DynamicResource SystemAccentColor}"/>
                 </Border>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="摄像头记录" Classes="h1" Margin="0"/>
-                    <TextBlock Text="查看并管理自动摄像头拍照记录" Classes="caption" Opacity="0.6"/>
+                    <TextBlock Text="{DynamicResource WebcamHistory_Title}" Classes="h1" Margin="0"/>
+                    <TextBlock Text="{DynamicResource WebcamHistory_Description}" Classes="caption" Opacity="0.6"/>
                 </StackPanel>
             </StackPanel>
         </StackPanel>
@@ -40,20 +40,20 @@
                 <Border Classes="card" Padding="24">
                     <StackPanel Spacing="16">
                         <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
-                            <icons:Icon Value="fas fa-cog" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
-                            <TextBlock Text="拍照设置" Classes="h3"/>
+                            <fluent:SymbolIcon Symbol="Settings" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                            <TextBlock Text="{DynamicResource WebcamHistory_Settings_Title}" Classes="h3"/>
                         </StackPanel>
 
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
                             <StackPanel Grid.Row="0" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock Text="上课拍照" Classes="subtitle"/>
-                                <TextBlock Text="在课程进行期间自动拍照" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource WebcamHistory_ClassWebcam}" Classes="subtitle"/>
+                                <TextBlock Text="{DynamicResource WebcamHistory_ClassWebcam_Description}" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
                             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Settings.EnableClassWebcam}">
-                                    <TextBlock Text="间隔" VerticalAlignment="Center" Classes="caption"/>
+                                    <TextBlock Text="{DynamicResource WebcamHistory_Interval}" VerticalAlignment="Center" Classes="caption"/>
                                     <ComboBox ItemsSource="{Binding ClassIntervalOptions}" SelectedItem="{Binding Settings.ClassWebcamInterval}" Width="100"/>
-                                    <TextBlock Text="分钟" VerticalAlignment="Center" Classes="caption"/>
+                                    <TextBlock Text="{DynamicResource WebcamHistory_Minutes}" VerticalAlignment="Center" Classes="caption"/>
                                 </StackPanel>
                                 <ToggleSwitch IsChecked="{Binding Settings.EnableClassWebcam}" OnContent="" OffContent="" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -61,14 +61,14 @@
                             <Separator Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12"/>
 
                             <StackPanel Grid.Row="2" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock Text="课间拍照" Classes="subtitle"/>
-                                <TextBlock Text="在课间休息期间自动拍照" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource WebcamHistory_BreakWebcam}" Classes="subtitle"/>
+                                <TextBlock Text="{DynamicResource WebcamHistory_BreakWebcam_Description}" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
                             <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Settings.EnableBreakWebcam}">
-                                    <TextBlock Text="间隔" VerticalAlignment="Center" Classes="caption"/>
+                                    <TextBlock Text="{DynamicResource WebcamHistory_Interval}" VerticalAlignment="Center" Classes="caption"/>
                                     <ComboBox ItemsSource="{Binding BreakIntervalOptions}" SelectedItem="{Binding Settings.BreakWebcamInterval}" Width="100"/>
-                                    <TextBlock Text="分钟" VerticalAlignment="Center" Classes="caption"/>
+                                    <TextBlock Text="{DynamicResource WebcamHistory_Minutes}" VerticalAlignment="Center" Classes="caption"/>
                                 </StackPanel>
                                 <ToggleSwitch IsChecked="{Binding Settings.EnableBreakWebcam}" OnContent="" OffContent="" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -76,8 +76,8 @@
                             <Separator Grid.Row="3" Grid.ColumnSpan="2" Margin="0,12"/>
 
                             <StackPanel Grid.Row="4" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock Text="摄像头选择" Classes="subtitle"/>
-                                <TextBlock Text="选择用于自动拍照的摄像头" Classes="caption" Opacity="0.7"/>
+                                <TextBlock Text="{DynamicResource WebcamHistory_CameraSelection}" Classes="subtitle"/>
+                                <TextBlock Text="{DynamicResource WebcamHistory_CameraSelection_Description}" Classes="caption" Opacity="0.7"/>
                             </StackPanel>
                             <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
                                 <ComboBox ItemsSource="{Binding CameraOptions}"
@@ -168,7 +168,7 @@
                 <Border Classes="card" Padding="24" IsVisible="{Binding IsDebugEnabled}">
                     <StackPanel Spacing="16">
                         <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,4">
-                            <icons:Icon Value="fas fa-video" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                            <fluent:SymbolIcon Symbol="Video" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
                             <StackPanel>
                                 <TextBlock Text="调试预览" Classes="h3"/>
                                 <TextBlock Text="{Binding PreviewStatus}" Classes="caption" Opacity="0.7"/>
@@ -181,7 +181,7 @@
                                 <Image Source="{Binding PreviewImage}" Stretch="Uniform" Height="240"/>
                                 <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center"
                                             IsVisible="{Binding PreviewImage, Converter={StaticResource IsNullConverter}}">
-                                    <icons:Icon Value="fas fa-video-slash" Width="20" Height="20" Opacity="0.6"/>
+                                    <fluent:SymbolIcon Symbol="VideoOff" Width="20" Height="20" Opacity="0.6"/>
                                     <TextBlock Text="未开启预览" Classes="caption" Opacity="0.6"/>
                                 </StackPanel>
                             </Grid>
@@ -197,13 +197,13 @@
                 <Border Classes="card" Padding="12">
                     <Grid ColumnDefinitions="Auto,Auto,*,Auto">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <icons:Icon Value="fas fa-calendar-days" Width="16" Height="16"/>
+                            <fluent:SymbolIcon Symbol="Calendar" Width="16" Height="16"/>
                             <TextBlock Text="日期" VerticalAlignment="Center"/>
                             <ComboBox ItemsSource="{Binding AvailableDates}" SelectedItem="{Binding SelectedDate}" Width="150"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="20,0,0,0" VerticalAlignment="Center">
-                            <icons:Icon Value="fas fa-filter" Width="16" Height="16"/>
+                            <fluent:SymbolIcon Symbol="Filter" Width="16" Height="16"/>
                             <TextBlock Text="类型" VerticalAlignment="Center"/>
                             <ComboBox SelectedIndex="{Binding FilterTypeIndex}" Width="120">
                                 <ComboBoxItem>全部</ComboBoxItem>
@@ -215,13 +215,13 @@
                         <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="10">
                             <Button Command="{Binding LoadScreenshotsCommand}" Padding="12,8">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <icons:Icon Value="fas fa-sync" Width="16" Height="16"/>
+                                    <fluent:SymbolIcon Symbol="ArrowSync" Width="16" Height="16"/>
                                     <TextBlock Text="刷新"/>
                                 </StackPanel>
                             </Button>
                             <Button Command="{Binding OpenFolderCommand}" Padding="12,8">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <icons:Icon Value="fas fa-folder-open" Width="16" Height="16"/>
+                                    <fluent:SymbolIcon Symbol="FolderOpen" Width="16" Height="16"/>
                                     <TextBlock Text="打开文件夹"/>
                                 </StackPanel>
                             </Button>
@@ -238,13 +238,13 @@
 
                         <Button Command="{Binding SelectAllOnPageCommand}" Padding="12,8" IsEnabled="{Binding IsSelectionMode}" Margin="0,0,10,10">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icons:Icon Value="fas fa-check-square" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="CheckboxChecked" Width="16" Height="16"/>
                                 <TextBlock Text="全选本页"/>
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding ClearSelectionCommand}" Padding="12,8" IsEnabled="{Binding IsSelectionMode}" Margin="0,0,10,10">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icons:Icon Value="fas fa-times-circle" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="DismissCircle" Width="16" Height="16"/>
                                 <TextBlock Text="清除"/>
                             </StackPanel>
                         </Button>
@@ -253,7 +253,7 @@
                             <TextBlock Text="{Binding SelectedCount, StringFormat='已选 {0}'}" Opacity="0.8" VerticalAlignment="Center"/>
                             <Button Command="{Binding DeleteSelectedCommand}" Padding="12,8" IsEnabled="{Binding IsSelectionMode}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <icons:Icon Value="fas fa-trash" Width="16" Height="16" Foreground="#FF4444"/>
+                                    <fluent:SymbolIcon Symbol="Delete" Width="16" Height="16" Foreground="#FF4444"/>
                                     <TextBlock Text="删除已选"/>
                                 </StackPanel>
                             </Button>
@@ -319,19 +319,19 @@
                             <TextBlock Text="{Binding PageEndItemIndex}" VerticalAlignment="Center" Opacity="0.8"/>
                             <Rectangle Width="1" Height="18" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" Margin="10,0"/>
                             <Button Command="{Binding FirstPageCommand}" Padding="10" IsEnabled="{Binding CanGoPrevious}">
-                                <icons:Icon Value="fas fa-angle-double-left" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="ChevronDoubleLeft" Width="16" Height="16"/>
                             </Button>
                             <Button Command="{Binding PreviousPageCommand}" Padding="10" IsEnabled="{Binding CanGoPrevious}">
-                                <icons:Icon Value="fas fa-chevron-left" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="ChevronLeft" Width="16" Height="16"/>
                             </Button>
                             <TextBlock Text="{Binding CurrentPage, StringFormat='第 {0}'}" VerticalAlignment="Center"/>
                             <TextBlock Text="/" VerticalAlignment="Center" Opacity="0.8"/>
                             <TextBlock Text="{Binding TotalPages, StringFormat='{}{0} 页'}" VerticalAlignment="Center"/>
                             <Button Command="{Binding NextPageCommand}" Padding="10" IsEnabled="{Binding CanGoNext}">
-                                <icons:Icon Value="fas fa-chevron-right" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="ChevronRight" Width="16" Height="16"/>
                             </Button>
                             <Button Command="{Binding LastPageCommand}" Padding="10" IsEnabled="{Binding CanGoNext}">
-                                <icons:Icon Value="fas fa-angle-double-right" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="ChevronDoubleRight" Width="16" Height="16"/>
                             </Button>
                         </StackPanel>
 

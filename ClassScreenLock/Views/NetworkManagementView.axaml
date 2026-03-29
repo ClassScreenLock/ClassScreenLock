@@ -1,10 +1,10 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
              xmlns:models="clr-namespace:ClassScreenLock.Models"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="ClassScreenLock.Views.NetworkManagementView"
              x:DataType="vm:NetworkManagementViewModel">
@@ -20,7 +20,7 @@
                 
                 <Button Grid.Column="1" Command="{Binding ApplyChangesCommand}" Classes="accent" VerticalContentAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <icons:Icon Value="fas fa-check" Width="14" Height="14"/>
+                        <fluent:SymbolIcon Symbol="Checkmark" Width="14" Height="14"/>
                         <TextBlock Text="{DynamicResource Network_ApplyChanges}"/>
                     </StackPanel>
                 </Button>
@@ -57,7 +57,7 @@
                                      Margin="0,0,12,0"/>
                             <Button Grid.Column="2" Command="{Binding AddRuleCommand}" 
                                     Classes="accent" MinWidth="0" Width="40" Padding="0">
-                                <icons:Icon Value="fas fa-plus" Width="14" Height="14"/>
+                                <fluent:SymbolIcon Symbol="Add" Width="14" Height="14"/>
                             </Button>
                         </Grid>
                         
@@ -68,7 +68,7 @@
                                 Padding="12,8"
                                 Margin="0,8,0,0">
                             <Grid ColumnDefinitions="Auto,*">
-                                <icons:Icon Grid.Column="0" Value="fas fa-info-circle" Foreground="{DynamicResource SystemAccentColor}" Margin="0,0,8,0" VerticalAlignment="Top"/>
+                                <fluent:SymbolIcon Grid.Column="0" Symbol="Info" Foreground="{DynamicResource SystemAccentColor}" Margin="0,0,8,0" VerticalAlignment="Top"/>
                                 <TextBlock Grid.Column="1" Text="{DynamicResource Network_DoHTip}" 
                                            FontSize="12" 
                                            TextWrapping="Wrap"
@@ -133,7 +133,7 @@
                                             Classes="danger" Width="32" Height="32" Padding="0"
                                             VerticalAlignment="Center"
                                             HorizontalAlignment="Center">
-                                        <icons:Icon Value="fas fa-trash" Width="14" Height="14"/>
+                                        <fluent:SymbolIcon Symbol="Delete" Width="14" Height="14"/>
                                     </Button>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

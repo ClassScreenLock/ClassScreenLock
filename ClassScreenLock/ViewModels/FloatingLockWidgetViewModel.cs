@@ -100,4 +100,13 @@ public partial class FloatingLockWidgetViewModel : ViewModelBase
         LockScreenService.Instance.DeactivateLock();
         NotificationService.Instance.ShowInfo($"已由管理员 {currentAccount.Username} 解除仅防护模式");
     }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _timer?.Stop();
+        }
+        base.Dispose(disposing);
+    }
 }
