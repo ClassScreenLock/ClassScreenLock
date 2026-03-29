@@ -246,11 +246,43 @@ class Program
     
     Console.WriteLine($"Watchdog instance {_instanceId}: Dynamic check interval enabled (Normal: 1.5s, Abnormal: 0.5s)");
     
+    // 自启动检查变量
+    int autoStartCheckCounter = 0;
+    const int AUTO_START_CHECK_INTERVAL = 20; // 每 20 次循环检查一次自启动（约 60-120 秒）
+    int autoStartFailureCount = 0;
+    const int MAX_AUTO_START_FAILURES = 1; // 连续失败 1 次立即触发修复
+    
     while (!_shouldExit)
     {
         try
         {
             bool hasException = false;
+            
+            // 定期检查自启动状态（与进程监控共用检测循环）
+            autoStartCheckCounter++;
+            if (autoStartCheckCounter >= AUTO_START_CHECK_INTERVAL)
+            {
+                autoStartCheckCounter = 0;
+                
+                // 检查自启动状态
+                var autoStartResult = CheckAutoStartStatus(baseDir);
+                if (!autoStartResult)
+                {
+                    autoStartFailureCount++;
+                    
+                    if (autoStartFailureCount >= MAX_AUTO_START_FAILURES)
+                    {
+                        RepairAutoStart(baseDir);
+                        autoStartFailureCount = 0;
+                    }
+                    
+                    hasException = true;
+                }
+                else
+                {
+                    autoStartFailureCount = 0;
+                }
+            }
             
             // 检查主进程
             var mainProcesses = Process.GetProcessesByName("ClassScreenLock");
@@ -443,6 +475,192 @@ class Program
         {
             Console.WriteLine($"Error checking {name}: {ex.Message}");
             return false;
+        }
+    }
+    
+    /// <summary>
+    /// 检查自启动状态（注册表 + 启动文件夹 + 任务计划）
+    /// </summary>
+    private static bool CheckAutoStartStatus(string baseDir)
+    {
+        try
+        {
+            var appPath = Path.Combine(baseDir, "ClassScreenLock.exe");
+            var expectedValue = $"\"{appPath}\" --minimized";
+            bool allHealthy = true;
+            
+            // 检查注册表
+            try
+            {
+                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", false))
+                {
+                    if (key != null)
+                    {
+                        var value = key.GetValue("ClassScreenLock") as string;
+                        if (value != expectedValue)
+                        {
+                            allHealthy = false;
+                            Console.WriteLine($"[Watchdog {_instanceId}] Auto-start registry entry missing or incorrect");
+                        }
+                    }
+                    else
+                    {
+                        allHealthy = false;
+                        Console.WriteLine($"[Watchdog {_instanceId}] Auto-start registry key not found");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Watchdog {_instanceId}] Error checking registry: {ex.Message}");
+                allHealthy = false;
+            }
+            
+            // 检查启动文件夹快捷方式
+            try
+            {
+                var startupFolder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+                var shortcutPath = Path.Combine(startupFolder, "ClassScreenLock.lnk");
+                if (!File.Exists(shortcutPath))
+                {
+                    allHealthy = false;
+                    Console.WriteLine($"[Watchdog {_instanceId}] Auto-start shortcut missing");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Watchdog {_instanceId}] Error checking shortcut: {ex.Message}");
+                allHealthy = false;
+            }
+            
+            // 检查任务计划程序
+            try
+            {
+                var taskName = "ClassScreenLockAutoStart";
+                var script = $"Get-ScheduledTask -TaskName '{taskName}' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty State";
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-NoProfile -WindowStyle Hidden -Command \"{script}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true
+                };
+                
+                using (var process = Process.Start(psi))
+                {
+                    if (process != null)
+                    {
+                        process.WaitForExit(3000);
+                        var output = process.StandardOutput.ReadToEnd().Trim();
+                        if (!output.Equals("Ready", StringComparison.OrdinalIgnoreCase))
+                        {
+                            allHealthy = false;
+                            Console.WriteLine($"[Watchdog {_instanceId}] Auto-start scheduled task not ready (State: {output})");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Watchdog {_instanceId}] Error checking task scheduler: {ex.Message}");
+                allHealthy = false;
+            }
+            
+            return allHealthy;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Watchdog {_instanceId}] Error checking auto-start status: {ex.Message}");
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// 修复自启动（重新启用所有方式）
+    /// </summary>
+    private static void RepairAutoStart(string baseDir)
+    {
+        try
+        {
+            var appPath = Path.Combine(baseDir, "ClassScreenLock.exe");
+            Console.WriteLine($"[Watchdog {_instanceId}] Repairing auto-start...");
+            
+            // 修复注册表
+            try
+            {
+                using (var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
+                {
+                    key?.SetValue("ClassScreenLock", $"\"{appPath}\" --minimized");
+                    Console.WriteLine($"[Watchdog {_instanceId}] Registry entry repaired");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Watchdog {_instanceId}] Error repairing registry: {ex.Message}");
+            }
+            
+            // 修复启动文件夹快捷方式
+            try
+            {
+                var startupFolder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+                var shortcutPath = Path.Combine(startupFolder, "ClassScreenLock.lnk");
+                
+                var script = $"$s=(New-Object -COM WScript.Shell).CreateShortcut('{shortcutPath}');$s.TargetPath='{appPath}';$s.Arguments='--minimized';$s.Save()";
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-NoProfile -WindowStyle Hidden -Command \"{script}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+                
+                using (var process = Process.Start(psi))
+                {
+                    process?.WaitForExit(3000);
+                    Console.WriteLine($"[Watchdog {_instanceId}] Shortcut repaired");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Watchdog {_instanceId}] Error repairing shortcut: {ex.Message}");
+            }
+            
+            // 修复任务计划程序
+            try
+            {
+                var taskName = "ClassScreenLockAutoStart";
+                var script = $@"
+$action = New-ScheduledTaskAction -Execute '{appPath}' -Argument '--minimized'
+$trigger = New-ScheduledTaskTrigger -AtLogOn
+$principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Highest
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Days 365)
+Register-ScheduledTask -TaskName '{taskName}' -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force";
+                
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-NoProfile -WindowStyle Hidden -Command \"{script}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+                
+                using (var process = Process.Start(psi))
+                {
+                    process?.WaitForExit(5000);
+                    Console.WriteLine($"[Watchdog {_instanceId}] Scheduled task repaired");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Watchdog {_instanceId}] Error repairing task scheduler: {ex.Message}");
+            }
+            
+            Console.WriteLine($"[Watchdog {_instanceId}] Auto-start repair completed");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Watchdog {_instanceId}] Error repairing auto-start: {ex.Message}");
         }
     }
     
