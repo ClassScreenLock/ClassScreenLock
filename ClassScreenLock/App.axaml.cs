@@ -287,37 +287,37 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // 先启动看门狗进程，确保父进程正确
-            try
-            {
-                Program.StartWatchdogProcess();
-            }
-            catch { }
-
-            // 立即创建并显示SplashWindow，不做任何延迟操作
+            // 立即创建并显示 SplashWindow，不做任何延迟操作
             splashWindow = new SplashWindow();
             
-            // 根据设置应用 dark 类
-            try
-            {
-                var settings = SettingsService.General;
-                RequestedThemeVariant = settings.DarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
-                if (settings.DarkMode)
-                {
-                    splashWindow.Classes.Add("dark");
-                }
-            }
-            catch { }
-            
+            // 默认先不应用主题，避免阻塞
             splashWindow.Show();
             splashWindow.SetProgress(null, "正在启动…");
 
-            // 后台执行启动前置任务
+            // 后台应用主题设置
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    var settings = SettingsService.General;
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        RequestedThemeVariant = settings.DarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
+                        if (settings.DarkMode)
+                        {
+                            splashWindow.Classes.Add("dark");
+                        }
+                    });
+                }
+                catch { }
+            });
+
+            // 后台执行启动前置任务（最快路径）
             Task.Run(() =>
             {
                 try
                 {
-                    // 检测并尝试UIAccess提权
+                    // 检测并尝试 UIAccess 提权
                     UiAccessService.Instance.CheckAndElevate();
                 }
                 catch { }
@@ -326,6 +326,13 @@ public partial class App : Application
                 {
                     // 启用进程保护
                     ProcessProtector.EnableProtection();
+                }
+                catch { }
+                
+                try
+                {
+                    // UIAccess 提权后启动看门狗，避免重复启动
+                    Program.StartWatchdogProcess();
                 }
                 catch { }
             });
@@ -459,6 +466,26 @@ public partial class App : Application
                         splashWindow?.SetProgress(80, "正在启动后台服务…");
                     }
 
+                    // 开机自启动配置移到后台异步执行，不阻塞启动流程（无论是否需要初始化都会执行）
+                    _ = Task.Run(() =>
+                    {
+                        try
+                        {
+                            // 立即检查并修复所有自启动方式，不延迟
+                            // 这可以解决用户在任务管理器禁用后状态不一致的问题
+                            AutoStartHelper.CheckAndRepairAutoStart();
+                            
+                            // 启动定时检查任务，持续监控自启动状态
+                            AutoStartHelper.StartPeriodicCheck();
+                            
+                            LogService.Instance.Log("Info", "AutoStart", "App", "开机自启动已检查并修复完成，定时检查已启动");
+                        }
+                        catch (Exception ex)
+                        {
+                            LogService.Instance.Log("Error", "AutoStart", "App", $"配置开机自启动失败：{ex.Message}");
+                        }
+                    });
+
                     // 立即更新进度到 90%，不阻塞等待界面设置
                     splashWindow?.SetProgress(90, "正在应用界面设置…");
                     _ = Task.Run(async () =>
@@ -474,22 +501,6 @@ public partial class App : Application
                         catch (Exception ex)
                         {
                             LogService.Instance.Log("Error", "Settings", "App", $"应用界面设置失败：{ex.Message}");
-                        }
-                    });
-
-                    // 开机自启动配置移到后台异步执行，不阻塞启动流程
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await Task.Delay(2000); // 延迟 2 秒，等待主窗口显示
-                            AutoStartHelper.SetAutoStart(true);
-                            AutoStartHelper.UpdateAutoStartPath();
-                            LogService.Instance.Log("Info", "AutoStart", "App", "开机自启动已配置完成");
-                        }
-                        catch (Exception ex)
-                        {
-                            LogService.Instance.Log("Error", "AutoStart", "App", $"配置开机自启动失败：{ex.Message}");
                         }
                     });
 
