@@ -23,7 +23,7 @@
                     </StackPanel>
                 </StackPanel>
                 
-                <Button Grid.Column="2" Classes="accent" Command="{Binding StartLockCommand}" IsVisible="{Binding !IsLocked}" Content="{DynamicResource Home_LockNow}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="20,10"/>
+                <Button Grid.Column="2" Classes="accent" Command="{Binding StartLockCommand}" IsEnabled="{Binding CanLock}" IsVisible="{Binding !IsLocked}" Content="{DynamicResource Home_LockNow}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="20,10"/>
             </Grid>
         </Border>
 
@@ -88,6 +88,6 @@
         </Grid>
         
         <!-- 底部信息 -->
-        <TextBlock Grid.Row="2" Text="ClassScreenLock v1.15.29.2803 - Creeper" HorizontalAlignment="Center" Classes="status" Margin="0,20,0,0"/>
+        <TextBlock Grid.Row="2" Text="ClassScreenLock v1.15.30.3004 - Creeper" HorizontalAlignment="Center" Classes="status" Margin="0,20,0,0"/>
     </Grid>
 </UserControl>

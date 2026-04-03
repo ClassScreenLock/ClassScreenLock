@@ -47,7 +47,6 @@
         <!-- 标题栏 -->
         <Border Grid.Row="0" Classes="chrome" 
                 Padding="16,8"
-                IsVisible="{Binding !IsOnboarding}"
                 x:Name="TitleBar"
                 Background="Transparent">
             <Grid>
@@ -93,8 +92,8 @@
         </Border>
         
         <!-- 主内容区域 -->
-        <Grid Grid.Row="{Binding IsOnboarding, Converter={StaticResource BoolToIntConverter}, ConverterParameter=0}" 
-              Grid.RowSpan="{Binding IsOnboarding, Converter={StaticResource BoolToIntConverter}, ConverterParameter=3}" 
+        <Grid Grid.Row="1" 
+              Grid.RowSpan="{Binding IsOnboarding, Converter={StaticResource BoolToIntConverter}, ConverterParameter=2}" 
               Classes="main-content-grid"
               Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
             <Grid.ColumnDefinitions>
