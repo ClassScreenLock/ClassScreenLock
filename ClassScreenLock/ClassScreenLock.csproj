@@ -8,10 +8,10 @@
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>ClassScreenLock.ico</ApplicationIcon>
         <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
-    <Version>1.15.29.2803</Version>
-    <AssemblyVersion>1.15.29.2803</AssemblyVersion>
-    <FileVersion>1.15.29.2803</FileVersion>
-    <InformationalVersion>1.15.29.2803</InformationalVersion>
+    <Version>1.15.30.3004</Version>
+    <AssemblyVersion>1.15.30.3004</AssemblyVersion>
+    <FileVersion>1.15.30.3004</FileVersion>
+    <InformationalVersion>1.15.30.3004</InformationalVersion>
     <Copyright>© 旧故里小牛（jiugulixiaoniu）</Copyright>
     <Authors>旧故里小牛（jiugulixiaoniu）</Authors>
     <Company>旧故里小牛（jiugulixiaoniu）</Company>

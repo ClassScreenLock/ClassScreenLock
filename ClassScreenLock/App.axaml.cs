@@ -18,6 +18,8 @@ using ClassScreenLock.Helpers;
 using System.Threading.Tasks;
 using Avalonia.Styling;
 using Avalonia.Platform;
+using System.Diagnostics;
+using System.Threading;
 
 namespace ClassScreenLock;
 
@@ -98,6 +100,9 @@ public partial class App : Application
     private delegate nint WndProcDelegate(nint hWnd, uint msg, nint wParam, nint lParam);
     private static WndProcDelegate? _wndProcDelegate;
     private static nint _messageWindow;
+    
+    private System.Threading.Timer? _watchdogMonitorTimer;
+    private static readonly object _watchdogLock = new object();
     private static App? _appInstance;
 
     [StructLayout(LayoutKind.Sequential)]
@@ -336,6 +341,9 @@ public partial class App : Application
                 }
                 catch { }
             });
+            
+            // 启动看门狗监测定时器
+            StartWatchdogMonitor();
 
             // 初始化本地化资源，避免资源键闪现
             try
@@ -691,11 +699,23 @@ public partial class App : Application
 
     private void MenuShow_OnClick(object? sender, EventArgs e)
     {
+        if (InitializationService.Instance.RequiresInitialization)
+        {
+            ShowMainWindow();
+            return;
+        }
+        
         ShowMainWindow();
     }
 
     private void MenuLock_OnClick(object? sender, EventArgs e)
     {
+        if (InitializationService.Instance.RequiresInitialization)
+        {
+            NotificationService.Instance.ShowWarning("请先完成初始设置");
+            return;
+        }
+        
         LockScreenService.Instance.ActivateLock(SettingsService.Lock.BreakTimeLockMode);
     }
 
@@ -798,6 +818,13 @@ public partial class App : Application
 
     private async void MenuOpenLockSettings_OnClick(object? sender, EventArgs e)
     {
+        if (InitializationService.Instance.RequiresInitialization)
+        {
+            NotificationService.Instance.ShowWarning("请先完成初始设置");
+            ShowMainWindow();
+            return;
+        }
+        
         var required = SettingsService.Lock.SidebarLockSettingsMinAccountType;
         var allowed = required == null || SecurityService.Instance.IsAuthenticated || AccountService.Instance.HasPermission(required.Value);
 
@@ -862,6 +889,13 @@ public partial class App : Application
 
     private void MenuOpenSchedule_OnClick(object? sender, EventArgs e)
     {
+        if (InitializationService.Instance.RequiresInitialization)
+        {
+            NotificationService.Instance.ShowWarning("请先完成初始设置");
+            ShowMainWindow();
+            return;
+        }
+        
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow is MainWindow mainWindow)
         {
             if (mainWindow.DataContext is MainWindowViewModel vm)
@@ -920,15 +954,72 @@ public partial class App : Application
         }
     }
     
+    private void StartWatchdogMonitor()
+    {
+        lock (_watchdogLock)
+        {
+            if (_watchdogMonitorTimer != null)
+                return;
+            
+            // 每 3 秒检查一次看门狗，与看门狗监测主程序的频率相当
+            _watchdogMonitorTimer = new System.Threading.Timer(CheckWatchdog, null, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3));
+            LogService.Instance.Log("Info", "WatchdogMonitor", "App", "看门狗监测已启动（间隔：3秒）");
+        }
+    }
+    
+    private void StopWatchdogMonitor()
+    {
+        lock (_watchdogLock)
+        {
+            _watchdogMonitorTimer?.Dispose();
+            _watchdogMonitorTimer = null;
+            LogService.Instance.Log("Info", "WatchdogMonitor", "App", "看门狗监测已停止");
+        }
+    }
+    
+    private void CheckWatchdog(object? state)
+    {
+        try
+        {
+            var exitFlagFile = Path.Combine(AppContext.BaseDirectory, "exit.flag");
+            if (File.Exists(exitFlagFile))
+            {
+                return;
+            }
+            
+            var watchdogProcesses = Process.GetProcessesByName("CSL.Watchdog");
+            if (watchdogProcesses.Length == 0)
+            {
+                LogService.Instance.Log("Warning", "WatchdogMonitor", "App", "检测到看门狗进程已退出，正在重启...");
+                Program.StartWatchdogProcess();
+            }
+            else if (watchdogProcesses.Length < 3)
+            {
+                LogService.Instance.Log("Warning", "WatchdogMonitor", "App", $"检测到看门狗实例不足（{watchdogProcesses.Length}/3），正在补充...");
+                Program.StartWatchdogProcess();
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "WatchdogMonitor", "App", $"检查看门狗失败: {ex.Message}");
+        }
+    }
+    
     // 应用退出时清理资源
     private void OnApplicationExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
         try
         {
+            // 停止看门狗监测
+            StopWatchdogMonitor();
+            
             // 创建退出标记文件，通知看门狗主进程正常退出
             var exitFlagFile = Path.Combine(AppContext.BaseDirectory, "exit.flag");
-            File.Create(exitFlagFile).Dispose();
-            Console.WriteLine("Created exit.flag file");
+            var currentProcess = Process.GetCurrentProcess();
+            var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var exitFlagContent = $"{currentProcess.Id}|{timestamp}";
+            File.WriteAllText(exitFlagFile, exitFlagContent);
+            Console.WriteLine($"Created exit.flag file with PID={currentProcess.Id}, timestamp={timestamp}");
             
             // 禁用应用防护，确保重启后不会自动启用
             SettingsService.UpdateBlockage(s =>

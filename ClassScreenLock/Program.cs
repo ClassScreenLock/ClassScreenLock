@@ -141,50 +141,38 @@ sealed class Program
         {
             // 检查当前运行的看门狗实例数量
             var existingWatchdogs = Process.GetProcessesByName("CSL.Watchdog");
+            
+            // 如果已经有3个或更多看门狗，不需要启动
             if (existingWatchdogs.Length >= 3)
             {
-                LogCrash(new Exception($"Already have {existingWatchdogs.Length} watchdog instances running. No need to start more."), "Program.StartWatchdog");
                 return;
             }
+            
+            // 计算需要启动的看门狗数量
+            int needToStart = 3 - existingWatchdogs.Length;
             
             var baseDir = AppContext.BaseDirectory;
             string watchdogExe = Path.Combine(baseDir, "CSL.Watchdog.exe");
             
             if (File.Exists(watchdogExe))
             {
-                // 启动缺少的看门狗实例
-                for (int i = 0; i < 3; i++)
+                // 只启动缺少的看门狗实例
+                for (int i = 0; i < needToStart; i++)
                 {
-                    // 检查是否已经有该实例ID的看门狗在运行
-                    bool instanceExists = false;
-                    foreach (var process in existingWatchdogs)
+                    var startInfo = new ProcessStartInfo
                     {
-                        try
-                        {
-                            // 尝试获取进程命令行参数，检查是否包含实例ID
-                            string commandLine = GetCommandLine(process.Id);
-                            if (commandLine.Contains($" {i}"))
-                            {
-                                instanceExists = true;
-                                break;
-                            }
-                        }
-                        catch { }
-                    }
+                        FileName = "cmd.exe",
+                        Arguments = $"/c start \"Watchdog Instance {existingWatchdogs.Length + i}\" /B \"{watchdogExe}\" {existingWatchdogs.Length + i}",
+                        UseShellExecute = true,
+                        CreateNoWindow = true,
+                        WindowStyle = ProcessWindowStyle.Hidden
+                    };
                     
-                    if (!instanceExists)
-                    {
-                        var startInfo = new ProcessStartInfo
-                        {
-                            FileName = "cmd.exe",
-                            Arguments = $"/c start \"Watchdog Instance {i}\" \"{watchdogExe}\" {i}",
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        };
-                        
-                        Process.Start(startInfo);
-                        LogCrash(new Exception($"CSL.Watchdog instance {i} started"), "Program.StartWatchdog");
-                    }
+                    Process.Start(startInfo);
+                    LogCrash(new Exception($"CSL.Watchdog instance {existingWatchdogs.Length + i} started"), "Program.StartWatchdog");
+                    
+                    // 短暂延迟，避免同时启动多个进程
+                    System.Threading.Thread.Sleep(500);
                 }
             }
             else
