@@ -675,9 +675,24 @@ Register-ScheduledTask -TaskName '{taskName}' -Action $action -Trigger $trigger 
             {
                 if (File.Exists(exitFlagFile))
                 {
-                    Console.WriteLine("Exit flag detected. Watchdog exiting.");
-                    _shouldExit = true;
-                    break;
+                    if (ValidateExitFlag(exitFlagFile))
+                    {
+                        Console.WriteLine("Valid exit flag detected. Watchdog exiting.");
+                        _shouldExit = true;
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid exit flag detected. Ignoring and deleting.");
+                        try
+                        {
+                            File.Delete(exitFlagFile);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to delete invalid exit flag: {ex.Message}");
+                        }
+                    }
                 }
                 Thread.Sleep(100);
             }
@@ -685,6 +700,78 @@ Register-ScheduledTask -TaskName '{taskName}' -Action $action -Trigger $trigger 
         catch (Exception ex)
         {
             Console.WriteLine($"Exit signal monitor error: {ex.Message}");
+        }
+    }
+    
+    private static bool ValidateExitFlag(string exitFlagFile)
+    {
+        try
+        {
+            var content = File.ReadAllText(exitFlagFile).Trim();
+            if (string.IsNullOrEmpty(content))
+            {
+                Console.WriteLine("Exit flag is empty.");
+                return false;
+            }
+            
+            var parts = content.Split('|');
+            if (parts.Length != 2)
+            {
+                Console.WriteLine("Exit flag format invalid.");
+                return false;
+            }
+            
+            if (!int.TryParse(parts[0], out var pid))
+            {
+                Console.WriteLine($"Exit flag PID invalid: {parts[0]}");
+                return false;
+            }
+            
+            if (!long.TryParse(parts[1], out var timestamp))
+            {
+                Console.WriteLine($"Exit flag timestamp invalid: {parts[1]}");
+                return false;
+            }
+            
+            var mainProcesses = Process.GetProcessesByName("ClassScreenLock");
+            bool pidMatches = false;
+            foreach (var proc in mainProcesses)
+            {
+                if (proc.Id == pid)
+                {
+                    pidMatches = true;
+                    break;
+                }
+            }
+            
+            if (!pidMatches && mainProcesses.Length > 0)
+            {
+                Console.WriteLine($"Exit flag PID {pid} does not match any running main process.");
+                return false;
+            }
+            
+            var flagTime = DateTimeOffset.FromUnixTimeMilliseconds(timestamp).LocalDateTime;
+            var now = DateTime.Now;
+            var age = now - flagTime;
+            
+            if (age.TotalSeconds > 30)
+            {
+                Console.WriteLine($"Exit flag is too old ({age.TotalSeconds:F1} seconds).");
+                return false;
+            }
+            
+            if (mainProcesses.Length == 0 && age.TotalSeconds > 5)
+            {
+                Console.WriteLine($"Main process not running and flag is {age.TotalSeconds:F1} seconds old.");
+                return false;
+            }
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error validating exit flag: {ex.Message}");
+            return false;
         }
     }
     
