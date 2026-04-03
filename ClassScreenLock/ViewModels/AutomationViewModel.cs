@@ -950,6 +950,12 @@ public partial class AutomationViewModel : ViewModelBase
 
     private void ExecuteLock()
     {
+        if (InitializationService.Instance.RequiresInitialization)
+        {
+            LogService.Instance.Log("Warning", "Automation", "Lock", "Cannot lock: initialization required");
+            return;
+        }
+        
         LogService.Instance.Log("Automation", "Lock", "Screen", "Activating full lock mode");
         LockScreenService.Instance.ActivateLock(LockMode.Full);
     }

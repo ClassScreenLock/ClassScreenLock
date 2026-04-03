@@ -183,6 +183,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void StartLock()
     {
+        if (InitializationService.Instance.RequiresInitialization)
+        {
+            Status = "请先完成初始设置";
+            return;
+        }
+        
         Status = "屏幕锁定已启动";
         LockScreenService.Instance.ActivateLock(LockMode.Full);
     }

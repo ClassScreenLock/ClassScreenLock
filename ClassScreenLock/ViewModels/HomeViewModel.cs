@@ -38,6 +38,12 @@ public partial class HomeViewModel : ViewModelBase
     [ObservableProperty]
     private string _uiAccessStatusText = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanLock))]
+    private bool _isInitialized;
+
+    public bool CanLock => IsInitialized && !IsLocked;
+
     public HomeViewModel(MainWindowViewModel mainWindowViewModel)
     {
         _mainWindowViewModel = mainWindowViewModel;
@@ -55,6 +61,7 @@ public partial class HomeViewModel : ViewModelBase
     public void UpdateStatus()
     {
         IsLocked = LockScreenService.Instance.IsLocked;
+        IsInitialized = !InitializationService.Instance.RequiresInitialization;
         LockStatusText = IsLocked ? "屏幕已锁定" : "屏幕未锁定";
         LockStatusIcon = IsLocked ? "fas fa-lock" : "fas fa-lock-open";
         
