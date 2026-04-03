@@ -80,6 +80,12 @@ public class IpcService
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => 
                 {
+                    if (InitializationService.Instance.RequiresInitialization)
+                    {
+                        LogService.Instance.Log("Warning", "IPC", "Lock", "Cannot lock: initialization required");
+                        return;
+                    }
+                    
                     var mode = SettingsService.Lock.BreakTimeLockMode;
                     LockScreenService.Instance.ActivateLock(mode);
                 });

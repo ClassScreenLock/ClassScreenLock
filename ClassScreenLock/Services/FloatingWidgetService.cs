@@ -209,6 +209,14 @@ public class FloatingWidgetService
             {
                 if ((now - _lastClickTime).TotalMilliseconds < 3000)
                 {
+                    if (InitializationService.Instance.RequiresInitialization)
+                    {
+                        NotificationService.Instance.ShowWarning("请先完成初始设置");
+                        _isConfirming = false;
+                        UpdateButtonStyle(false);
+                        return;
+                    }
+                    
                     var mode = SettingsService.Lock.BreakTimeLockMode;
                     LockScreenService.Instance.ActivateLock(mode);
                     _isConfirming = false;
