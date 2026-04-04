@@ -13,10 +13,11 @@
 
 [![License](https://img.shields.io/badge/License-GPLV3-blue.svg?style=for-the-badge)](https://opensource.org/licenses/GPLV3)
 
-## 你可以加入我们的QQ群：1081181845
+## 官方网站：[https://classscreenlock.us.ci/](https://classscreenlock.us.ci/)
 
 </div>
 
+## 你可以加入我们的 QQ 群：1081181845,并且在加入 QQ 群聊时，请注意[社区规定](https://classscreenlock.us.ci/docs/qq-group-rules)
 
 > [!NOTE]
 > ClassScreenLock 基于GPL-3协议开源，您可自由使用、修改和分发本项目，修改后的衍生作品同样需要遵循GPL-3协议
@@ -70,7 +71,8 @@
   
   本软件为本地单机应用程序，主要功能无需连接互联网即可使用。
 ### 🌐 官方下载渠道
-- 📥 **[GitHub Releases](https://github.com/jiugulixiaoniu/ClassScreenLock/releases)** - 获取最新稳定版本和测试版本
+- 📥 **[GitHub Releases](https://github.com/jiugulixiaoniu/ClassScreenLock/releases)**
+- 📥 **[官方下载中心](https://classscreenlock.us.ci/download/)**
 - 📝 **安装说明**：下载对应版本的安装包/绿色包，解压后直接运行主程序，无需复杂安装步骤
 
 
