@@ -15,6 +15,8 @@
 
 ## 官方网站：[https://classscreenlock.github.io/](https://classscreenlock.github.io/)
 
+## 集控中心已经迁移：https://github.com/ClassScreenLock/ClassScreenLock_CentralControlServer
+
 </div>
 
 ## 你可以加入我们的 QQ 群：1081181845,并且在加入 QQ 群聊时，请注意[社区规定](https://classscreenlock.github.io/docs/qq-group-rules)
