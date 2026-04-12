@@ -483,10 +483,13 @@ public partial class App : Application
                             // 这可以解决用户在任务管理器禁用后状态不一致的问题
                             AutoStartHelper.CheckAndRepairAutoStart();
                             
+                            // 检查并修复看门狗的自启动状态
+                            AutoStartHelper.CheckAndRepairWatchdogAutoStart();
+                            
                             // 启动定时检查任务，持续监控自启动状态
                             AutoStartHelper.StartPeriodicCheck();
                             
-                            LogService.Instance.Log("Info", "AutoStart", "App", "开机自启动已检查并修复完成，定时检查已启动");
+                            LogService.Instance.Log("Info", "AutoStart", "App", "开机自启动已检查并修复完成（主程序 + 看门狗），定时检查已启动");
                         }
                         catch (Exception ex)
                         {

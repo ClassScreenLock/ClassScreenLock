@@ -168,10 +168,10 @@ public partial class InitializationViewModel : ViewModelBase
         private string _repositoryUrl = "https://github.com/jiugulixiaoniu/ClassScreenLock";
 
         [ObservableProperty]
-        private string _userAgreementUrl = "https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/UserAgreement.html";
+        private string _userAgreementUrl = "https://classscreenlock.github.io/eula";
 
         [ObservableProperty]
-        private string _privacyPolicyUrl = "https://jiugulixiaoniu.github.io/ClassScreenLock-Offical/PrivacyPolicy.html";
+        private string _privacyPolicyUrl = "https://classscreenlock.github.io/eula";
 
     [ObservableProperty]
     private bool _isWelcomeVisible = true;
@@ -213,7 +213,7 @@ public partial class InitializationViewModel : ViewModelBase
 
     private void LoadInitialState()
     {
-        UserAgreementUrl = "https://classscreenlock.us.ci/eula";
+        UserAgreementUrl = "https://classscreenlock.github.io/eula";
         AgreementConnectionStatus = $"协议地址：{UserAgreementUrl}";
         IsAgreementConnectionSuccessful = true;
 

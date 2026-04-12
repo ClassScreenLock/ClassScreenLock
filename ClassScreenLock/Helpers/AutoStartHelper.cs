@@ -417,8 +417,6 @@ public static class AutoStartHelper
             var taskName = $"{AppName}AutoStart";
             if (enable)
             {
-                // 使用 PowerShell 创建任务计划，设置为最高权限运行以跳过 UAC
-                // 触发器：登录时；操作：启动程序；设置：允许按需运行，不在交流电时停止，允许在电池模式启动
                 var script = $@"
 $action = New-ScheduledTaskAction -Execute '{appPath}' -Argument '{StartupArgs}'
 $trigger = New-ScheduledTaskTrigger -AtLogOn
@@ -438,7 +436,6 @@ Register-ScheduledTask -TaskName '{taskName}' -Action $action -Trigger $trigger 
             }
             else
             {
-                // 移除任务
                 var script = $"Unregister-ScheduledTask -TaskName '{taskName}' -Confirm:$false -ErrorAction SilentlyContinue";
                 var psi = new ProcessStartInfo
                 {
@@ -454,6 +451,259 @@ Register-ScheduledTask -TaskName '{taskName}' -Action $action -Trigger $trigger 
         catch (Exception ex)
         {
             Debug.WriteLine($"管理任务计划程序失败: {ex.Message}");
+        }
+    }
+
+    private const string WatchdogName = "CSL.Watchdog";
+    private const string WatchdogStartupArgs = "";
+
+    public static void SetWatchdogAutoStart(bool enable)
+    {
+        if (!OperatingSystem.IsWindows()) return;
+
+        try
+        {
+#if WINDOWS
+            var baseDir = AppContext.BaseDirectory;
+            var watchdogPath = Path.Combine(baseDir, $"{WatchdogName}.exe");
+            
+            if (!File.Exists(watchdogPath))
+            {
+                LogService.Instance.Log("Warning", "AutoStart", "Watchdog", $"看门狗程序不存在: {watchdogPath}");
+                return;
+            }
+
+            using (var key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
+            {
+                if (enable)
+                {
+                    key?.SetValue(WatchdogName, $"\"{watchdogPath}\" {WatchdogStartupArgs}".TrimEnd());
+                }
+                else
+                {
+                    key?.DeleteValue(WatchdogName, false);
+                }
+            }
+
+            var startupFolder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+            var shortcutPath = Path.Combine(startupFolder, $"{WatchdogName}.lnk");
+
+            if (enable)
+            {
+                CreateShortcut(watchdogPath, shortcutPath, WatchdogStartupArgs);
+            }
+            else
+            {
+                if (File.Exists(shortcutPath))
+                {
+                    File.Delete(shortcutPath);
+                }
+            }
+
+            ManageWatchdogTaskScheduler(enable, watchdogPath);
+
+            LogService.Instance.Log("Info", "AutoStart", "Watchdog", $"看门狗自启动已{(enable ? "启用" : "禁用")} (注册表 + 启动文件夹 + 任务计划)");
+#endif
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"设置看门狗自启动失败：{ex.Message}");
+            LogService.Instance.Log("Error", "AutoStart", "Watchdog", ex.Message);
+        }
+    }
+
+    public static bool CheckWatchdogAutoStartStatus()
+    {
+        if (!OperatingSystem.IsWindows()) return true;
+
+        try
+        {
+#if WINDOWS
+            var baseDir = AppContext.BaseDirectory;
+            var watchdogPath = Path.Combine(baseDir, $"{WatchdogName}.exe");
+            
+            if (!File.Exists(watchdogPath))
+            {
+                LogService.Instance.Log("Warning", "AutoStart", "Watchdog", $"看门狗程序不存在: {watchdogPath}");
+                return false;
+            }
+
+            var expectedValue = $"\"{watchdogPath}\" {WatchdogStartupArgs}".TrimEnd();
+            bool allHealthy = true;
+
+            using (var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", false))
+            {
+                if (key != null)
+                {
+                    var value = key.GetValue(WatchdogName) as string;
+                    if (value != expectedValue)
+                    {
+                        allHealthy = false;
+                        LogService.Instance.Log("Debug", "AutoStart", "Watchdog", "注册表自启动项不正确");
+                    }
+                }
+                else
+                {
+                    allHealthy = false;
+                    LogService.Instance.Log("Debug", "AutoStart", "Watchdog", "注册表自启动项缺失");
+                }
+            }
+
+            var startupFolder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+            var shortcutPath = Path.Combine(startupFolder, $"{WatchdogName}.lnk");
+            if (!File.Exists(shortcutPath))
+            {
+                allHealthy = false;
+                LogService.Instance.Log("Debug", "AutoStart", "Watchdog", "启动文件夹快捷方式缺失");
+            }
+
+            if (!IsWatchdogTaskSchedulerEnabled())
+            {
+                allHealthy = false;
+                LogService.Instance.Log("Debug", "AutoStart", "Watchdog", "任务计划任务缺失或未启用");
+            }
+
+            return allHealthy;
+#endif
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "AutoStart", "Watchdog", $"检查看门狗自启动状态失败：{ex.Message}");
+            return false;
+        }
+    }
+
+    public static void CheckAndRepairWatchdogAutoStart()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+
+        try
+        {
+#if WINDOWS
+            var baseDir = AppContext.BaseDirectory;
+            var watchdogPath = Path.Combine(baseDir, $"{WatchdogName}.exe");
+            
+            if (!File.Exists(watchdogPath))
+            {
+                return;
+            }
+
+            bool needRepair = false;
+            string repairReason = string.Empty;
+
+            using (var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", false))
+            {
+                if (key != null)
+                {
+                    var value = key.GetValue(WatchdogName) as string;
+                    var expectedValue = $"\"{watchdogPath}\" {WatchdogStartupArgs}".TrimEnd();
+                    if (value != expectedValue)
+                    {
+                        needRepair = true;
+                        repairReason += "注册表 ";
+                    }
+                }
+                else
+                {
+                    needRepair = true;
+                    repairReason += "注册表 ";
+                }
+            }
+
+            var startupFolder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+            var shortcutPath = Path.Combine(startupFolder, $"{WatchdogName}.lnk");
+            if (!File.Exists(shortcutPath))
+            {
+                needRepair = true;
+                repairReason += "启动文件夹 ";
+            }
+
+            if (needRepair)
+            {
+                SetWatchdogAutoStart(true);
+                LogService.Instance.Log("Info", "AutoStart", "Watchdog", $"看门狗自启动已修复: {repairReason}");
+            }
+#endif
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"检查看门狗自启动状态失败：{ex.Message}");
+        }
+    }
+
+    private static bool IsWatchdogTaskSchedulerEnabled()
+    {
+        try
+        {
+            var taskName = $"{WatchdogName}AutoStart";
+            var script = $"Get-ScheduledTask -TaskName '{taskName}' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty State";
+            var psi = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-NoProfile -WindowStyle Hidden -Command \"{script}\"",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true
+            };
+
+            using (var process = Process.Start(psi))
+            {
+                if (process != null)
+                {
+                    process.WaitForExit(2000);
+                    var output = process.StandardOutput.ReadToEnd().Trim();
+                    return output.Equals("Ready", StringComparison.OrdinalIgnoreCase);
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return false;
+    }
+
+    private static void ManageWatchdogTaskScheduler(bool enable, string watchdogPath)
+    {
+        try
+        {
+            var taskName = $"{WatchdogName}AutoStart";
+            if (enable)
+            {
+                var script = $@"
+$action = New-ScheduledTaskAction -Execute '{watchdogPath}' -Argument '{WatchdogStartupArgs}'
+$trigger = New-ScheduledTaskTrigger -AtLogOn
+$principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Highest
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Days 365)
+Register-ScheduledTask -TaskName '{taskName}' -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force";
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-NoProfile -WindowStyle Hidden -Command \"{script}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+                var process = Process.Start(psi);
+                process?.WaitForExit(10000);
+            }
+            else
+            {
+                var script = $"Unregister-ScheduledTask -TaskName '{taskName}' -Confirm:$false -ErrorAction SilentlyContinue";
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-NoProfile -WindowStyle Hidden -Command \"{script}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+                var process = Process.Start(psi);
+                process?.WaitForExit(5000);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"管理看门狗任务计划程序失败: {ex.Message}");
         }
     }
 }

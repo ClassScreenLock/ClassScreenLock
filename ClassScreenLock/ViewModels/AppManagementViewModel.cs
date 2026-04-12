@@ -24,6 +24,14 @@ namespace ClassScreenLock.ViewModels;
 
 public partial class AppManagementViewModel : ViewModelBase
 {
+    private static readonly HashSet<string> OwnProcessNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "ClassScreenLock",
+        "CSL.Watchdog",
+        "MonitorProcess",
+        "BreakButtonProcess"
+    };
+
     [ObservableProperty]
     private ObservableCollection<AppInfo> _runningApps = new();
 
@@ -755,7 +763,15 @@ public partial class AppManagementViewModel : ViewModelBase
             return;
         }
 
-        if (app != null && !BlockedRules.Contains(app.ProcessName))
+        if (app == null) return;
+
+        if (OwnProcessNames.Contains(app.ProcessName))
+        {
+            NotificationService.Instance.ShowError("无法添加：不能将本程序自身加入黑名单");
+            return;
+        }
+
+        if (!BlockedRules.Contains(app.ProcessName))
         {
             BlockedRules.Add(app.ProcessName);
             SaveSettings();
@@ -772,7 +788,16 @@ public partial class AppManagementViewModel : ViewModelBase
             NotificationService.Instance.ShowWarning("权限不足：访问应用管理需要更高权限");
             return;
         }
-        if (!string.IsNullOrWhiteSpace(path) && !BlockedRules.Contains(path))
+
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        if (IsOwnProgramPath(path))
+        {
+            NotificationService.Instance.ShowError("无法添加：不能将本程序自身加入黑名单");
+            return;
+        }
+
+        if (!BlockedRules.Contains(path))
         {
             BlockedRules.Add(path);
 
@@ -789,6 +814,55 @@ public partial class AppManagementViewModel : ViewModelBase
             SaveSettings();
             NotificationService.Instance.ShowSuccess($"已添加路径到阻止列表");
         }
+    }
+
+    private static bool IsOwnProgramPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return false;
+
+        try
+        {
+            var fileName = Path.GetFileNameWithoutExtension(path);
+            if (!string.IsNullOrEmpty(fileName) && OwnProcessNames.Contains(fileName))
+            {
+                return true;
+            }
+
+            var normalizedPath = NormalizeRulePath(path);
+            if (string.IsNullOrEmpty(normalizedPath)) return false;
+
+            var baseDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
+
+            foreach (var ownName in OwnProcessNames)
+            {
+                var ownExePath = Path.Combine(baseDir, $"{ownName}.exe");
+                if (string.Equals(normalizedPath, ownExePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            var ext = Path.GetExtension(normalizedPath);
+            if (string.Equals(ext, ".dll", StringComparison.OrdinalIgnoreCase) &&
+                normalizedPath.StartsWith(baseDir + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            var dataPath = Path.Combine(baseDir, "Data").TrimEnd(Path.DirectorySeparatorChar);
+            var normalizedPathTrimmed = normalizedPath.TrimEnd(Path.DirectorySeparatorChar);
+            
+            if (normalizedPathTrimmed.StartsWith(dataPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(normalizedPathTrimmed, dataPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        catch
+        {
+        }
+
+        return false;
     }
 
     [RelayCommand]

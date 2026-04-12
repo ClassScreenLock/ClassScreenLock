@@ -19,6 +19,14 @@ public class AppBlockingService
     private CancellationTokenSource? _cts;
     private bool _isRunning;
 
+    private static readonly HashSet<string> OwnProcessNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "ClassScreenLock",
+        "CSL.Watchdog",
+        "MonitorProcess",
+        "BreakButtonProcess"
+    };
+
     private AppBlockingService() { }
 
     public void Start()
@@ -148,10 +156,15 @@ public class AppBlockingService
             {
                 try
                 {
-                    // 跳过空进程和系统进程 (PID <= 4)
                     if (process.Id <= 4) continue;
 
                     string name = process.ProcessName;
+                    
+                    if (OwnProcessNames.Contains(name))
+                    {
+                        continue;
+                    }
+
                     bool shouldKill = false;
 
                     if (isManualBlockingActive && blockedProcessNames.Contains(name))
