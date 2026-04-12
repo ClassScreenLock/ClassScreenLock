@@ -68,6 +68,8 @@ public partial class AppManagementViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isBasicProtectionEnabled = true;
 
+    private bool _isInitializing = true;
+
     [ObservableProperty]
     private ObservableCollection<ProtectionRule> _protectionRules = new();
 
@@ -102,8 +104,9 @@ public partial class AppManagementViewModel : ViewModelBase
 
     public AppManagementViewModel()
     {
+        _isInitializing = true;
         LoadSettings();
-        // 不再在构造函数中自动启动，由 MainWindowViewModel 控制
+        _isInitializing = false;
     }
 
     public void StartRefreshTimer()
@@ -890,6 +893,99 @@ public partial class AppManagementViewModel : ViewModelBase
     partial void OnShowAllProcessesChanged(bool value)
     {
         RefreshAppsCommand.Execute(null);
+    }
+
+    partial void OnIsAppBlockingEnabledChanged(bool value)
+    {
+        if (value)
+        {
+            ApplyBlockedFilePermissions();
+        }
+        else
+        {
+            RestoreBlockedFilePermissions();
+        }
+        SaveSettings();
+        NotificationService.Instance.ShowSuccess(value ? "阻止列表已启用" : "阻止列表已禁用");
+    }
+
+    partial void OnIsBasicProtectionEnabledChanged(bool value)
+    {
+        if (_isInitializing) return;
+
+        var required = SettingsService.Lock.SidebarAppManagementMinAccountType;
+        if (required != null && !(SecurityService.Instance.IsAuthenticated || AccountService.Instance.HasPermission(required.Value)))
+        {
+            NotificationService.Instance.ShowWarning("权限不足：访问应用管理需要更高权限");
+            _isInitializing = true;
+            IsBasicProtectionEnabled = !value;
+            _isInitializing = false;
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                if (value)
+                {
+                    var backupSuccess = await ProtectionBackupService.Instance.CreateBackupAsync();
+                    if (!backupSuccess)
+                    {
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            NotificationService.Instance.ShowWarning("基础防护：备份创建失败，请检查权限或日志");
+                        });
+                    }
+
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        foreach (var rule in ProtectionRules)
+                        {
+                            rule.IsEnabled = true;
+                        }
+                    });
+                }
+                else
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        NotificationService.Instance.ShowInfo("正在解除基础防护并恢复系统状态...");
+                    });
+                    
+                    var restoreSuccess = await ProtectionBackupService.Instance.RestoreBackupAsync();
+                    
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        if (restoreSuccess)
+                        {
+                            NotificationService.Instance.ShowSuccess("基础防护解除成功，系统状态已恢复");
+                            _isInitializing = true;
+                            LoadSettings();
+                            _isInitializing = false;
+                            RefreshAppsCommand.Execute(null);
+                        }
+                        else
+                        {
+                            NotificationService.Instance.ShowError("基础防护解除失败：无法完整恢复备份文件，请查阅错误日志");
+                        }
+                    });
+                }
+                
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    SaveSettings();
+                    NotificationService.Instance.ShowSuccess(value ? "基础防护已开启 (所有子项已强制开启)" : "基础防护已关闭");
+                });
+            }
+            catch (Exception ex)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    NotificationService.Instance.ShowError($"基础防护操作失败: {ex.Message}");
+                });
+            }
+        });
     }
 
     private void FilterApps()

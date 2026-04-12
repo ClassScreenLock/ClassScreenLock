@@ -142,6 +142,24 @@ public partial class NetworkManagementViewModel : ViewModelBase
     {
         if (_isInitialLoad) return;
         
-        _ = ApplyChanges();
+        SaveSettings();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await NetworkBlockingService.Instance.ApplyRulesAsync("UserToggle");
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    NotificationService.Instance.ShowSuccess(LocalizationService.Instance.GetString("Notify_SettingsSaved"));
+                });
+            }
+            catch (Exception ex)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    NotificationService.Instance.ShowError($"应用规则失败: {ex.Message}");
+                });
+            }
+        });
     }
 }

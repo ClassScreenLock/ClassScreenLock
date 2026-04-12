@@ -471,7 +471,7 @@ public class AccountService
                 return (false, "子账号数量已达到上限");
             }
 
-            if (_accounts.Any(a => string.Equals(a.Username, username, StringComparison.OrdinalIgnoreCase)))
+            if (_accounts.Any(a => string.Equals(a.Username, username, StringComparison.OrdinalIgnoreCase) && !a.IsDisabled))
             {
                 return (false, "该用户名已存在");
             }
@@ -523,7 +523,7 @@ public class AccountService
                 return (false, "不能删除超级管理员账号");
             }
 
-            account.IsDisabled = true;
+            _accounts.Remove(account);
             SaveAccounts();
             LogService.Instance.Log("Account", "Deleted", account.Username);
         }

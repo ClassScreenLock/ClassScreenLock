@@ -15,12 +15,12 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using ClassScreenLock.Models;
+using System.Windows.Automation;
 
 namespace ClassScreenLock.Services;
 
 public class NetworkBlockingService
 {
-    // Win32 API for "Soft" interception
     [DllImport("user32.dll")]
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
@@ -40,6 +40,27 @@ public class NetworkBlockingService
     private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
 
     private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, string? className, string? windowTitle);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, StringBuilder lParam);
+
+    private const uint WM_GETTEXT = 0x000D;
+    private const uint WM_GETTEXTLENGTH = 0x000E;
+
+    [DllImport("oleacc.dll")]
+    private static extern int AccessibleObjectFromWindow(IntPtr hWnd, uint dwObjectID, ref Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object? pacc);
+
+    [DllImport("oleacc.dll")]
+    private static extern int AccessibleChildren(object paccContainer, int iChildStart, int cChildren, [Out] object[]? rgvarChildren, out int pcObtained);
+
+    private static readonly Guid IID_IAccessible = new(0x618736E0, 0x3C3D, 0x11CF, 0x81, 0x0C, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
+    private const uint OBJID_WINDOW = 0x00000000;
 
     private const int SW_MINIMIZE = 6;
     private const int SW_RESTORE = 9;
@@ -425,9 +446,18 @@ public class NetworkBlockingService
                 var sb = new StringBuilder(1024);
                 GetWindowText(foregroundHwnd, sb, sb.Capacity);
                 string title = sb.ToString();
-                if (!string.IsNullOrEmpty(title))
+
+                string browserUrl = GetBrowserUrlFromAccessibility(foregroundHwnd, name);
+                string combinedText = string.Join(" ", new[] { title, browserUrl }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+                if (!string.IsNullOrWhiteSpace(browserUrl))
                 {
-                    var analysis = ContentAnalysisEngine.Instance.Analyze(title, activeRules);
+                    LogService.Instance.Log("Debug", "BrowserScan", name, $"URL: {browserUrl}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(combinedText))
+                {
+                    var analysis = ContentAnalysisEngine.Instance.Analyze(combinedText, activeRules);
                     if (analysis.IsViolation)
                     {
                         ExecuteInterception((uint)fgProcess.Id, analysis, foregroundHwnd);
@@ -463,14 +493,24 @@ public class NetworkBlockingService
             if (interceptedPidsThisCycle.Contains(processId)) return true;
             if (_cachedBrowserPids.Contains(processId))
             {
-                // 1. 快速扫描：获取当前窗口标题
+                string procName = string.Empty;
+                try
+                {
+                    var p = Process.GetProcessById((int)processId);
+                    procName = p.ProcessName;
+                }
+                catch { return true; }
+
                 var sb = new StringBuilder(1024);
                 GetWindowText(hWnd, sb, sb.Capacity);
                 string title = sb.ToString();
 
-                if (!string.IsNullOrEmpty(title))
+                string browserUrl = GetBrowserUrlFromAccessibility(hWnd, procName);
+                string combinedText = string.Join(" ", new[] { title, browserUrl }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+                if (!string.IsNullOrWhiteSpace(combinedText))
                 {
-                    var analysis = ContentAnalysisEngine.Instance.Analyze(title, activeRules);
+                    var analysis = ContentAnalysisEngine.Instance.Analyze(combinedText, activeRules);
                     if (analysis.IsViolation)
                     {
                         ExecuteInterception(processId, analysis, hWnd);
@@ -535,6 +575,11 @@ public class NetworkBlockingService
 
             _lastInterceptionAt[processId] = now;
             _lastInterceptionTitle[processId] = title;
+
+            if (!string.IsNullOrWhiteSpace(analysis.MatchedDomain))
+            {
+                LogService.Observe(BlockSubdomainAsync(analysis.MatchedDomain), "NetworkBlocking.BlockSubdomain");
+            }
 
             PerformInterception(p, analysis, hWnd);
         }
@@ -972,32 +1017,34 @@ ipconfig /flushdns
             }
 
             var ipList = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var resolutionTasks = new List<Task<IPAddress[]>>();
+            var domainsToResolve = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var rule in activeRules)
             {
                 string domain = rule.Domain.Trim().ToLower();
                 if (string.IsNullOrWhiteSpace(domain)) continue;
 
-                resolutionTasks.Add(Dns.GetHostAddressesAsync(domain));
-                if (!domain.StartsWith("www."))
+                string baseDomain = domain;
+                if (baseDomain.StartsWith("www."))
                 {
-                    resolutionTasks.Add(Dns.GetHostAddressesAsync("www." + domain));
+                    baseDomain = baseDomain.Substring(4);
                 }
+
+                domainsToResolve.Add(baseDomain);
+                domainsToResolve.Add("www." + baseDomain);
             }
 
             foreach (var host in _dohHosts)
             {
-                resolutionTasks.Add(Dns.GetHostAddressesAsync(host));
+                domainsToResolve.Add(host);
             }
 
-            var results = await Task.WhenAll(resolutionTasks.Select(async t =>
-            {
-                try { return await t; } catch { return Array.Empty<IPAddress>(); }
-            }));
+            var dnsTasks = domainsToResolve.Select(domain => ResolveDomainWithTimeoutAsync(domain, TimeSpan.FromSeconds(2)));
+            var results = await Task.WhenAll(dnsTasks);
 
             foreach (var addresses in results)
             {
+                if (addresses == null) continue;
                 foreach (var addr in addresses)
                 {
                     if (addr == null) continue;
@@ -1014,15 +1061,7 @@ ipconfig /flushdns
                 foreach (var chunk in chunks)
                 {
                     string chunkIps = string.Join(",", chunk);
-                    string suffix;
-                    if (chunks.Count == 1)
-                    {
-                        suffix = "";
-                    }
-                    else
-                    {
-                        suffix = chunkIndex == 1 ? "" : $"_{chunkIndex}";
-                    }
+                    string suffix = chunks.Count == 1 ? "" : (chunkIndex == 1 ? "" : $"_{chunkIndex}");
 
                     AddRemoteIpBlockRule($"ClassScreenLock_DomainBlock_Out{suffix}", FirewallGroup, NET_FW_RULE_DIR_OUT, chunkIps);
                     AddRemoteIpBlockRule($"ClassScreenLock_DomainBlock_In{suffix}", FirewallGroup, NET_FW_RULE_DIR_IN, chunkIps);
@@ -1033,17 +1072,14 @@ ipconfig /flushdns
                 Debug.WriteLine($"[FIREWALL] Applied {ipList.Count} IPs to firewall block rules in {chunks.Count} chunks.");
                 LogService.Instance.Log("Info", "FirewallRulesApplied", "Firewall", $"Applied {ipList.Count} IPs in {chunks.Count} chunks.");
 
-                // 立即验证规则是否真正出现在系统中（不阻塞启动流程）
                 LogService.Observe(Task.Run(() => {
-                    // 移除不必要的等待，直接验证
                     if (!HasFirewallDomainRulesCom())
                     {
                         LogService.Instance.Log("Warning", "FirewallRuleValidationFailed", "Firewall", "Rules were applied but not found by COM API.");
                     }
                 }), "NetworkBlocking.ValidateFirewallRules");
                 
-                // 短暂延迟确保规则生效
-                await Task.Delay(100);
+                await Task.Delay(50);
             }
             else
             {
@@ -1069,7 +1105,6 @@ ipconfig /flushdns
                 return;
             }
 
-            // 带有重试机制的 Hosts 文件写入，解决文件占用问题
             int retryCount = 3;
             bool success = false;
             while (retryCount > 0 && !success)
@@ -1085,7 +1120,6 @@ ipconfig /flushdns
                         lines.RemoveRange(startIndex, endIndex - startIndex + 1);
                     }
 
-                    // 所有启用的域名规则都写入 Hosts，实现纯网络层阻断
                     var activeRules = rules
                         .Where(r => r.IsEnabled && r.Type == "Domain")
                         .ToList();
@@ -1104,13 +1138,16 @@ ipconfig /flushdns
                             string domain = rule.Domain.Trim().ToLower();
                             if (string.IsNullOrWhiteSpace(domain)) continue;
 
-                            lines.Add($"127.0.0.1 {domain}");
-                            lines.Add($"::1 {domain}");
-                            if (!domain.StartsWith("www."))
+                            string baseDomain = domain;
+                            if (baseDomain.StartsWith("www."))
                             {
-                                lines.Add($"127.0.0.1 www.{domain}");
-                                lines.Add($"::1 www.{domain}");
+                                baseDomain = baseDomain.Substring(4);
                             }
+
+                            lines.Add($"127.0.0.1 {baseDomain}");
+                            lines.Add($"::1 {baseDomain}");
+                            lines.Add($"127.0.0.1 www.{baseDomain}");
+                            lines.Add($"::1 www.{baseDomain}");
                         }
                         lines.Add(MarkerEnd);
                     }
@@ -1121,11 +1158,11 @@ ipconfig /flushdns
                 catch (IOException) when (retryCount > 1)
                 {
                     retryCount--;
-                    Thread.Sleep(500); // 等待 0.5 秒后重试
+                    Thread.Sleep(500);
                 }
                 catch (Exception)
                 {
-                    throw; // 其他异常直接抛出
+                    throw;
                 }
             }
             
@@ -1138,6 +1175,93 @@ ipconfig /flushdns
         {
             LogService.Instance.Log("Error", "HostsUpdateFailed", "HostsFile", ex.Message);
         }
+    }
+
+    private void AddSubdomainToHosts(string subdomain)
+    {
+        if (string.IsNullOrWhiteSpace(subdomain)) return;
+        if (!IsAdministrator()) return;
+
+        try
+        {
+            var lines = File.ReadAllLines(HostsPath).ToList();
+            string entry1 = $"127.0.0.1 {subdomain}";
+            string entry2 = $"::1 {subdomain}";
+
+            bool exists = lines.Any(l => l.Trim().Equals(entry1, StringComparison.OrdinalIgnoreCase) ||
+                                         l.Trim().Equals(entry2, StringComparison.OrdinalIgnoreCase));
+
+            if (exists) return;
+
+            int endIndex = lines.FindIndex(l => l.Trim() == MarkerEnd);
+            if (endIndex == -1) return;
+
+            lines.Insert(endIndex, entry1);
+            lines.Insert(endIndex + 1, entry2);
+            File.WriteAllLines(HostsPath, lines);
+            RunCommand("ipconfig", "/flushdns");
+            
+            Debug.WriteLine($"[HOSTS] Added subdomain: {subdomain}");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[HOSTS] Failed to add subdomain {subdomain}: {ex.Message}");
+        }
+    }
+
+    private readonly HashSet<string> _addedSubdomainIps = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object _subdomainLock = new();
+
+    private async Task AddSubdomainToFirewallAsync(string subdomain)
+    {
+        if (string.IsNullOrWhiteSpace(subdomain)) return;
+        if (!IsAdministrator()) return;
+
+        try
+        {
+            var addresses = await ResolveDomainWithTimeoutAsync(subdomain, TimeSpan.FromSeconds(2));
+            if (addresses == null || addresses.Length == 0) return;
+
+            var newIps = new List<string>();
+            lock (_subdomainLock)
+            {
+                foreach (var addr in addresses)
+                {
+                    if (addr == null) continue;
+                    if (IsLoopbackOrUnspecified(addr)) continue;
+                    var ipStr = NormalizeAddressString(addr);
+                    if (!_addedSubdomainIps.Contains(ipStr))
+                    {
+                        _addedSubdomainIps.Add(ipStr);
+                        newIps.Add(ipStr);
+                    }
+                }
+            }
+
+            if (newIps.Count == 0) return;
+
+            foreach (var ip in newIps)
+            {
+                AddRemoteIpBlockRule($"ClassScreenLock_Subdomain_{ip.Replace(":", "_").Replace(".", "_")}", 
+                    FirewallGroup, NET_FW_RULE_DIR_OUT, ip);
+                AddRemoteIpBlockRule($"ClassScreenLock_Subdomain_In_{ip.Replace(":", "_").Replace(".", "_")}", 
+                    FirewallGroup, NET_FW_RULE_DIR_IN, ip);
+            }
+
+            Debug.WriteLine($"[FIREWALL] Added {newIps.Count} IPs for subdomain: {subdomain}");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[FIREWALL] Failed to add subdomain {subdomain}: {ex.Message}");
+        }
+    }
+
+    public async Task BlockSubdomainAsync(string subdomain)
+    {
+        if (string.IsNullOrWhiteSpace(subdomain)) return;
+
+        AddSubdomainToHosts(subdomain);
+        await AddSubdomainToFirewallAsync(subdomain);
     }
 
     private bool IsAdministrator()
@@ -1376,6 +1500,27 @@ ipconfig /flushdns
         }
     }
 
+    private static async Task<IPAddress[]?> ResolveDomainWithTimeoutAsync(string domain, TimeSpan timeout)
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(timeout);
+            var task = Dns.GetHostAddressesAsync(domain, cts.Token);
+            var completedTask = await Task.WhenAny(task, Task.Delay(timeout, cts.Token));
+            
+            if (completedTask == task)
+            {
+                return await task;
+            }
+            
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static bool IsLoopbackOrUnspecified(IPAddress address)
     {
         try
@@ -1520,6 +1665,211 @@ ipconfig /flushdns
         }
         catch { }
         return string.Empty;
+    }
+
+    private string GetBrowserUrlFromAccessibility(IntPtr hWnd, string processName)
+    {
+        try
+        {
+            var urlFromUIA = GetUrlViaUIAutomation(hWnd);
+            if (!string.IsNullOrEmpty(urlFromUIA))
+            {
+                return urlFromUIA;
+            }
+        }
+        catch { }
+        return string.Empty;
+    }
+
+    private string GetUrlViaUIAutomation(IntPtr hWnd)
+    {
+        try
+        {
+            var element = AutomationElement.FromHandle(hWnd);
+            if (element == null) return string.Empty;
+
+            var condition = new AndCondition(
+                new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit),
+                new PropertyCondition(AutomationElement.IsValuePatternAvailableProperty, true)
+            );
+
+            var edits = element.FindAll(TreeScope.Descendants, condition);
+            foreach (AutomationElement edit in edits)
+            {
+                try
+                {
+                    var valuePattern = edit.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
+                    if (valuePattern != null)
+                    {
+                        var value = valuePattern.Current.Value;
+                        if (!string.IsNullOrEmpty(value) && IsUrl(value))
+                        {
+                            return value;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            var documentCondition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Document);
+            var documents = element.FindAll(TreeScope.Descendants, documentCondition);
+            foreach (AutomationElement doc in documents)
+            {
+                try
+                {
+                    var valuePattern = doc.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
+                    if (valuePattern != null)
+                    {
+                        var value = valuePattern.Current.Value;
+                        if (!string.IsNullOrEmpty(value) && IsUrl(value))
+                        {
+                            return value;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            var nameCondition = new PropertyCondition(AutomationElement.AutomationIdProperty, "addressEditBox", PropertyConditionFlags.IgnoreCase);
+            var addressBox = element.FindFirst(TreeScope.Descendants, nameCondition);
+            if (addressBox != null)
+            {
+                try
+                {
+                    var valuePattern = addressBox.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
+                    if (valuePattern != null)
+                    {
+                        var value = valuePattern.Current.Value;
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            return value;
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+        catch { }
+
+        return string.Empty;
+    }
+
+    private string GetUrlViaAccessibility(IntPtr hWnd, string processName)
+    {
+        object? accObj = null;
+        var iid = IID_IAccessible;
+        int result = AccessibleObjectFromWindow(hWnd, OBJID_WINDOW, ref iid, out accObj);
+        if (result != 0 || accObj == null) return string.Empty;
+
+        return ExtractUrlFromAccessible(accObj, processName, 0);
+    }
+
+    private string GetUrlViaFindWindowEx(IntPtr hWnd, string processName)
+    {
+        IntPtr child = IntPtr.Zero;
+        while (true)
+        {
+            child = FindWindowEx(hWnd, child, null, null);
+            if (child == IntPtr.Zero) break;
+
+            var className = new StringBuilder(256);
+            GetClassName(child, className, className.Capacity);
+            var cn = className.ToString();
+
+            if (cn.Contains("Edit") || cn.Contains("Address") || cn.Contains("Toolbar") || cn.Contains("ReBar"))
+            {
+                var textLen = (int)SendMessage(child, WM_GETTEXTLENGTH, IntPtr.Zero, null!);
+                if (textLen > 0)
+                {
+                    var text = new StringBuilder(textLen + 1);
+                    SendMessage(child, WM_GETTEXT, (IntPtr)(textLen + 1), text);
+                    var content = text.ToString();
+                    if (IsUrl(content))
+                    {
+                        return content;
+                    }
+                }
+            }
+
+            var subResult = GetUrlViaFindWindowEx(child, processName);
+            if (!string.IsNullOrEmpty(subResult)) return subResult;
+        }
+
+        return string.Empty;
+    }
+
+    private string ExtractUrlFromAccessible(object accObj, string processName, int depth)
+    {
+        if (depth > 10) return string.Empty;
+        
+        try
+        {
+            var accType = accObj.GetType();
+            var accValueProp = accType.GetProperty("accValue");
+            var accNameProp = accType.GetProperty("accName");
+            var accRoleProp = accType.GetProperty("accRole");
+            var accChildCountProp = accType.GetProperty("accChildCount");
+            var accStateProp = accType.GetProperty("accState");
+
+            if (accChildCountProp == null) return string.Empty;
+
+            string? currentValue = accValueProp?.GetValue(accObj)?.ToString();
+            string? currentName = accNameProp?.GetValue(accObj)?.ToString();
+            
+            if (!string.IsNullOrEmpty(currentValue) && IsUrl(currentValue))
+            {
+                return currentValue;
+            }
+            if (!string.IsNullOrEmpty(currentName) && IsUrl(currentName))
+            {
+                return currentName;
+            }
+
+            int childCount = (int)accChildCountProp.GetValue(accObj)!;
+            if (childCount <= 0) return string.Empty;
+
+            var children = new object[childCount];
+            int obtained;
+            AccessibleChildren(accObj, 0, childCount, children, out obtained);
+
+            foreach (var child in children.Take(obtained))
+            {
+                if (child == null) continue;
+
+                var childType = child.GetType();
+                var childRoleProp = childType.GetProperty("accRole");
+                var childNameProp = childType.GetProperty("accName");
+                var childValueProp = childType.GetProperty("accValue");
+
+                string? name = childNameProp?.GetValue(child)?.ToString();
+                string? value = childValueProp?.GetValue(child)?.ToString();
+
+                if (!string.IsNullOrEmpty(value) && IsUrl(value))
+                {
+                    return value;
+                }
+                if (!string.IsNullOrEmpty(name) && IsUrl(name))
+                {
+                    return name;
+                }
+
+                var subResult = ExtractUrlFromAccessible(child, processName, depth + 1);
+                if (!string.IsNullOrEmpty(subResult)) return subResult;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[URL] ExtractUrlFromAccessible error at depth {depth}: {ex.Message}");
+        }
+
+        return string.Empty;
+    }
+
+    private static bool IsUrl(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return false;
+        return text.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+               text.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
     }
 
     private bool IsSniForgery(string? commandLine)

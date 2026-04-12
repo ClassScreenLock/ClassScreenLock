@@ -11,6 +11,7 @@ public class AnalysisResult
     public float Confidence { get; set; }
     public string Reason { get; set; } = string.Empty;
     public string MatchedPattern { get; set; } = string.Empty;
+    public string MatchedDomain { get; set; } = string.Empty;
 }
 
 public class ContentAnalysisEngine
@@ -18,7 +19,6 @@ public class ContentAnalysisEngine
     private static readonly ContentAnalysisEngine _instance = new();
     public static ContentAnalysisEngine Instance => _instance;
 
-    // 特征关键词权重
     private readonly Dictionary<string, float> _featureWeights = new()
     {
         { "vpn", 0.8f },
@@ -33,45 +33,37 @@ public class ContentAnalysisEngine
         { "adult", 1.0f }
     };
 
+    private static readonly Regex DomainExtractionRegex = new(
+        @"(?:https?://)?(?:www\.)?([a-zA-Z0-9][-a-zA-Z0-9]*(?:\.[a-zA-Z0-9][-a-zA-Z0-9]*)+)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     private ContentAnalysisEngine() { }
 
     public AnalysisResult Analyze(string text, List<Models.NetworkRule> rules)
     {
         if (string.IsNullOrWhiteSpace(text)) 
             return new AnalysisResult { IsViolation = false };
-        var netEnabled = SettingsService.Blockage?.IsNetworkLockEnabled ?? false;
+
+        var extractedDomains = ExtractAllDomains(text);
 
         foreach (var rule in rules.Where(r => r.IsEnabled))
         {
             if (!string.IsNullOrEmpty(rule.Domain))
             {
-                string domain = rule.Domain.ToLower();
-                if (text.Contains(domain, StringComparison.OrdinalIgnoreCase))
+                string ruleDomain = NormalizeDomain(rule.Domain);
+                
+                foreach (var extractedDomain in extractedDomains)
                 {
-                    return new AnalysisResult 
-                    { 
-                        IsViolation = true, 
-                        Confidence = 1.0f, 
-                        Reason = "Domain Rule Match", 
-                        MatchedPattern = rule.Domain 
-                    };
-                }
-
-                if (netEnabled)
-                {
-                    var token = ExtractDomainToken(domain);
-                    if (!string.IsNullOrEmpty(token))
+                    if (DomainMatchesRule(extractedDomain, ruleDomain, out bool isSubdomain))
                     {
-                        if (ContainsWord(text, token) || ContainsAlias(text, token))
-                        {
-                            return new AnalysisResult
-                            {
-                                IsViolation = true,
-                                Confidence = 0.95f,
-                                Reason = "Domain Keyword Match",
-                                MatchedPattern = token
-                            };
-                        }
+                        return new AnalysisResult 
+                        { 
+                            IsViolation = true, 
+                            Confidence = 1.0f, 
+                            Reason = isSubdomain ? "Subdomain Rule Match" : "Domain Rule Match", 
+                            MatchedPattern = rule.Domain,
+                            MatchedDomain = extractedDomain
+                        };
                     }
                 }
             }
@@ -150,6 +142,80 @@ public class ContentAnalysisEngine
         {
             if (text.IndexOf(a, StringComparison.OrdinalIgnoreCase) >= 0) return true;
         }
+        return false;
+    }
+
+    private static HashSet<string> ExtractAllDomains(string text)
+    {
+        var domains = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        
+        var matches = DomainExtractionRegex.Matches(text);
+        foreach (Match match in matches)
+        {
+            if (match.Success && match.Groups.Count > 1)
+            {
+                var domain = match.Groups[1].Value.ToLowerInvariant();
+                domains.Add(domain);
+            }
+        }
+
+        var simpleDomainPattern = new Regex(@"\b([a-zA-Z0-9][-a-zA-Z0-9]{0,61}[a-zA-Z0-9]\.[a-zA-Z]{2,})\b", RegexOptions.IgnoreCase);
+        var simpleMatches = simpleDomainPattern.Matches(text);
+        foreach (Match match in simpleMatches)
+        {
+            if (match.Success)
+            {
+                var domain = match.Groups[1].Value.ToLowerInvariant();
+                domains.Add(domain);
+            }
+        }
+
+        return domains;
+    }
+
+    private static string NormalizeDomain(string domain)
+    {
+        if (string.IsNullOrWhiteSpace(domain)) return string.Empty;
+        
+        var normalized = domain.Trim().ToLowerInvariant();
+        
+        if (normalized.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            normalized = normalized.Substring(8);
+        else if (normalized.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            normalized = normalized.Substring(7);
+        
+        if (normalized.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
+            normalized = normalized.Substring(4);
+        
+        var slashIndex = normalized.IndexOf('/');
+        if (slashIndex >= 0)
+            normalized = normalized.Substring(0, slashIndex);
+        
+        var colonIndex = normalized.IndexOf(':');
+        if (colonIndex >= 0)
+            normalized = normalized.Substring(0, colonIndex);
+        
+        return normalized.TrimEnd('.');
+    }
+
+    private static bool DomainMatchesRule(string extractedDomain, string ruleDomain, out bool isSubdomain)
+    {
+        isSubdomain = false;
+        if (string.IsNullOrWhiteSpace(extractedDomain) || string.IsNullOrWhiteSpace(ruleDomain))
+            return false;
+
+        var extracted = NormalizeDomain(extractedDomain);
+        var rule = NormalizeDomain(ruleDomain);
+
+        if (string.Equals(extracted, rule, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (extracted.EndsWith("." + rule, StringComparison.OrdinalIgnoreCase))
+        {
+            isSubdomain = true;
+            return true;
+        }
+
         return false;
     }
 }
