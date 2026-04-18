@@ -28,7 +28,7 @@
 > 使用本软件前请仔细阅读[用户协议](https://classscreenlock.github.io/eula/)
 --------
 
-## 🎯 为什么选择ClassScreenLock
+## ClassScreenLock
 
 由于电子教育的兴起，各个班级安装上了多媒体设备，有很多无计算机基础的学生会在下课/放学后对计算机进行操作而造成不必要的麻烦，而 ClassScreenLock 专为此情况设计，解决课堂屏幕管控的核心痛点：
 
@@ -37,21 +37,6 @@
 - **操作留痕可追溯**：自动记录屏幕管控操作日志，便于教学管理和问题追溯
 - **低学习成本**：界面简洁直观，教师和学生均可快速上手，不干扰正常教学流程
 - **隐私友好设计**：仅管控屏幕显示权限，不收集敏感数据，保障师生隐私安全
-
-## 🌟 核心亮点
-
-### 🎯 智能课堂屏幕管控
-- ✅ **定时解锁机制**：预设锁定时长，到期自动解锁，适配课堂环节（如自习、测验）
-- ✅ **离线管控能力**：无网络环境下仍可实现本地设备锁定，适配各类教学场景
-- ✅ **网络拦截能力**：可以快速拦截学生访问部分非教学相关的网站
-
-### 🎨 轻量化交互体验
-- ✅ **简约易用界面**：采用轻量化设计风格，支持浅色/深色主题自适应系统设置
-- ✅ **友好提示引导**：锁定/解锁过程配有清晰的文字+语音提示，降低操作认知成本
-
-### 🚀 实用功能集
-- ✅ **操作日志记录**：自动保存锁定/解锁时间、操作人、目标分组等信息
-- ✅ **时间计划设置**：支持CSES课表格式支持，支持Classisland等课表软件使用CSES导出的yml文件导入时间设置
 
 ## 📥 下载与安装
 
@@ -72,6 +57,7 @@
   #### 网络与环境要求：
   
   本软件为本地单机应用程序，主要功能无需连接互联网即可使用。
+  
 ### 🌐 官方下载渠道
 - 📥 **[GitHub Releases](https://github.com/ClassScreenLock/ClassScreenLock/releases)**
 - 📥 **[官方下载中心](https://classscreenlock.github.io/download/)**
@@ -112,9 +98,10 @@
 
 ## 📞 联系方式
 
-- 📧 [邮箱](Lavachicken2512@outlook.com)
-- 🐙 [问题反馈](https://github.com/ClassScreenLock/ClassScreenLock/issues)
-- 💬 [QQ群：1081181845](https://qm.qq.com/q/1081181845)
+- [邮箱](Lavachicken2512@outlook.com)
+- [问题反馈](https://github.com/ClassScreenLock/ClassScreenLock/issues)
+- [QQ群：1081181845](https://qm.qq.com/q/1081181845)
+- [官方漏洞枚举库](https://github.com/ClassScreenLock/ClassScreenLock/wiki)
 
 ## 📄 官方文档
 
