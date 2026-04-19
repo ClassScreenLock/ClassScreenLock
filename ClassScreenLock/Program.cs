@@ -7,6 +7,7 @@ using System.IO.Pipes;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using ClassScreenLock.Helpers;
 using ClassScreenLock.Services;
 
@@ -16,6 +17,7 @@ sealed class Program
 {
     private static Mutex? _appMutex;
     private const string AppGuid = "ClassScreenLock-8A31-D0624A328FE5";
+    private static string _exitFlagFile = Path.Combine(AppContext.BaseDirectory, "exit.dat");
 
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     private static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
@@ -23,78 +25,64 @@ sealed class Program
     private const uint MB_OK = 0x00000000;
     private const uint MB_ICONINFORMATION = 0x00000040;
 
-    // Initialization code. Don't use any Avalonia, third-party APIs or any
-    // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
-    // yet and stuff might break.
     [DllImport("shell32.dll", SetLastError = true)]
     private static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
 
     [STAThread]
     public static void Main(string[] args)
     {
-        // 尽早设置独立的 AppUserModelID，避免与看门狗进程分到同一组
         try
         {
             SetCurrentProcessExplicitAppUserModelID("ClassScreenLock.Main");
         }
         catch
         {
-            // 忽略失败，不影响功能
-        }
-
-        // 删除退出标记文件（如果存在）
-        try
-        {
-            var exitFlagFile = Path.Combine(AppContext.BaseDirectory, "exit.flag");
-            if (File.Exists(exitFlagFile))
-            {
-                File.Delete(exitFlagFile);
-                Console.WriteLine("Deleted exit.flag file");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error deleting exit.flag: {ex.Message}");
         }
 
         var isRestart = Array.Exists(args, a => string.Equals(a, "--restart", StringComparison.OrdinalIgnoreCase));
 
-        // 单实例检测
+        if (isRestart)
+        {
+            WaitForPreviousInstanceExit();
+        }
+
+        DeleteExitFlagFile();
+
         _appMutex = new Mutex(true, AppGuid, out bool createdNew);
         if (!createdNew)
         {
-            if (isRestart)
+            var acquired = false;
+            var start = DateTime.UtcNow;
+            var timeout = isRestart ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(2);
+            
+            while (!acquired && (DateTime.UtcNow - start) < timeout)
             {
-                var acquired = false;
-                var start = DateTime.UtcNow;
-                while (!acquired && (DateTime.UtcNow - start) < TimeSpan.FromSeconds(5))
+                try
                 {
-                    try
-                    {
-                        acquired = _appMutex.WaitOne(TimeSpan.FromMilliseconds(100));
-                    }
-                    catch
-                    {
-                        acquired = false;
-                    }
+                    acquired = _appMutex.WaitOne(TimeSpan.FromMilliseconds(200));
                 }
-
-                if (!acquired)
+                catch
                 {
-                    MessageBox(IntPtr.Zero, "重启超时：原实例未退出。", "提示", MB_OK | MB_ICONINFORMATION);
-                    return;
+                    acquired = false;
                 }
             }
-            else
+
+            if (!acquired)
             {
-                TryNotifyExistingInstanceToShowMain();
+                if (isRestart)
+                {
+                    Console.WriteLine("Restart timeout: previous instance did not exit in time.");
+                }
+                else
+                {
+                    TryNotifyExistingInstanceToShowMain();
+                }
                 return;
             }
         }
 
         try
         {
-            // 全局未处理异常捕获
             AppDomain.CurrentDomain.UnhandledException += (s, e) => 
             {
                 LogCrash(e.ExceptionObject as Exception, "AppDomain.UnhandledException");
@@ -112,12 +100,179 @@ sealed class Program
         catch (Exception ex)
         {
             LogCrash(ex, "Program.Main.Catch");
-            // 发生致命错误时退出，并返回退出代码 500 (对应用户提到的错误)
             Environment.Exit(500);
         }
         finally
         {
+            CreateExitFlag();
             Cleanup();
+        }
+    }
+
+    private static void WaitForPreviousInstanceExit()
+    {
+        var start = DateTime.UtcNow;
+        var timeout = TimeSpan.FromSeconds(15);
+        
+        while ((DateTime.UtcNow - start) < timeout)
+        {
+            if (!File.Exists(_exitFlagFile))
+            {
+                Console.WriteLine("Previous instance exit flag not found, proceeding with startup.");
+                return;
+            }
+            
+            var encryptedData = File.ReadAllBytes(_exitFlagFile);
+            if (encryptedData.Length == 0)
+            {
+                Console.WriteLine("Exit flag file is empty, deleting and proceeding.");
+                DeleteExitFlagFile();
+                return;
+            }
+            
+            var decryptedData = DecryptExitFlag(encryptedData);
+            if (decryptedData == null)
+            {
+                Console.WriteLine("Exit flag decryption failed, deleting and proceeding.");
+                DeleteExitFlagFile();
+                return;
+            }
+            
+            var content = Encoding.UTF8.GetString(decryptedData);
+            var parts = content.Split('|');
+            
+            if (parts.Length == 2 && int.TryParse(parts[0], out var pid))
+            {
+                try
+                {
+                    var process = Process.GetProcessById(pid);
+                    if (process.HasExited)
+                    {
+                        Console.WriteLine($"Previous instance (PID {pid}) has exited. Waiting for cleanup...");
+                        Thread.Sleep(500);
+                        DeleteExitFlagFile();
+                        return;
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    Console.WriteLine($"Previous instance (PID {pid}) no longer exists. Proceeding.");
+                    DeleteExitFlagFile();
+                    return;
+                }
+                catch
+                {
+                    Console.WriteLine("Cannot check previous instance status, proceeding.");
+                    DeleteExitFlagFile();
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Exit flag format invalid, deleting and proceeding.");
+                DeleteExitFlagFile();
+                return;
+            }
+            
+            Thread.Sleep(200);
+        }
+        
+        Console.WriteLine("Timeout waiting for previous instance, forcing cleanup.");
+        DeleteExitFlagFile();
+    }
+
+    private static byte[]? DecryptExitFlag(byte[] encryptedData)
+    {
+        try
+        {
+            if (encryptedData.Length < 32)
+            {
+                return null;
+            }
+            
+            var key = new byte[16];
+            var iv = new byte[16];
+            
+            Array.Copy(encryptedData, 0, key, 0, 16);
+            Array.Copy(encryptedData, 16, iv, 0, 16);
+            
+            var payload = new byte[encryptedData.Length - 32];
+            Array.Copy(encryptedData, 32, payload, 0, payload.Length);
+            
+            using var aes = Aes.Create();
+            aes.Key = key;
+            aes.IV = iv;
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
+            
+            using var decryptor = aes.CreateDecryptor();
+            var decrypted = decryptor.TransformFinalBlock(payload, 0, payload.Length);
+            
+            return decrypted;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static void DeleteExitFlagFile()
+    {
+        try
+        {
+            if (File.Exists(_exitFlagFile))
+            {
+                File.Delete(_exitFlagFile);
+                Console.WriteLine("Deleted exit.dat file");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting exit.dat: {ex.Message}");
+        }
+    }
+
+    private static void CreateExitFlag()
+    {
+        try
+        {
+            var pid = Environment.ProcessId;
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var content = $"{pid}|{timestamp}";
+            var contentBytes = Encoding.UTF8.GetBytes(content);
+            
+            var key = new byte[16];
+            var iv = new byte[16];
+            
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(key);
+                rng.GetBytes(iv);
+            }
+            
+            byte[] encryptedPayload;
+            using (var aes = Aes.Create())
+            {
+                aes.Key = key;
+                aes.IV = iv;
+                aes.Mode = CipherMode.CBC;
+                aes.Padding = PaddingMode.PKCS7;
+                
+                using var encryptor = aes.CreateEncryptor();
+                encryptedPayload = encryptor.TransformFinalBlock(contentBytes, 0, contentBytes.Length);
+            }
+            
+            var finalData = new byte[key.Length + iv.Length + encryptedPayload.Length];
+            Array.Copy(key, 0, finalData, 0, key.Length);
+            Array.Copy(iv, 0, finalData, key.Length, iv.Length);
+            Array.Copy(encryptedPayload, 0, finalData, key.Length + iv.Length, encryptedPayload.Length);
+            
+            File.WriteAllBytes(_exitFlagFile, finalData);
+            Console.WriteLine("Created encrypted exit flag file");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating exit flag: {ex.Message}");
         }
     }
 
@@ -139,16 +294,13 @@ sealed class Program
     {
         try
         {
-            // 检查当前运行的看门狗实例数量
             var existingWatchdogs = Process.GetProcessesByName("CSL.Watchdog");
             
-            // 如果已经有3个或更多看门狗，不需要启动
             if (existingWatchdogs.Length >= 3)
             {
                 return;
             }
             
-            // 计算需要启动的看门狗数量
             int needToStart = 3 - existingWatchdogs.Length;
             
             var baseDir = AppContext.BaseDirectory;
@@ -156,7 +308,6 @@ sealed class Program
             
             if (File.Exists(watchdogExe))
             {
-                // 只启动缺少的看门狗实例
                 for (int i = 0; i < needToStart; i++)
                 {
                     var startInfo = new ProcessStartInfo
@@ -169,15 +320,14 @@ sealed class Program
                     };
                     
                     Process.Start(startInfo);
-                    LogCrash(new Exception($"CSL.Watchdog instance {existingWatchdogs.Length + i} started"), "Program.StartWatchdog");
+                    LogService.Instance.Log("Info", "Watchdog", "StartWatchdog", $"CSL.Watchdog instance {existingWatchdogs.Length + i} started");
                     
-                    // 短暂延迟，避免同时启动多个进程
                     System.Threading.Thread.Sleep(500);
                 }
             }
             else
             {
-                LogCrash(new Exception($"Watchdog executable not found: {watchdogExe}"), "Program.StartWatchdog");
+                LogService.Instance.Log("Error", "Watchdog", "StartWatchdog", $"Watchdog executable not found: {watchdogExe}");
             }
         }
         catch (Exception ex)
@@ -210,10 +360,9 @@ sealed class Program
         
         try 
         {
-            // 尝试写入日志文件
             Services.LogService.Instance.Log("Error", "Crash", source, ex.ToString());
         }
-        catch { /* 忽略日志写入失败 */ }
+        catch { }
     }
 
     private static void Cleanup()
@@ -231,7 +380,6 @@ sealed class Program
         ProcessProtector.Cleanup();
     }
 
-    // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
     {
         var builder = AppBuilder.Configure<App>()

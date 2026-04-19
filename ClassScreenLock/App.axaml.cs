@@ -297,7 +297,25 @@ public partial class App : Application
             
             // 默认先不应用主题，避免阻塞
             splashWindow.Show();
-            splashWindow.SetProgress(null, "正在启动…");
+            splashWindow.SetProgress(null, "正在核验数据完整性…");
+
+            // 首先执行数据恢复，确保在任何其他服务初始化之前完成
+            // 这是关键：必须在访问任何服务（如 SettingsService）之前恢复数据
+            try
+            {
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await DataProtectionService.Instance.VerifyAndRestoreDataAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Instance.Log("Error", "DataProtection", "App", $"数据恢复失败：{ex.Message}");
+                    }
+                }).GetAwaiter().GetResult();
+            }
+            catch { }
 
             // 后台应用主题设置
             _ = Task.Run(() =>
@@ -369,11 +387,10 @@ public partial class App : Application
                         _ = NotificationService.Instance;
                     });
 
-                    // 初始化数据保护服务并执行数据核验
-                    splashWindow?.SetProgress(35, "正在核验数据完整性…");
+                    // 数据恢复已在启动最前面完成，这里只创建备份和保护文件
+                    splashWindow?.SetProgress(35, "正在更新数据备份…");
                     try
                     {
-                        await DataProtectionService.Instance.VerifyAndRestoreDataAsync();
                         await DataProtectionService.Instance.CreateEncryptedBackupAsync();
                         DataProtectionService.Instance.EnsureAllFilesProtected();
                     }
@@ -569,6 +586,8 @@ public partial class App : Application
 
                             splashWindow?.Close();
                             LogService.Instance.Log("Info", "MainWindow", "App", "启动完成，闪屏窗口已关闭");
+                            
+                            LockScreenService.Instance.RestoreLockStateOnStartup();
                         }
                         catch (Exception ex)
                         {
@@ -607,7 +626,10 @@ public partial class App : Application
             _trayPopup = new TrayPopupWindow();
             _trayPopup.ShowClicked += MenuShow_OnClick;
             _trayPopup.LockClicked += MenuLock_OnClick;
-            _trayPopup.UnlockClicked += MenuUnlock_OnClick;
+            _trayPopup.AppManagementClicked += MenuAppManagement_OnClick;
+            _trayPopup.NetworkInterceptionClicked += MenuNetworkInterception_OnClick;
+            _trayPopup.SecurityLogsClicked += MenuSecurityLogs_OnClick;
+            _trayPopup.SecurityCenterClicked += MenuSecurityCenter_OnClick;
             _trayPopup.LockSettingsClicked += MenuOpenLockSettings_OnClick;
             _trayPopup.ScheduleClicked += MenuOpenSchedule_OnClick;
             _trayPopup.ExitClicked += MenuExit_OnClick;
@@ -621,14 +643,14 @@ public partial class App : Application
 
         var menuWidth = 240;
         var menuHeight = 320;
-        var margin = 8;
+        var margin = 150;
         
         double x, y;
         
         if (GetCursorPos(out var cursorPos))
         {
             x = cursorPos.X;
-            y = cursorPos.Y - menuHeight - margin * 5;
+            y = cursorPos.Y - menuHeight - margin;
             
             if (x + menuWidth > screen.WorkingArea.X + screen.WorkingArea.Width)
                 x = screen.WorkingArea.X + screen.WorkingArea.Width - menuWidth - margin;
@@ -722,9 +744,64 @@ public partial class App : Application
         LockScreenService.Instance.ActivateLock(SettingsService.Lock.BreakTimeLockMode);
     }
 
-    private void MenuUnlock_OnClick(object? sender, EventArgs e)
+    private void MenuAppManagement_OnClick(object? sender, EventArgs e)
     {
-        LockScreenService.Instance.ManualDeactivateLock();
+        if (InitializationService.Instance.RequiresInitialization)
+        {
+            ShowMainWindow();
+            return;
+        }
+        
+        ShowMainWindow();
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow is MainWindow mainWindow && mainWindow.DataContext is MainWindowViewModel vm)
+        {
+            vm.NavigateToAppManagement();
+        }
+    }
+
+    private void MenuNetworkInterception_OnClick(object? sender, EventArgs e)
+    {
+        if (InitializationService.Instance.RequiresInitialization)
+        {
+            ShowMainWindow();
+            return;
+        }
+        
+        ShowMainWindow();
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow is MainWindow mainWindow && mainWindow.DataContext is MainWindowViewModel vm)
+        {
+            vm.NavigateToNetworkInterception();
+        }
+    }
+
+    private void MenuSecurityLogs_OnClick(object? sender, EventArgs e)
+    {
+        if (InitializationService.Instance.RequiresInitialization)
+        {
+            ShowMainWindow();
+            return;
+        }
+        
+        ShowMainWindow();
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow is MainWindow mainWindow && mainWindow.DataContext is MainWindowViewModel vm)
+        {
+            vm.NavigateToSecurityLogs();
+        }
+    }
+
+    private void MenuSecurityCenter_OnClick(object? sender, EventArgs e)
+    {
+        if (InitializationService.Instance.RequiresInitialization)
+        {
+            ShowMainWindow();
+            return;
+        }
+        
+        ShowMainWindow();
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow is MainWindow mainWindow && mainWindow.DataContext is MainWindowViewModel vm)
+        {
+            vm.NavigateToSecurityCenter();
+        }
     }
 
     private async void MenuExit_OnClick(object? sender, EventArgs e)
@@ -984,12 +1061,6 @@ public partial class App : Application
     {
         try
         {
-            var exitFlagFile = Path.Combine(AppContext.BaseDirectory, "exit.flag");
-            if (File.Exists(exitFlagFile))
-            {
-                return;
-            }
-            
             var watchdogProcesses = Process.GetProcessesByName("CSL.Watchdog");
             if (watchdogProcesses.Length == 0)
             {
@@ -1008,21 +1079,11 @@ public partial class App : Application
         }
     }
     
-    // 应用退出时清理资源
     private void OnApplicationExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
         try
         {
-            // 停止看门狗监测
             StopWatchdogMonitor();
-            
-            // 创建退出标记文件，通知看门狗主进程正常退出
-            var exitFlagFile = Path.Combine(AppContext.BaseDirectory, "exit.flag");
-            var currentProcess = Process.GetCurrentProcess();
-            var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            var exitFlagContent = $"{currentProcess.Id}|{timestamp}";
-            File.WriteAllText(exitFlagFile, exitFlagContent);
-            Console.WriteLine($"Created exit.flag file with PID={currentProcess.Id}, timestamp={timestamp}");
             
             // 禁用应用防护，确保重启后不会自动启用
             SettingsService.UpdateBlockage(s =>
