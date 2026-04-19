@@ -271,7 +271,10 @@
     <x:String x:Key="Tray_Show">Show Main Window</x:String>
     <x:String x:Key="Tray_Exit">Exit</x:String>
     <x:String x:Key="Tray_QuickLock">Quick Lock</x:String>
-    <x:String x:Key="Tray_QuickUnlock">Quick Unlock</x:String>
+    <x:String x:Key="Tray_AppManagement">App Management</x:String>
+    <x:String x:Key="Tray_NetworkInterception">Network Interception</x:String>
+    <x:String x:Key="Tray_SecurityLogs">Security Logs</x:String>
+    <x:String x:Key="Tray_SecurityCenter">Security Center</x:String>
     <x:String x:Key="Tray_OpenLockSettings">Lock Settings</x:String>
     <x:String x:Key="Tray_OpenSchedule">Schedule</x:String>
     <x:String x:Key="Initialization_Title">First-Time Setup</x:String>

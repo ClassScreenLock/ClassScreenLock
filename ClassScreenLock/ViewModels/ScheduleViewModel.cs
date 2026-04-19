@@ -215,6 +215,34 @@ public partial class ScheduleViewModel : ViewModelBase
         RefreshTodayScheduleSummary();
     }
 
+    [RelayCommand]
+    private async Task SaveAndBackup()
+    {
+        try
+        {
+            // 先保存当前设置
+            SettingsService.UpdateGeneral(s => s.WeeklyCycleCount = WeeklyCycleCount);
+            
+            // 重新加载课表以确保所有文件都已创建
+            LoadSchedules();
+            RefreshWeekOptions();
+            RefreshWeeklySelection();
+            RefreshTodayScheduleSummary();
+            
+            // 等待文件写入完成
+            await Task.Delay(500);
+            
+            // 同步备份所有数据
+            await DataProtectionService.Instance.SyncToAppDataAsync();
+            
+            NotificationService.Instance.ShowSuccess("设置已保存并备份");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Instance.ShowError($"保存失败: {ex.Message}");
+        }
+    }
+
     partial void OnTermStartDateTextChanged(string value)
     {
         if (_suppressTermStartDateTextSideEffects)
@@ -607,7 +635,7 @@ public partial class ScheduleViewModel : ViewModelBase
         var schedule = ScheduleService.Instance.GetActiveSchedule() ?? SelectedSchedule;
         if (schedule == null || schedule.TimePoints == null || schedule.TimePoints.Count == 0)
         {
-            IsBreakNow = false;
+            IsBreakNow = true;
             CurrentBreakTimePoint = null;
             return;
         }

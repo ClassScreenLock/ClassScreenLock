@@ -20,7 +20,10 @@ public partial class TrayMenuView : UserControl
 
     public event EventHandler? ShowClicked;
     public event EventHandler? LockClicked;
-    public event EventHandler? UnlockClicked;
+    public event EventHandler? AppManagementClicked;
+    public event EventHandler? NetworkInterceptionClicked;
+    public event EventHandler? SecurityLogsClicked;
+    public event EventHandler? SecurityCenterClicked;
     public event EventHandler? LockSettingsClicked;
     public event EventHandler? ScheduleClicked;
     public event EventHandler? ExitClicked;
@@ -35,9 +38,24 @@ public partial class TrayMenuView : UserControl
         LockClicked?.Invoke(this, EventArgs.Empty);
     }
 
-    private void OnUnlockClicked(object sender, PointerPressedEventArgs e)
+    private void OnAppManagementClicked(object sender, PointerPressedEventArgs e)
     {
-        UnlockClicked?.Invoke(this, EventArgs.Empty);
+        AppManagementClicked?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnNetworkInterceptionClicked(object sender, PointerPressedEventArgs e)
+    {
+        NetworkInterceptionClicked?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnSecurityLogsClicked(object sender, PointerPressedEventArgs e)
+    {
+        SecurityLogsClicked?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnSecurityCenterClicked(object sender, PointerPressedEventArgs e)
+    {
+        SecurityCenterClicked?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnLockSettingsClicked(object sender, PointerPressedEventArgs e)

@@ -17,7 +17,7 @@
         <StackPanel Spacing="20">
             <StackPanel Spacing="10" HorizontalAlignment="Center">
                 <fluent:SymbolIcon Symbol="ShieldPerson" Width="48" Height="48" Foreground="{DynamicResource SystemAccentColor}"/>
-                <TextBlock Text="身份验证" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="身份验证" FontSize="26" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                 <TextBlock Text="此操作需要管理员权限" Opacity="0.6" HorizontalAlignment="Center"/>
             </StackPanel>
 
@@ -36,7 +36,7 @@
                                  Height="40"/>
                         <Button Grid.Column="1" Command="{Binding TogglePasswordVisibilityCommand}"
                                 Background="Transparent" BorderThickness="0" Width="36" Height="36">
-                            <fluent:SymbolIcon Symbol="{Binding PasswordIcon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}" Width="16" Height="16" Opacity="0.5"/>
+                            <fluent:SymbolIcon Symbol="{Binding PasswordIcon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}" Width="20" Height="20" Opacity="0.5"/>
                         </Button>
                     </Grid>
                 </StackPanel>

@@ -276,7 +276,10 @@
     <x:String x:Key="Tray_Show">显示主界面</x:String>
     <x:String x:Key="Tray_Exit">退出</x:String>
     <x:String x:Key="Tray_QuickLock">快速锁定</x:String>
-    <x:String x:Key="Tray_QuickUnlock">快速解锁</x:String>
+    <x:String x:Key="Tray_AppManagement">应用管理</x:String>
+    <x:String x:Key="Tray_NetworkInterception">网络拦截</x:String>
+    <x:String x:Key="Tray_SecurityLogs">安全日志</x:String>
+    <x:String x:Key="Tray_SecurityCenter">安全中心</x:String>
     <x:String x:Key="Tray_OpenLockSettings">锁屏设置</x:String>
     <x:String x:Key="Tray_OpenSchedule">时间计划</x:String>
     <x:String x:Key="Initialization_Title">首次启动引导</x:String>

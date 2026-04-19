@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Linq;
 using System.Globalization;
+using System.Threading.Tasks;
 using ClassScreenLock.Models;
 
 namespace ClassScreenLock.Services;
@@ -290,6 +291,22 @@ public class SettingsService
                 else if (path == ScreenshotSettingsPath) _screenshot = settings as ScreenshotSettingsModel;
                 else if (path == BlockageSettingsPath) _blockage = settings as SoftwareBlockageModel;
                 else if (path.StartsWith(AutomationSettingsDir, StringComparison.OrdinalIgnoreCase)) { _automation = settings as AutomationSettingsModel; _lastAutomationPath = path; }
+                
+                // 当保存通用设置时，异步更新加密备份以确保数据保护服务不会还原旧数据
+                if (path == GeneralSettingsPath)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await DataProtectionService.Instance.SyncToAppDataAsync();
+                        }
+                        catch
+                        {
+                            // 忽略备份更新失败，不影响主流程
+                        }
+                    });
+                }
             }
             catch (Exception ex)
             {

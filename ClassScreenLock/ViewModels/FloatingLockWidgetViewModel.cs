@@ -62,8 +62,15 @@ public partial class FloatingLockWidgetViewModel : ViewModelBase
         }
         else if (current != null && current.Type == TimePointType.Break)
         {
-            var endTime = DateTime.Today.Add(current.EndTime);
-            InfoText = $"仅防护模式运行中。本次课间预计 {endTime:HH:mm} 结束。";
+            if (current.EndTime.TotalHours >= 24)
+            {
+                InfoText = "仅防护模式运行中。今日无课程安排。";
+            }
+            else
+            {
+                var endTime = DateTime.Today.Add(current.EndTime);
+                InfoText = $"仅防护模式运行中。本次课间预计 {endTime:HH:mm} 结束。";
+            }
         }
         else
         {

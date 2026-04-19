@@ -505,6 +505,17 @@ public partial class InitializationViewModel : ViewModelBase
             case InitStep.NetworkBlocking:
                 await ApplyNetworkBlockingAsync();
                 InitializationService.Instance.MarkStepComplete(InitStep.NetworkBlocking);
+                
+                // 初始化完成后立即创建加密备份，确保 accounts.json 和 security.json 等关键文件被备份
+                try
+                {
+                    await DataProtectionService.Instance.CreateEncryptedBackupAsync();
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.Log("Warning", "DataProtection", "Init", $"初始化后备份失败：{ex.Message}");
+                }
+                
                 NotificationService.Instance.ShowSuccess("初始化完成");
                 _mainWindowViewModel.IsInitialized = true;
                 // 初始化完成后再启动应用拦截服务，以免在引导阶段误拦截

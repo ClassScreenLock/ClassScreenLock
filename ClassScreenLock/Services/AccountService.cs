@@ -435,7 +435,6 @@ public class AccountService
             _loginTime = null;
         }
         
-        // 登出时同时解除安全中心的授权状态
         SecurityService.Instance.Logout();
     }
 
@@ -606,13 +605,10 @@ public class AccountService
             return false;
         }
 
-        return current.AccountType switch
-        {
-            AccountType.SuperAdmin => true,
-            AccountType.Admin => requiredLevel != AccountType.SuperAdmin,
-            AccountType.User => requiredLevel == AccountType.User,
-            _ => false
-        };
+        var currentLevel = (int)current.AccountType;
+        var requiredLevelValue = (int)requiredLevel;
+
+        return currentLevel <= requiredLevelValue;
     }
 
     public bool EnsurePermission(AccountType requiredLevel, string operationName)

@@ -34,7 +34,10 @@ public class TrayPopupWindow : Window
         
         _menuView.ShowClicked += (s, e) => { Hide(); ShowClicked?.Invoke(this, e); };
         _menuView.LockClicked += (s, e) => { Hide(); LockClicked?.Invoke(this, e); };
-        _menuView.UnlockClicked += (s, e) => { Hide(); UnlockClicked?.Invoke(this, e); };
+        _menuView.AppManagementClicked += (s, e) => { Hide(); AppManagementClicked?.Invoke(this, e); };
+        _menuView.NetworkInterceptionClicked += (s, e) => { Hide(); NetworkInterceptionClicked?.Invoke(this, e); };
+        _menuView.SecurityLogsClicked += (s, e) => { Hide(); SecurityLogsClicked?.Invoke(this, e); };
+        _menuView.SecurityCenterClicked += (s, e) => { Hide(); SecurityCenterClicked?.Invoke(this, e); };
         _menuView.LockSettingsClicked += (s, e) => { Hide(); LockSettingsClicked?.Invoke(this, e); };
         _menuView.ScheduleClicked += (s, e) => { Hide(); ScheduleClicked?.Invoke(this, e); };
         _menuView.ExitClicked += (s, e) => { Hide(); ExitClicked?.Invoke(this, e); };
@@ -82,7 +85,10 @@ public class TrayPopupWindow : Window
 
     public event EventHandler? ShowClicked;
     public event EventHandler? LockClicked;
-    public event EventHandler? UnlockClicked;
+    public event EventHandler? AppManagementClicked;
+    public event EventHandler? NetworkInterceptionClicked;
+    public event EventHandler? SecurityLogsClicked;
+    public event EventHandler? SecurityCenterClicked;
     public event EventHandler? LockSettingsClicked;
     public event EventHandler? ScheduleClicked;
     public event EventHandler? ExitClicked;

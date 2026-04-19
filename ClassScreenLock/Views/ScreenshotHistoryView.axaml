@@ -162,7 +162,7 @@
                             </Button>
                             <Button Command="{Binding OpenFolderCommand}" Padding="12,8">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <fluent:SymbolIcon Symbol="FolderOpen" Width="16" Height="16"/>
+                                    <fluent:SymbolIcon Symbol="FolderOpen" Width="20" Height="20"/>
                                     <TextBlock Text="打开文件夹"/>
                                 </StackPanel>
                             </Button>
@@ -180,13 +180,13 @@
 
                         <Button Command="{Binding SelectAllOnPageCommand}" Padding="12,8" IsEnabled="{Binding IsSelectionMode}" Margin="0,0,10,10">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <fluent:SymbolIcon Symbol="CheckboxChecked" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="CheckboxChecked" Width="20" Height="20"/>
                                 <TextBlock Text="全选本页"/>
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding ClearSelectionCommand}" Padding="12,8" IsEnabled="{Binding IsSelectionMode}" Margin="0,0,10,10">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <fluent:SymbolIcon Symbol="DismissCircle" Width="16" Height="16"/>
+                                <fluent:SymbolIcon Symbol="DismissCircle" Width="20" Height="20"/>
                                 <TextBlock Text="清除"/>
                             </StackPanel>
                         </Button>
@@ -195,7 +195,7 @@
                             <TextBlock Text="{Binding SelectedCount, StringFormat='已选 {0}'}" Opacity="0.8" VerticalAlignment="Center"/>
                             <Button Command="{Binding DeleteSelectedCommand}" Padding="12,8" IsEnabled="{Binding IsSelectionMode}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <fluent:SymbolIcon Symbol="Delete" Width="16" Height="16" Foreground="#FF4444"/>
+                                    <fluent:SymbolIcon Symbol="Delete" Width="20" Height="20" Foreground="#FF4444"/>
                                     <TextBlock Text="删除已选"/>
                                 </StackPanel>
                             </Button>

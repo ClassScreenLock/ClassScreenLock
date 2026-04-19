@@ -87,6 +87,15 @@ public class InitializationService
         }
     }
 
+    public void ReloadState()
+    {
+        lock (_lock)
+        {
+            LoadStateInternal();
+            LogService.Instance.Log("Init", "Reloaded", "System");
+        }
+    }
+
     public void MarkStepComplete(InitStep step)
     {
         lock (_lock)

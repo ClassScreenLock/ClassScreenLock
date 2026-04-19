@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -184,7 +184,7 @@
                     </Grid>
 
                     <!-- 2. 阻止列表 -->
-                    <Grid RowDefinitions="Auto,Auto,*">
+                    <Grid RowDefinitions="Auto,Auto,Auto,*">
                         <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="16" Margin="0,0,0,16">
                             <Grid ColumnDefinitions="*,Auto">
                                 <StackPanel Spacing="4">
@@ -193,7 +193,6 @@
                                 </StackPanel>
                                 <ToggleSwitch Grid.Column="1" 
                                               IsChecked="{Binding IsAppBlockingEnabled}" 
-                                              Command="{Binding ToggleAppBlockingCommand}"
                                               OnContent="已开启" OffContent="已关闭"/>
                             </Grid>
                         </Border>
@@ -204,7 +203,29 @@
                                 <TextBlock Text="{DynamicResource AppManagement_AddPath}"/>
                             </StackPanel>
                         </Button>
-                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        
+                        <Border Grid.Row="2" 
+                                x:Name="DropZone"
+                                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" 
+                                CornerRadius="8" 
+                                BorderBrush="{DynamicResource SystemAccentColor}"
+                                BorderThickness="2"
+                                Padding="20"
+                                Margin="0,0,0,16"
+                                DragDrop.AllowDrop="True"
+                                DragDrop.DragEnter="DropZone_DragEnter"
+                                DragDrop.DragLeave="DropZone_DragLeave"
+                                DragDrop.Drop="DropZone_Drop">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                <fluent:SymbolIcon Symbol="ArrowUpload" FontSize="32" Opacity="0.5" HorizontalAlignment="Center"/>
+                                <TextBlock Text="拖放文件到此处添加到阻止列表" 
+                                           HorizontalAlignment="Center" 
+                                           Opacity="0.7"
+                                           FontSize="14"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding BlockedRules}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="system:String">
@@ -233,7 +254,6 @@
                                     </StackPanel>
                                     <ToggleSwitch Grid.Column="1" 
                                                   IsChecked="{Binding IsBasicProtectionEnabled}" 
-                                                  Command="{Binding ToggleGlobalProtectionCommand}"
                                                   OnContent="已开启" OffContent="已关闭"/>
                                 </Grid>
                             </Border>

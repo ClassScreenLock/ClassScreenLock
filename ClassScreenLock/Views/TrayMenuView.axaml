@@ -60,12 +60,49 @@
                 </Grid>
             </Border>
 
-            <!-- 快速解锁 -->
-            <Border Classes="menu-item" PointerPressed="OnUnlockClicked">
+            <!-- 分隔线 -->
+            <Border Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                    Margin="12,8"/>
+
+            <!-- 应用管理 -->
+            <Border Classes="menu-item" PointerPressed="OnAppManagementClicked">
                 <Grid ColumnDefinitions="Auto,*">
-                    <fluent:SymbolIcon Classes="menu-icon" Symbol="LockOpen"
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="Grid"
                                        Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
-                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_QuickUnlock}" 
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_AppManagement}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 网络拦截 -->
+            <Border Classes="menu-item" PointerPressed="OnNetworkInterceptionClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="Building"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_NetworkInterception}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 安全日志 -->
+            <Border Classes="menu-item" PointerPressed="OnSecurityLogsClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="ClipboardText"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_SecurityLogs}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 安全中心 -->
+            <Border Classes="menu-item" PointerPressed="OnSecurityCenterClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="ShieldPerson"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_SecurityCenter}" 
                                Margin="14,0,0,0"
                                Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
                 </Grid>

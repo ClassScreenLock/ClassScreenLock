@@ -27,7 +27,7 @@ public class DataProtectionService
     private readonly object _fileLock = new();
     private bool _isSyncing = false;
     private DateTime _lastSyncTime = DateTime.MinValue;
-    private const int SyncCooldownMs = 2000; // 2 秒冷却时间
+    private const int SyncCooldownMs = 500; // 500 毫秒冷却时间
     private const int MaxLogEntries = 100; // 最多保留 100 条日志
     private const int MaxLogFileSizeKB = 500; // 日志文件最大 500KB
 
@@ -539,7 +539,20 @@ public class DataProtectionService
 
             if (needsRestore)
             {
-                return await RestoreFromBackupAsync(backupData);
+                var restored = await RestoreFromBackupAsync(backupData);
+                if (restored)
+                {
+                    // 恢复数据后重新加载初始化状态，避免进入重新初始化流程
+                    try
+                    {
+                        InitializationService.Instance.ReloadState();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Instance.Log("Warning", "DataProtection", "ReloadInit", $"重新加载初始化状态失败：{ex.Message}");
+                    }
+                }
+                return restored;
             }
 
             return true;

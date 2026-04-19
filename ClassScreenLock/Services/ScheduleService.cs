@@ -335,10 +335,64 @@ public class ScheduleService
         return weeklyPlan;
     }
 
+    public (TimePoint? point, DateTime? classDateTime) GetNextClassPoint()
+    {
+        var now = DateTime.Now;
+        var currentTime = now.TimeOfDay;
+
+        for (int daysAhead = 0; daysAhead <= 7; daysAhead++)
+        {
+            var targetDate = now.Date.AddDays(daysAhead);
+            var schedule = WeeklyScheduleService.Instance.BuildPlanFor(targetDate);
+            if (schedule == null || schedule.TimePoints == null || schedule.TimePoints.Count == 0)
+            {
+                continue;
+            }
+
+            var futureClasses = schedule.TimePoints
+                .Where(t => t.Type == TimePointType.Class)
+                .ToList();
+
+            if (daysAhead == 0)
+            {
+                var todayClass = futureClasses
+                    .Where(t => t.StartTime > currentTime)
+                    .OrderBy(t => t.StartTime)
+                    .FirstOrDefault();
+                if (todayClass != null)
+                {
+                    return (todayClass, targetDate.Add(todayClass.StartTime));
+                }
+            }
+            else
+            {
+                var earliestClass = futureClasses
+                    .OrderBy(t => t.StartTime)
+                    .FirstOrDefault();
+                if (earliestClass != null)
+                {
+                    var classDateTime = targetDate.Add(earliestClass.StartTime);
+                    return (earliestClass, classDateTime);
+                }
+            }
+        }
+
+        return (null, null);
+    }
+
     public (TimePoint? current, TimePoint? next) GetCurrentAndNextTimePoint(TimeSpan time)
     {
         var schedule = GetActiveSchedule();
-        if (schedule == null || schedule.TimePoints == null) return (null, null);
+        if (schedule == null || schedule.TimePoints == null || schedule.TimePoints.Count == 0)
+        {
+            return (new TimePoint
+            {
+                Type = TimePointType.Break,
+                Label = "课间休息",
+                StartTime = TimeSpan.Zero,
+                EndTime = TimeSpan.FromHours(24)
+            }, null);
+        }
 
         var current = schedule.TimePoints
             .Where(t => time >= t.StartTime && time < t.EndTime)

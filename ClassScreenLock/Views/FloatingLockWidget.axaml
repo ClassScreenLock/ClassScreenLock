@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,7 +7,7 @@
         x:Class="ClassScreenLock.Views.FloatingLockWidget"
         x:DataType="vm:FloatingLockWidgetViewModel"
         Title="仅防护管理"
-        Width="360" Height="170"
+        Width="400" Height="170"
         WindowStartupLocation="Manual"
         SystemDecorations="None"
         Topmost="True"
@@ -24,13 +24,11 @@
                 VerticalAlignment="Stretch">
             <StackPanel Spacing="8">
                 <TextBlock Text="当前电脑已被管控"
-                           Width="16" Height="16"
                            FontWeight="Bold"
                            Foreground="White"/>
 
                 <TextBlock Text="{Binding InfoText}"
                            TextWrapping="Wrap"
-                           Width="12" Height="12"
                            Foreground="White"
                            Opacity="0.9"/>
 
@@ -42,14 +40,13 @@
                              Watermark="密码"
                              Text="{Binding Password, Mode=TwoWay}"
                              PasswordChar="*"/>
-                    <Button Width="70"
+                    <Button Width="90"
                             Content="解除管控"
                             Command="{Binding UnlockCommand}"/>
                 </StackPanel>
 
                 <TextBlock Text="{Binding ErrorMessage}"
                            Foreground="#FFE81123"
-                           Width="12" Height="12"
                            TextWrapping="Wrap"/>
             </StackPanel>
         </Border>

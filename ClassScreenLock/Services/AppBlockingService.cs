@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
+using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -18,6 +21,9 @@ public class AppBlockingService
 
     private CancellationTokenSource? _cts;
     private bool _isRunning;
+    private readonly List<FileSystemWatcher> _fileWatchers = new();
+    private readonly HashSet<string> _watchedDirectories = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object _watcherLock = new();
 
     private static readonly HashSet<string> OwnProcessNames = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -35,12 +41,213 @@ public class AppBlockingService
         _isRunning = true;
         _cts = new CancellationTokenSource();
         LogService.Observe(Task.Run(() => MonitorLoop(_cts.Token)), "AppBlocking.MonitorLoop");
+        SetupFileWatchers();
     }
 
     public void Stop()
     {
         _isRunning = false;
         _cts?.Cancel();
+        CleanupFileWatchers();
+    }
+
+    public void RefreshFileWatchers()
+    {
+        SetupFileWatchers();
+    }
+
+    private void SetupFileWatchers()
+    {
+        lock (_watcherLock)
+        {
+            CleanupFileWatchers();
+
+            var settings = SettingsService.Blockage;
+            if (settings?.BlockedRules == null) return;
+
+            foreach (var rule in settings.BlockedRules)
+            {
+                if (!LooksLikePath(rule)) continue;
+                var path = NormalizePath(rule);
+                if (string.IsNullOrWhiteSpace(path)) continue;
+
+                var dir = Path.GetDirectoryName(path);
+                if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) continue;
+
+                if (_watchedDirectories.Contains(dir)) continue;
+
+                try
+                {
+                    var watcher = new FileSystemWatcher(dir)
+                    {
+                        NotifyFilter = NotifyFilters.FileName | NotifyFilters.CreationTime,
+                        IncludeSubdirectories = false,
+                        EnableRaisingEvents = true
+                    };
+
+                    watcher.Created += OnFileCreated;
+                    watcher.Renamed += OnFileRenamed;
+
+                    _fileWatchers.Add(watcher);
+                    _watchedDirectories.Add(dir);
+                    LogService.Instance.Log("Info", "FileWatcher", "Setup", $"监控目录: {dir}");
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.Log("Error", "FileWatcher", "Setup", $"设置目录监控失败 {dir}: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    private void CleanupFileWatchers()
+    {
+        lock (_watcherLock)
+        {
+            foreach (var watcher in _fileWatchers)
+            {
+                try
+                {
+                    watcher.EnableRaisingEvents = false;
+                    watcher.Created -= OnFileCreated;
+                    watcher.Renamed -= OnFileRenamed;
+                    watcher.Dispose();
+                }
+                catch { }
+            }
+            _fileWatchers.Clear();
+            _watchedDirectories.Clear();
+        }
+    }
+
+    private static string? ComputeFileHash(string path)
+    {
+        try
+        {
+            if (!File.Exists(path)) return null;
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var buffer = new byte[Math.Min(64 * 1024, stream.Length)];
+            var bytesRead = stream.Read(buffer, 0, buffer.Length);
+            if (bytesRead == 0) return null;
+            using var sha256 = SHA256.Create();
+            var hash = sha256.ComputeHash(buffer, 0, bytesRead);
+            return Convert.ToHexString(hash);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void OnFileCreated(object sender, FileSystemEventArgs e)
+    {
+        try
+        {
+            var newFile = e.FullPath;
+            if (!File.Exists(newFile)) return;
+
+            var settings = SettingsService.Blockage;
+            if (settings?.BlockedFileHashes == null || settings.BlockedFileHashes.Count == 0) return;
+
+            var newFileHash = ComputeFileHash(newFile);
+            if (string.IsNullOrWhiteSpace(newFileHash)) return;
+
+            foreach (var kv in settings.BlockedFileHashes)
+            {
+                if (string.Equals(kv.Value, newFileHash, StringComparison.OrdinalIgnoreCase))
+                {
+                    LogService.Instance.Log("Warning", "FileWatcher", "Created", $"检测到新文件与阻止文件哈希匹配: {newFile}");
+                    ApplyFileAcl(newFile, settings);
+                    break;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "FileWatcher", "Created", ex.Message);
+        }
+    }
+
+    private void OnFileRenamed(object sender, RenamedEventArgs e)
+    {
+        try
+        {
+            var newFile = e.FullPath;
+            if (!File.Exists(newFile)) return;
+
+            var settings = SettingsService.Blockage;
+            if (settings?.BlockedFileHashes == null || settings.BlockedFileHashes.Count == 0) return;
+
+            var newFileHash = ComputeFileHash(newFile);
+            if (string.IsNullOrWhiteSpace(newFileHash)) return;
+
+            foreach (var kv in settings.BlockedFileHashes)
+            {
+                if (string.Equals(kv.Value, newFileHash, StringComparison.OrdinalIgnoreCase))
+                {
+                    LogService.Instance.Log("Warning", "FileWatcher", "Renamed", $"检测到重命名文件与阻止文件哈希匹配: {newFile}");
+                    ApplyFileAcl(newFile, settings);
+                    break;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "FileWatcher", "Renamed", ex.Message);
+        }
+    }
+
+    private static void ApplyFileAcl(string path, SoftwareBlockageModel settings)
+    {
+        if (!File.Exists(path)) return;
+
+        settings.BlockedFileAclBackup ??= new Dictionary<string, string>();
+
+        if (!settings.BlockedFileAclBackup.ContainsKey(path))
+        {
+            try
+            {
+                var current = new FileInfo(path).GetAccessControl(AccessControlSections.All);
+                settings.BlockedFileAclBackup[path] = current.GetSecurityDescriptorSddlForm(AccessControlSections.All);
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Error", "FileAcl", "Backup", $"备份文件 ACL 失败 {path}: {ex.Message}");
+                return;
+            }
+        }
+
+        try
+        {
+            var fileSecurity = new FileSecurity();
+            fileSecurity.SetAccessRuleProtection(true, false);
+
+            var systemSid = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
+            fileSecurity.AddAccessRule(new FileSystemAccessRule(systemSid, FileSystemRights.FullControl, AccessControlType.Allow));
+
+            var currentUser = WindowsIdentity.GetCurrent();
+            if (currentUser != null)
+            {
+                var userSid = currentUser.User;
+                if (userSid != null)
+                {
+                    fileSecurity.AddAccessRule(new FileSystemAccessRule(userSid, FileSystemRights.FullControl, AccessControlType.Deny));
+                }
+            }
+
+            var everyoneSid = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
+            fileSecurity.AddAccessRule(new FileSystemAccessRule(everyoneSid, FileSystemRights.FullControl, AccessControlType.Deny));
+
+            var usersSid = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
+            fileSecurity.AddAccessRule(new FileSystemAccessRule(usersSid, FileSystemRights.FullControl, AccessControlType.Deny));
+
+            new FileInfo(path).SetAccessControl(fileSecurity);
+            LogService.Instance.Log("Info", "FileAcl", "Apply", $"已限制文件访问: {path}");
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "FileAcl", "Apply", $"设置文件 ACL 失败 {path}: {ex.Message}");
+        }
     }
 
     private bool IsAdministrator()

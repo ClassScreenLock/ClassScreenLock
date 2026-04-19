@@ -634,10 +634,20 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void RestartApp()
+    private async Task RestartApp()
     {
         try
         {
+            // 在重启前等待备份完成，确保最新设置被保存
+            try
+            {
+                await DataProtectionService.Instance.SyncToAppDataAsync();
+            }
+            catch
+            {
+                // 忽略备份失败，继续重启
+            }
+
             var exePath = Environment.ProcessPath;
             if (string.IsNullOrWhiteSpace(exePath))
             {

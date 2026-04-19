@@ -102,11 +102,17 @@ public class FloatingWidgetService
         private const uint SWP_NOOWNERZORDER = 0x0200;
         private const uint SWP_NOSENDCHANGING = 0x0400;
 
+        private const double DragThreshold = 5.0;
+
         private readonly Button _button;
         private readonly Panel _normalContent;
         private readonly Panel _confirmContent;
         private bool _isConfirming;
         private DateTime _lastClickTime;
+        private PixelPoint _dragStartPosition;
+        private PixelPoint _pointerScreenStartPosition;
+        private bool _isPointerDown;
+        private bool _hasDragged;
 
         public FloatingBreakButtonWindow()
         {
@@ -150,15 +156,11 @@ public class FloatingWidgetService
                 }
             };
 
-            _button.Click += (_, __) => HandleButtonClick();
-            _button.PointerPressed += (_, e) =>
-            {
-                if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-                {
-                    try { BeginMoveDrag(e); } catch { }
-                    EnsureBottom();
-                }
-            };
+            _button.AddHandler(PointerPressedEvent, OnPointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+            _button.AddHandler(PointerMovedEvent, OnPointerMoved, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+            _button.AddHandler(PointerReleasedEvent, OnPointerReleased, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+
+            _button.Click += OnButtonClick;
 
             Content = new Grid
             {
@@ -171,16 +173,68 @@ public class FloatingWidgetService
 
             Opened += (_, __) =>
             {
-                var screens = Screens;
-                var s = screens?.Primary;
-                if (s != null)
-                {
-                    var wa = s.WorkingArea;
-                    Position = new PixelPoint(wa.X + wa.Width - 120, wa.Y + wa.Height - 140);
-                }
+                RestorePosition();
                 EnsureBottom();
                 Dispatcher.UIThread.Post(() => Opacity = 1);
             };
+        }
+
+        private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && !_isConfirming)
+            {
+                _isPointerDown = true;
+                _hasDragged = false;
+                var localPos = e.GetPosition(this);
+                _pointerScreenStartPosition = new PixelPoint(Position.X + (int)localPos.X, Position.Y + (int)localPos.Y);
+                _dragStartPosition = Position;
+            }
+        }
+
+        private void OnPointerMoved(object? sender, PointerEventArgs e)
+        {
+            if (_isPointerDown && !_isConfirming)
+            {
+                var point = e.GetCurrentPoint(this);
+                if (point.Properties.IsLeftButtonPressed)
+                {
+                    var localPos = point.Position;
+                    var currentPointerScreenPos = new PixelPoint(Position.X + (int)localPos.X, Position.Y + (int)localPos.Y);
+                    var delta = currentPointerScreenPos - _pointerScreenStartPosition;
+                    var distance = Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y);
+
+                    if (distance > DragThreshold)
+                    {
+                        _hasDragged = true;
+                        Position = new PixelPoint(_dragStartPosition.X + delta.X, _dragStartPosition.Y + delta.Y);
+                    }
+                }
+            }
+        }
+
+        private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+        {
+            if (_isPointerDown)
+            {
+                _isPointerDown = false;
+
+                if (_hasDragged)
+                {
+                    SavePosition();
+                }
+            }
+        }
+
+        private void OnButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (_hasDragged)
+            {
+                _hasDragged = false;
+                e.Handled = true;
+                return;
+            }
+
+            HandleButtonClick();
         }
 
         private void HandleButtonClick()
@@ -236,7 +290,10 @@ public class FloatingWidgetService
             if (confirming)
             {
                 _button.Classes.Remove("accent");
-                _button.Classes.Add("danger");
+                if (!_button.Classes.Contains("danger"))
+                {
+                    _button.Classes.Add("danger");
+                }
             }
             else
             {
@@ -264,6 +321,47 @@ public class FloatingWidgetService
                         SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING);
                 }
             });
+        }
+
+        private void SavePosition()
+        {
+            try
+            {
+                var pos = Position;
+                SettingsService.UpdateLock(s =>
+                {
+                    s.FloatingWidgetPositionX = pos.X;
+                    s.FloatingWidgetPositionY = pos.Y;
+                });
+            }
+            catch
+            {
+            }
+        }
+
+        private void RestorePosition()
+        {
+            try
+            {
+                var settings = SettingsService.Lock;
+                if (settings.FloatingWidgetPositionX.HasValue && settings.FloatingWidgetPositionY.HasValue)
+                {
+                    Position = new PixelPoint((int)settings.FloatingWidgetPositionX.Value, (int)settings.FloatingWidgetPositionY.Value);
+                }
+                else
+                {
+                    var screens = Screens;
+                    var s = screens?.Primary;
+                    if (s != null)
+                    {
+                        var wa = s.WorkingArea;
+                        Position = new PixelPoint(wa.X + wa.Width - 120, wa.Y + wa.Height - 140);
+                    }
+                }
+            }
+            catch
+            {
+            }
         }
 
         private static Panel BuildNormalContent()

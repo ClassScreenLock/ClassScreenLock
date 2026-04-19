@@ -88,6 +88,9 @@ public partial class LockWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _shutdownCountdownText = string.Empty;
 
+    [ObservableProperty]
+    private bool _canRelock;
+
     private DispatcherTimer? _shutdownTimer;
 
     public bool IsLetterModeVisible => !IsSymbolModeEnabled;
@@ -383,6 +386,7 @@ public partial class LockWindowViewModel : ViewModelBase
         UpdateCurrentTime();
         LoadScheduleInfo();
         UpdateCountdown();
+        CanRelock = LockScreenService.Instance.CanRelock();
     }
 
     private void UpdateCurrentTime()
@@ -480,6 +484,12 @@ public partial class LockWindowViewModel : ViewModelBase
         TwoFactorCode = string.Empty;
         IsTwoFactorRequired = false;
         ErrorMessage = string.Empty;
+    }
+
+    [RelayCommand]
+    private void Relock()
+    {
+        LockScreenService.Instance.Relock();
     }
 
     [RelayCommand]

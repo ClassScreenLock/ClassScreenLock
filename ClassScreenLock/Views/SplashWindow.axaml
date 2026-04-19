@@ -50,15 +50,15 @@
                        Grid.Row="0"
                        Source="avares://ClassScreenLock/Assets/CSL.png"
                        Width="360"
-                       MaxHeight="200"
+                       MaxHeight="150"
                        Stretch="Uniform"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"
                        RenderOptions.BitmapInterpolationMode="HighQuality"/>
 
-                <StackPanel Grid.Row="1" HorizontalAlignment="Center" Spacing="6" Margin="0,0,0,16">
-                    <TextBlock x:Name="StatusText" Opacity="0.85" HorizontalAlignment="Center" Text="正在启动" FontSize="14"/>
-                    <TextBlock x:Name="PercentText" Opacity="0.9" HorizontalAlignment="Center" FontSize="13" FontWeight="Medium" Text=""/>
+                <StackPanel Grid.Row="1" HorizontalAlignment="Center" Spacing="6" Margin="0,0,0,10">
+                    <TextBlock x:Name="StatusText" Opacity="0.85" HorizontalAlignment="Center" Text="正在启动" FontSize="16"/>
+                    <TextBlock x:Name="PercentText" Opacity="0.9" HorizontalAlignment="Center" FontSize="16" FontWeight="Medium" Text=""/>
                     <TextBlock x:Name="VersionText" Opacity="0.6" HorizontalAlignment="Center" FontSize="12"/>
                 </StackPanel>
 

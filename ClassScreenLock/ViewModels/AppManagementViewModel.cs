@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -539,9 +540,152 @@ public partial class AppManagementViewModel : ViewModelBase
                 ApplyBlockedFilePermissionForPath(rule, settings);
             }
         }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "FileAcl", "ApplyAll", $"应用所有文件 ACL 失败: {ex.Message}");
+        }
+    }
+
+    private static string? ComputeFileHash(string path)
+    {
+        try
+        {
+            if (!File.Exists(path)) return null;
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var buffer = new byte[Math.Min(64 * 1024, stream.Length)];
+            var bytesRead = stream.Read(buffer, 0, buffer.Length);
+            if (bytesRead == 0) return null;
+            using var sha256 = SHA256.Create();
+            var hash = sha256.ComputeHash(buffer, 0, bytesRead);
+            return Convert.ToHexString(hash);
+        }
         catch
         {
+            return null;
         }
+    }
+
+    private static bool RestoreFileAclWithElevation(string filePath, string? sddl)
+    {
+        try
+        {
+            var escapedPath = filePath.Replace("'", "''");
+            string psScript;
+
+            if (!string.IsNullOrWhiteSpace(sddl))
+            {
+                var escapedSddl = sddl.Replace("'", "''");
+                psScript = $@"
+$acl = New-Object System.Security.AccessControl.FileSecurity
+$acl.SetSecurityDescriptorSddlForm('{escapedSddl}')
+Set-Acl -Path '{escapedPath}' -AclObject $acl
+";
+            }
+            else
+            {
+                psScript = $@"
+$acl = Get-Acl -Path '{escapedPath}'
+$acl.SetAccessRuleProtection($false, $true)
+Set-Acl -Path '{escapedPath}' -AclObject $acl
+";
+            }
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{psScript.Replace("\"", "\\\"")}\"",
+                Verb = "runas",
+                UseShellExecute = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process != null)
+            {
+                process.WaitForExit(10000);
+                if (process.ExitCode == 0)
+                {
+                    LogService.Instance.Log("Info", "FileAcl", "ElevatedRestore", $"已通过提权恢复文件权限: {filePath}");
+                    return true;
+                }
+                else
+                {
+                    LogService.Instance.Log("Error", "FileAcl", "ElevatedRestore", $"提权恢复失败，退出码: {process.ExitCode}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "FileAcl", "ElevatedRestore", $"提权恢复异常: {ex.Message}");
+        }
+        return false;
+    }
+
+    private static bool RestoreMultipleFileAclsWithElevation(List<(string filePath, string? sddl)> files)
+    {
+        if (files.Count == 0) return true;
+
+        try
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var (filePath, sddl) in files)
+            {
+                var escapedPath = filePath.Replace("'", "''");
+                if (!string.IsNullOrWhiteSpace(sddl))
+                {
+                    var escapedSddl = sddl.Replace("'", "''");
+                    sb.AppendLine($@"
+$acl = New-Object System.Security.AccessControl.FileSecurity
+$acl.SetSecurityDescriptorSddlForm('{escapedSddl}')
+Set-Acl -Path '{escapedPath}' -AclObject $acl -ErrorAction SilentlyContinue
+");
+                }
+                else
+                {
+                    sb.AppendLine($@"
+try {{
+    $acl = Get-Acl -Path '{escapedPath}' -ErrorAction SilentlyContinue
+    if ($acl) {{
+        $acl.SetAccessRuleProtection($false, $true)
+        Set-Acl -Path '{escapedPath}' -AclObject $acl -ErrorAction SilentlyContinue
+    }}
+}} catch {{}}
+");
+                }
+            }
+
+            var psScript = sb.ToString();
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{psScript.Replace("\"", "\\\"")}\"",
+                Verb = "runas",
+                UseShellExecute = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process != null)
+            {
+                process.WaitForExit(30000);
+                if (process.ExitCode == 0)
+                {
+                    LogService.Instance.Log("Info", "FileAcl", "BatchElevatedRestore", $"已批量恢复 {files.Count} 个文件权限");
+                    return true;
+                }
+                else
+                {
+                    LogService.Instance.Log("Error", "FileAcl", "BatchElevatedRestore", $"批量恢复失败，退出码: {process.ExitCode}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "FileAcl", "BatchElevatedRestore", $"批量恢复异常: {ex.Message}");
+        }
+        return false;
     }
 
     private void ApplyBlockedFilePermissionForPath(string rule, SoftwareBlockageModel settings)
@@ -550,7 +694,11 @@ public partial class AppManagementViewModel : ViewModelBase
         var path = NormalizeRulePath(rule);
         if (string.IsNullOrWhiteSpace(path)) return;
         if (!ShouldApplyFileAcl(path)) return;
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path))
+        {
+            LogService.Instance.Log("Warning", "FileAcl", "Apply", $"文件不存在: {path}");
+            return;
+        }
 
         if (!settings.BlockedFileAclBackup.ContainsKey(path))
         {
@@ -559,10 +707,19 @@ public partial class AppManagementViewModel : ViewModelBase
                 var current = new FileInfo(path).GetAccessControl(AccessControlSections.All);
                 settings.BlockedFileAclBackup[path] = current.GetSecurityDescriptorSddlForm(AccessControlSections.All);
             }
-            catch
+            catch (Exception ex)
             {
+                LogService.Instance.Log("Error", "FileAcl", "Backup", $"备份文件 ACL 失败 {path}: {ex.Message}");
                 return;
             }
+        }
+
+        settings.BlockedFileHashes ??= new Dictionary<string, string>();
+        var hash = ComputeFileHash(path);
+        if (!string.IsNullOrWhiteSpace(hash))
+        {
+            settings.BlockedFileHashes[path] = hash;
+            LogService.Instance.Log("Info", "FileAcl", "Hash", $"已记录文件哈希: {path}");
         }
 
         try
@@ -570,15 +727,31 @@ public partial class AppManagementViewModel : ViewModelBase
             var fileSecurity = new FileSecurity();
             fileSecurity.SetAccessRuleProtection(true, false);
 
-            var adminSid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
             var systemSid = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
-            fileSecurity.AddAccessRule(new FileSystemAccessRule(adminSid, FileSystemRights.FullControl, AccessControlType.Allow));
             fileSecurity.AddAccessRule(new FileSystemAccessRule(systemSid, FileSystemRights.FullControl, AccessControlType.Allow));
 
+            var currentUser = WindowsIdentity.GetCurrent();
+            if (currentUser != null)
+            {
+                var userSid = currentUser.User;
+                if (userSid != null)
+                {
+                    fileSecurity.AddAccessRule(new FileSystemAccessRule(userSid, FileSystemRights.FullControl, AccessControlType.Deny));
+                }
+            }
+
+            var everyoneSid = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
+            fileSecurity.AddAccessRule(new FileSystemAccessRule(everyoneSid, FileSystemRights.FullControl, AccessControlType.Deny));
+
+            var usersSid = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
+            fileSecurity.AddAccessRule(new FileSystemAccessRule(usersSid, FileSystemRights.FullControl, AccessControlType.Deny));
+
             new FileInfo(path).SetAccessControl(fileSecurity);
+            LogService.Instance.Log("Info", "FileAcl", "Apply", $"已限制文件访问: {path}");
         }
-        catch
+        catch (Exception ex)
         {
+            LogService.Instance.Log("Error", "FileAcl", "Apply", $"设置文件 ACL 失败 {path}: {ex.Message}");
         }
     }
 
@@ -589,35 +762,118 @@ public partial class AppManagementViewModel : ViewModelBase
             var settings = SettingsService.Blockage;
             if (settings?.BlockedFileAclBackup == null || settings.BlockedFileAclBackup.Count == 0) return;
 
+            var filesToRestoreWithElevation = new List<(string filePath, string? sddl)>();
+            var pathsToRemove = new List<string>();
+
             foreach (var kv in settings.BlockedFileAclBackup.ToList())
             {
                 var path = kv.Key;
                 var sddl = kv.Value;
 
-                if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(sddl))
+                if (string.IsNullOrWhiteSpace(path))
                 {
                     settings.BlockedFileAclBackup.Remove(path);
                     continue;
                 }
 
-                try
+                if (File.Exists(path))
                 {
-                    if (File.Exists(path))
+                    if (!string.IsNullOrWhiteSpace(sddl))
                     {
-                        var original = new FileSecurity();
-                        original.SetSecurityDescriptorSddlForm(sddl);
-                        new FileInfo(path).SetAccessControl(original);
+                        try
+                        {
+                            var original = new FileSecurity();
+                            original.SetSecurityDescriptorSddlForm(sddl);
+                            new FileInfo(path).SetAccessControl(original);
+                            LogService.Instance.Log("Info", "FileAcl", "Restore", $"已恢复文件访问: {path}");
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            filesToRestoreWithElevation.Add((path, sddl));
+                        }
+                        catch (Exception ex)
+                        {
+                            LogService.Instance.Log("Warning", "FileAcl", "Restore", $"普通恢复失败，将批量提权: {ex.Message}");
+                            filesToRestoreWithElevation.Add((path, sddl));
+                        }
+                    }
+                    else
+                    {
+                        filesToRestoreWithElevation.Add((path, null));
                     }
                 }
-                catch
+                else if (!File.Exists(path))
                 {
+                    var dir = Path.GetDirectoryName(path);
+                    if (!string.IsNullOrWhiteSpace(dir) && Directory.Exists(dir))
+                    {
+                        var storedHash = settings.BlockedFileHashes?.GetValueOrDefault(path);
+                        if (!string.IsNullOrWhiteSpace(storedHash))
+                        {
+                            try
+                            {
+                                var files = Directory.GetFiles(dir);
+                                foreach (var file in files)
+                                {
+                                    try
+                                    {
+                                        var fileHash = ComputeFileHash(file);
+                                        if (string.Equals(fileHash, storedHash, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(sddl))
+                                            {
+                                                try
+                                                {
+                                                    var original = new FileSecurity();
+                                                    original.SetSecurityDescriptorSddlForm(sddl);
+                                                    new FileInfo(file).SetAccessControl(original);
+                                                    LogService.Instance.Log("Info", "FileAcl", "Restore", $"已恢复重命名文件访问: {file}");
+                                                }
+                                                catch (UnauthorizedAccessException)
+                                                {
+                                                    filesToRestoreWithElevation.Add((file, sddl));
+                                                }
+                                                catch (Exception)
+                                                {
+                                                    filesToRestoreWithElevation.Add((file, sddl));
+                                                }
+                                            }
+                                            else
+                                            {
+                                                filesToRestoreWithElevation.Add((file, null));
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    catch { }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogService.Instance.Log("Error", "FileAcl", "Scan", $"扫描目录查找文件失败: {ex.Message}");
+                            }
+                        }
+                    }
                 }
 
+                pathsToRemove.Add(path);
+            }
+
+            if (filesToRestoreWithElevation.Count > 0)
+            {
+                LogService.Instance.Log("Info", "FileAcl", "BatchRestore", $"需要提权恢复 {filesToRestoreWithElevation.Count} 个文件");
+                RestoreMultipleFileAclsWithElevation(filesToRestoreWithElevation);
+            }
+
+            foreach (var path in pathsToRemove)
+            {
                 settings.BlockedFileAclBackup.Remove(path);
             }
+            settings.BlockedFileHashes?.Clear();
         }
-        catch
+        catch (Exception ex)
         {
+            LogService.Instance.Log("Error", "FileAcl", "RestoreAll", $"恢复所有文件 ACL 失败: {ex.Message}");
         }
     }
 
@@ -626,29 +882,112 @@ public partial class AppManagementViewModel : ViewModelBase
         try
         {
             var settings = SettingsService.Blockage;
-            if (settings?.BlockedFileAclBackup == null || settings.BlockedFileAclBackup.Count == 0) return;
+            if (settings?.BlockedFileAclBackup == null) return;
 
             var path = NormalizeRulePath(rule);
             if (string.IsNullOrWhiteSpace(path)) return;
-            if (!settings.BlockedFileAclBackup.TryGetValue(path, out var sddl) || string.IsNullOrWhiteSpace(sddl)) return;
 
-            try
+            var sddl = settings.BlockedFileAclBackup.TryGetValue(path, out var backupSddl) ? backupSddl : null;
+
+            if (File.Exists(path))
             {
-                if (File.Exists(path))
+                var restored = false;
+                if (!string.IsNullOrWhiteSpace(sddl))
                 {
-                    var original = new FileSecurity();
-                    original.SetSecurityDescriptorSddlForm(sddl);
-                    new FileInfo(path).SetAccessControl(original);
+                    try
+                    {
+                        var original = new FileSecurity();
+                        original.SetSecurityDescriptorSddlForm(sddl);
+                        new FileInfo(path).SetAccessControl(original);
+                        LogService.Instance.Log("Info", "FileAcl", "Restore", $"已恢复文件访问: {path}");
+                        restored = true;
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        LogService.Instance.Log("Warning", "FileAcl", "Restore", $"无权限恢复 ACL，尝试提权: {path}");
+                        restored = RestoreFileAclWithElevation(path, sddl);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Instance.Log("Warning", "FileAcl", "Restore", $"普通恢复失败，尝试提权: {ex.Message}");
+                        restored = RestoreFileAclWithElevation(path, sddl);
+                    }
+                }
+                else
+                {
+                    restored = RestoreFileAclWithElevation(path, null);
                 }
             }
-            catch
+            else if (!File.Exists(path))
             {
+                var dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrWhiteSpace(dir) && Directory.Exists(dir))
+                {
+                    var storedHash = settings.BlockedFileHashes?.GetValueOrDefault(path);
+                    if (!string.IsNullOrWhiteSpace(storedHash))
+                    {
+                        try
+                        {
+                            var files = Directory.GetFiles(dir);
+                            foreach (var file in files)
+                            {
+                                try
+                                {
+                                    var fileHash = ComputeFileHash(file);
+                                    if (string.Equals(fileHash, storedHash, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        var restored = false;
+                                        if (!string.IsNullOrWhiteSpace(sddl))
+                                        {
+                                            try
+                                            {
+                                                var original = new FileSecurity();
+                                                original.SetSecurityDescriptorSddlForm(sddl);
+                                                new FileInfo(file).SetAccessControl(original);
+                                                LogService.Instance.Log("Info", "FileAcl", "Restore", $"已恢复重命名文件访问: {file}");
+                                                restored = true;
+                                            }
+                                            catch (UnauthorizedAccessException)
+                                            {
+                                                LogService.Instance.Log("Warning", "FileAcl", "Restore", $"无权限恢复 ACL，尝试提权: {file}");
+                                                restored = RestoreFileAclWithElevation(file, sddl);
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                LogService.Instance.Log("Warning", "FileAcl", "Restore", $"普通恢复失败，尝试提权: {ex.Message}");
+                                                restored = RestoreFileAclWithElevation(file, sddl);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            restored = RestoreFileAclWithElevation(file, null);
+                                        }
+                                        break;
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LogService.Instance.Log("Error", "FileAcl", "Scan", $"扫描目录查找文件失败: {ex.Message}");
+                        }
+                    }
+                }
             }
 
-            settings.BlockedFileAclBackup.Remove(path);
+            if (settings.BlockedFileAclBackup.ContainsKey(path))
+            {
+                settings.BlockedFileAclBackup.Remove(path);
+            }
+            if (settings.BlockedFileHashes?.ContainsKey(path) == true)
+            {
+                settings.BlockedFileHashes.Remove(path);
+            }
         }
-        catch
+        catch (Exception ex)
         {
+            LogService.Instance.Log("Error", "FileAcl", "Restore", $"恢复文件 ACL 失败: {ex.Message}");
         }
     }
 
@@ -815,6 +1154,7 @@ public partial class AppManagementViewModel : ViewModelBase
             }
 
             SaveSettings();
+            AppBlockingService.Instance.RefreshFileWatchers();
             NotificationService.Instance.ShowSuccess($"已添加路径到阻止列表");
         }
     }
@@ -882,6 +1222,7 @@ public partial class AppManagementViewModel : ViewModelBase
         if (BlockedRules.Remove(rule))
         {
             SaveSettings();
+            AppBlockingService.Instance.RefreshFileWatchers();
         }
     }
 
