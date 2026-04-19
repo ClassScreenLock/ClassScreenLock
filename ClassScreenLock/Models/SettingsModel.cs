@@ -30,7 +30,7 @@ public class SettingsModel
     public NotificationPosition NotificationPosition { get; set; } = NotificationPosition.Center;
 
     [JsonPropertyName("weeklyCycleCount")]
-    public int WeeklyCycleCount { get; set; } = 4;
+    public int WeeklyCycleCount { get; set; } = 1;
 
     [JsonPropertyName("termStartDate")]
     public DateTime? TermStartDate { get; set; }

@@ -11,6 +11,9 @@ public class SoftwareBlockageModel
     [JsonPropertyName("blockedFileAclBackup")]
     public Dictionary<string, string> BlockedFileAclBackup { get; set; } = new();
 
+    [JsonPropertyName("blockedFileHashes")]
+    public Dictionary<string, string> BlockedFileHashes { get; set; } = new();
+
     [JsonPropertyName("isNetworkLockEnabled")]
     public bool IsNetworkLockEnabled { get; set; } = false;
 

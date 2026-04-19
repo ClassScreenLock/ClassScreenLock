@@ -88,4 +88,10 @@ public class LockSettingsModel
 
     [JsonPropertyName("lockStateFileCheckIntervalSeconds")]
     public int LockStateFileCheckIntervalSeconds { get; set; } = 5;
+
+    [JsonPropertyName("floatingWidgetPositionX")]
+    public double? FloatingWidgetPositionX { get; set; }
+
+    [JsonPropertyName("floatingWidgetPositionY")]
+    public double? FloatingWidgetPositionY { get; set; }
 }
