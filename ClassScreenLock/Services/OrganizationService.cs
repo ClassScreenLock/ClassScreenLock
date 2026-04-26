@@ -127,7 +127,7 @@ public class OrganizationService
             
             // 创建临时 HttpClient 实例，设置更短的超时时间
             using var httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(15); // 加入组织操作设置15秒超时
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
             
             // 从服务器获取组织信息
             var response = await httpClient.GetAsync($"{serverUrl}/api/organizations/{organizationId}");
@@ -180,44 +180,35 @@ public class OrganizationService
             Console.WriteLine($"[DEBUG] 成功加入组织：{org.Name}");
             Console.WriteLine($"[DEBUG] 组织信息：ID={org.Id}, Name={org.Name}, ServerUrl={org.ServerUrl}, IsActive={org.IsActive}, Phone={org.ContactPhone}, Class={org.ClassName}, Person={org.PersonInCharge}");
             
-            // 注册设备到服务器（使用带超时的操作）
-            var deviceRegistered = await Task.Run(async () => {
-                try
-                {
-                    return await _deviceService.RegisterDeviceAsync();
-                }
-                catch (TaskCanceledException ex)
-                {
-                    LogService.Instance.Log("Error", "Device", "OrganizationService", $"设备注册超时：{ex.Message}");
-                    Console.WriteLine($"[ERROR] 设备注册超时：{ex.Message}");
-                    return false;
-                }
-            }).WaitAsync(TimeSpan.FromSeconds(15)); // 设备注册15秒超时
-            
-            LogService.Instance.Log("Info", "Device", "OrganizationService", $"设备注册结果：{(deviceRegistered ? "成功" : "失败")}");
-            Console.WriteLine($"[DEBUG] 设备注册结果：{(deviceRegistered ? "成功" : "失败")}");
-            
-            // 同步配置（使用带超时的操作）
-            await Task.Run(async () => {
-                try
-                {
-                    await SyncConfigurationAsync();
-                }
-                catch (TaskCanceledException ex)
-                {
-                    LogService.Instance.Log("Error", "Organization", "OrganizationService", $"配置同步超时：{ex.Message}");
-                    Console.WriteLine($"[ERROR] 配置同步超时：{ex.Message}");
-                }
-            }).WaitAsync(TimeSpan.FromSeconds(20)); // 配置同步20秒超时
-            
-            // 禁用本地超级管理员账户
+            // 禁用本地超级管理员账户（立即执行）
             DisableLocalSuperAdmin();
             
-            // 强制应用安全配置，确保 2FA 设置被覆盖
-            if (_currentOrganization?.SecurityConfig != null)
+            // 后台异步执行非关键操作，不阻塞用户
+            _ = Task.Run(async () =>
             {
-                ApplyConfigurationAsync();
-            }
+                try
+                {
+                    // 注册设备到服务器（10秒超时）
+                    var deviceRegistered = await _deviceService.RegisterDeviceAsync()
+                        .WaitAsync(TimeSpan.FromSeconds(10));
+                    
+                    LogService.Instance.Log("Info", "Device", "OrganizationService", $"设备注册结果：{(deviceRegistered ? "成功" : "失败")}");
+                    Console.WriteLine($"[DEBUG] 设备注册结果：{(deviceRegistered ? "成功" : "失败")}");
+                    
+                    // 同步配置（15秒超时）
+                    await SyncConfigurationAsync().WaitAsync(TimeSpan.FromSeconds(15));
+                }
+                catch (TaskCanceledException ex)
+                {
+                    LogService.Instance.Log("Error", "Organization", "OrganizationService", $"后台配置同步超时：{ex.Message}");
+                    Console.WriteLine($"[ERROR] 后台配置同步超时：{ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.Log("Error", "Organization", "OrganizationService", $"后台配置同步失败：{ex.Message}");
+                    Console.WriteLine($"[ERROR] 后台配置同步失败：{ex.Message}");
+                }
+            });
             
             return (true, string.Empty);
         }
@@ -584,15 +575,9 @@ public class OrganizationService
 
         try
         {
-            // 确保设备已注册（简单检查，如果已加入组织则注册）
-            if (_currentOrganization.IsActive)
-            {
-                await _deviceService.RegisterDeviceAsync();
-            }
-
             // 从服务器获取最新的安全配置和网络配置
             using var httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(20); // 配置同步设置20秒超时
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
             
             var securityConfigTask = httpClient.GetAsync($"{_currentOrganization.ServerUrl}/api/organizations/{_currentOrganization.Id}/security-config");
             var networkConfigTask = httpClient.GetAsync($"{_currentOrganization.ServerUrl}/api/organizations/{_currentOrganization.Id}/network-config");

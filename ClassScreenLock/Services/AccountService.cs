@@ -611,6 +611,22 @@ public class AccountService
         return currentLevel <= requiredLevelValue;
     }
 
+    public bool HasPermissionOrSecurityAuth(AccountType requiredLevel)
+    {
+        if (SecurityService.Instance.IsAuthenticated)
+        {
+            LogService.Instance.Log("Debug", "Permission", "HasPermissionOrSecurityAuth", $"SecurityService.IsAuthenticated=true, required={requiredLevel}");
+            return true;
+        }
+        
+        var current = CurrentAccount;
+        var hasPerm = HasPermission(requiredLevel);
+        LogService.Instance.Log("Debug", "Permission", "HasPermissionOrSecurityAuth", 
+            $"CurrentAccount={current?.Username ?? "null"}, AccountType={current?.AccountType}, required={requiredLevel}, result={hasPerm}");
+        
+        return hasPerm;
+    }
+
     public bool EnsurePermission(AccountType requiredLevel, string operationName)
     {
         var allowed = HasPermission(requiredLevel);
