@@ -88,6 +88,6 @@
         </Grid>
         
         <!-- 底部信息 -->
-        <TextBlock Grid.Row="2" Text="ClassScreenLock v1.15.32.3176 - Creeper" HorizontalAlignment="Center" Classes="status" Margin="0,20,0,0"/>
+        <TextBlock Grid.Row="2" Text="ClassScreenLock v1.15.33.3226 - Creeper" HorizontalAlignment="Center" Classes="status" Margin="0,20,0,0"/>
     </Grid>
 </UserControl>

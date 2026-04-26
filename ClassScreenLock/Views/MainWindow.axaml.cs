@@ -69,12 +69,17 @@ public partial class MainWindow : Window
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
+        if (!_isClosing)
+        {
+            e.Cancel = true;
+            Hide();
+            return;
+        }
+        
         var required = SettingsService.Lock.ExitAppMinAccountType;
         if (required != null)
         {
-            var hasPermission = AccountService.Instance.HasPermission(required.Value) 
-                || SecurityService.Instance.IsAuthenticated;
-            if (!hasPermission)
+            if (!AccountService.Instance.HasPermissionOrSecurityAuth(required.Value))
             {
                 e.Cancel = true;
                 NotificationService.Instance.ShowWarning(LocalizationService.Instance.GetString("SecurityCenter_Msg_InsufficientPermission") ?? "权限不足，无法退出软件");
@@ -84,11 +89,6 @@ public partial class MainWindow : Window
         
         ClassScreenLock.Services.AccountService.Instance.Logout();
         
-        if (!_isClosing)
-        {
-            e.Cancel = true;
-            Hide();
-        }
         base.OnClosing(e);
     }
 

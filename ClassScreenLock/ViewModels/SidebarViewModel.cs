@@ -368,25 +368,7 @@ public partial class SidebarViewModel : ViewModelBase
 
         if (required == null) return true;
         
-        var currentAccount = AccountService.Instance.CurrentAccount;
-        if (currentAccount != null)
-        {
-            return AccountService.Instance.HasPermission(required.Value);
-        }
-        
-        if (SecurityService.Instance.IsAuthenticated)
-        {
-            var securitySettings = SecurityService.Instance.Settings;
-            var securityAccountType = GetAccountTypeFromSecurityMode(securitySettings.LoginVerificationMode);
-            return (int)securityAccountType <= (int)required.Value;
-        }
-        
-        return false;
-    }
-    
-    private AccountType GetAccountTypeFromSecurityMode(AdminLoginVerificationMode mode)
-    {
-        return AccountType.SuperAdmin;
+        return AccountService.Instance.HasPermissionOrSecurityAuth(required.Value);
     }
     
     protected override void Dispose(bool disposing)
