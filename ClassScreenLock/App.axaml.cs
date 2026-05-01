@@ -1057,6 +1057,40 @@ public partial class App : Application
         }
     }
     
+    private void TerminateWatchdogProcesses()
+    {
+        try
+        {
+            var watchdogProcesses = Process.GetProcessesByName("CSL.Watchdog");
+            if (watchdogProcesses.Length > 0)
+            {
+                LogService.Instance.Log("Info", "WatchdogTerminator", "App", $"正在终止 {watchdogProcesses.Length} 个看门狗进程...");
+                
+                foreach (var process in watchdogProcesses)
+                {
+                    try
+                    {
+                        if (!process.HasExited)
+                        {
+                            process.Kill();
+                            process.WaitForExit(2000);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Instance.Log("Warning", "WatchdogTerminator", "App", $"终止看门狗进程失败: {ex.Message}");
+                    }
+                }
+                
+                LogService.Instance.Log("Info", "WatchdogTerminator", "App", "所有看门狗进程已终止");
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "WatchdogTerminator", "App", $"终止看门狗进程失败: {ex.Message}");
+        }
+    }
+    
     private void CheckWatchdog(object? state)
     {
         try
@@ -1084,6 +1118,8 @@ public partial class App : Application
         try
         {
             StopWatchdogMonitor();
+            
+            TerminateWatchdogProcesses();
             
             // 禁用应用防护，确保重启后不会自动启用
             SettingsService.UpdateBlockage(s =>
