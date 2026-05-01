@@ -62,6 +62,14 @@ public partial class LockSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private int _lockStateFileCheckIntervalSeconds;
 
+    [ObservableProperty]
+    private double _topmostRefreshInterval;
+
+    public ObservableCollection<double> TopmostRefreshIntervalOptions { get; } = new()
+    {
+        0.01, 0.05, 0.1, 0.5, 1, 5, 10, 25, 50, 100, 200, 500
+    };
+
     public ObservableCollection<string> AllowedTopmostApps { get; } = new();
     public ObservableCollection<string> ForcedTopmostApps { get; } = new();
 
@@ -99,6 +107,8 @@ public partial class LockSettingsViewModel : ViewModelBase
         EnableLockStateFileCheck = settings.EnableLockStateFileCheck;
         LockStateFileCheckIntervalSeconds = settings.LockStateFileCheckIntervalSeconds;
 
+        TopmostRefreshInterval = settings.TopmostRefreshInterval;
+
         CanEditBreakTimeLock = settings.BreakTimeLockSettingsMinAccountType == null
                                 || SecurityService.Instance.IsAuthenticated
                                 || AccountService.Instance.HasPermission(settings.BreakTimeLockSettingsMinAccountType.Value);
@@ -129,6 +139,7 @@ public partial class LockSettingsViewModel : ViewModelBase
 
             settings.EnableLockStateFileCheck = EnableLockStateFileCheck;
             settings.LockStateFileCheckIntervalSeconds = LockStateFileCheckIntervalSeconds;
+            settings.TopmostRefreshInterval = TopmostRefreshInterval;
         });
         
         LockScreenService.Instance.StopLockStateFileCheck();

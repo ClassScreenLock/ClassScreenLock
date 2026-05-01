@@ -789,6 +789,14 @@ public partial class SecurityCenterViewModel : ViewModelBase
     private double _lockTextShadowBlurRadius;
 
     [ObservableProperty]
+    private double _topmostRefreshInterval = 50;
+
+    public ObservableCollection<double> TopmostRefreshIntervalOptions { get; } = new()
+    {
+        0.01, 0.05, 0.1, 0.5, 1, 5, 10, 25, 50, 100, 200, 500
+    };
+
+    [ObservableProperty]
     private int _maxLockDurationHours = 48;
 
     [ObservableProperty]
@@ -832,6 +840,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
             settings.LockBackgroundOpacity = LockBackgroundOpacity;
             settings.LockTextShadowOpacity = LockTextShadowOpacity;
             settings.LockTextShadowBlurRadius = LockTextShadowBlurRadius;
+            settings.TopmostRefreshInterval = TopmostRefreshInterval;
         });
         SettingsService.UpdateGeneral(settings =>
         {
@@ -860,6 +869,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
         LockBackgroundOpacity = settings.LockBackgroundOpacity;
         LockTextShadowOpacity = settings.LockTextShadowOpacity;
         LockTextShadowBlurRadius = settings.LockTextShadowBlurRadius;
+        TopmostRefreshInterval = settings.TopmostRefreshInterval;
 
         MaxLockDurationHours = SettingsService.General.MaxLockDurationHours;
 

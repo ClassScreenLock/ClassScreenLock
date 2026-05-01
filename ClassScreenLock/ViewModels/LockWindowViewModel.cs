@@ -453,15 +453,24 @@ public partial class LockWindowViewModel : ViewModelBase
         if (now >= autoUnlockTime)
         {
             var remainingToClass = _nextClassTime.Value - now;
-            CountdownText = $"即将自动解锁，距离上课 {remainingToClass.Minutes:D2}:{remainingToClass.Seconds:D2}";
+            CountdownText = $"即将自动解锁，距离上课 {FormatTimeSpan(remainingToClass)}";
             HasCountdown = true;
         }
         else
         {
             var remainingToUnlock = autoUnlockTime - now;
-            CountdownText = $"距离自动解锁: {remainingToUnlock.Minutes:D2}:{remainingToUnlock.Seconds:D2}";
+            CountdownText = $"距离自动解锁: {FormatTimeSpan(remainingToUnlock)}";
             HasCountdown = true;
         }
+    }
+
+    private static string FormatTimeSpan(TimeSpan timeSpan)
+    {
+        if (timeSpan.TotalHours >= 1)
+        {
+            return $"{timeSpan.Hours}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+        }
+        return $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
     }
 
     [RelayCommand]
