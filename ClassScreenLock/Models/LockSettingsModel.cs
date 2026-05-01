@@ -18,7 +18,7 @@ public class LockSettingsModel
     public int AutoUnlockBeforeClassMinutes { get; set; } = 3;
 
     [JsonPropertyName("allowedTopmostApps")]
-    public List<string> AllowedTopmostApps { get; set; } = new() { "Classisland" };
+    public List<string> AllowedTopmostApps { get; set; } = new();
 
     [JsonPropertyName("forcedTopmostApps")]
     public List<string> ForcedTopmostApps { get; set; } = new();
@@ -94,4 +94,7 @@ public class LockSettingsModel
 
     [JsonPropertyName("floatingWidgetPositionY")]
     public double? FloatingWidgetPositionY { get; set; }
+
+    [JsonPropertyName("topmostRefreshInterval")]
+    public double TopmostRefreshInterval { get; set; } = 50;
 }
