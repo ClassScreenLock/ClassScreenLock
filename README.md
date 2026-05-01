@@ -13,6 +13,8 @@
 
 [![License](https://img.shields.io/badge/License-GPLV3-blue.svg?style=for-the-badge)](https://opensource.org/licenses/GPLV3)
 
+![Alt](https://repobeats.axiom.co/api/embed/f0fe9669cfcf1885296dd928b0299d62d4e006a9.svg "Repobeats analytics image")
+
 ## 官方网站：[https://classscreenlock.github.io/](https://classscreenlock.github.io/)
 
 ## 集控中心已经迁移：https://github.com/ClassScreenLock/ClassScreenLock_CentralControlServer
