@@ -40,9 +40,9 @@
 - **低学习成本**：界面简洁直观，教师和学生均可快速上手，不干扰正常教学流程
 - **隐私友好设计**：仅管控屏幕显示权限，不收集敏感数据，保障师生隐私安全
 
-## 📥 下载与安装
+## 下载与安装
 
-### 💻 请确认您的设备是否满足以下要求再进行安装
+### 请确认您的设备是否满足以下要求再进行安装
   #### 最低硬件要求：
   
   - 处理器（CPU）：基础频率必须大于或等于 1 GHz 的64位处理器。
@@ -54,19 +54,18 @@
   - 操作系统：支持 Microsoft Windows 10 或 Windows 11 操作系统。本软件理论支持 Windows 10 的各个版本，但推荐使用最新稳定版本以获得最佳兼容性。
   - 系统框架：必须安装 .NET 9.0 Runtime 或更高版本。
   - 系统权限：安装及部分核心功能的正常运作，必须要求以“管理员身份”运行本软件。
-  - 明确不支持的平台：本软件明确不支持且无法在 Windows 7、Windows 8、Windows Server 系列、任何版本的 Linux 发行版、macOS 以及所有其他非 Windows 10 内核的操作系统上运行。
 
   #### 网络与环境要求：
   
   本软件为本地单机应用程序，主要功能无需连接互联网即可使用。
   
-### 🌐 官方下载渠道
-- 📥 **[GitHub Releases](https://github.com/ClassScreenLock/ClassScreenLock/releases)**
-- 📥 **[官方下载中心](https://classscreenlock.github.io/download/)**
-- 📝 **安装说明**：下载对应版本的安装包/绿色包，解压后直接运行主程序，无需复杂安装步骤
+### 官方下载渠道
+- **[GitHub Releases](https://github.com/ClassScreenLock/ClassScreenLock/releases)**
+- **[官方下载中心](https://classscreenlock.github.io/download/)**
+- **安装说明**：下载对应版本的安装包/绿色包，解压后直接运行主程序，无需复杂安装步骤
 
 
-## 🙏 贡献者感谢
+## 贡献者感谢
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
@@ -92,20 +91,20 @@
 | 感谢智教联盟提供论坛平台支持 | 感谢天津静海汇智卓创文化发展有限公司提供免费下载服务 |
 
 
-## 💝 支持与反馈
+## 支持与反馈
 
 如果您在使用过程中遇到问题，或有功能建议，欢迎通过以下方式反馈：
-- 🐛 **问题提交**：在GitHub Issues中详细描述问题场景和复现步骤
-- 💡 **功能建议**：提交Feature Request，我们会评估并纳入迭代计划
+- **问题提交**：在GitHub Issues中详细描述问题场景和复现步骤
+- **功能建议**：提交Feature Request，我们会评估并纳入迭代计划
 
-## 📞 联系方式
+## 联系方式
 
-- [邮箱](Lavachicken2512@outlook.com)
+- [邮箱](ClassScreenLock@outlook.com)
 - [问题反馈](https://github.com/ClassScreenLock/ClassScreenLock/issues)
 - [QQ群：1081181845](https://qm.qq.com/q/1081181845)
 - [官方漏洞枚举库](https://github.com/ClassScreenLock/ClassScreenLock/wiki)
 
-## 📄 官方文档
+## 官方文档
 
 查看[官方网站](https://classscreenlock.github.io)
 
@@ -114,7 +113,7 @@
 欢迎所有开发者参与项目贡献，无论是修复Bug、新增功能还是优化文档：
 
 
-## ✨ Star历程
+## Star历程
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=jiugulixiaoniu/ClassScreenLock&type=Date&theme=dark">
