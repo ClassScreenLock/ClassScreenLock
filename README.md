@@ -1,6 +1,8 @@
-# ClassScreenLock - 班级屏幕管理系统
+
 
 <div align="center">
+  
+# ClassScreenLock - 班级屏幕管理系统
 
 <image src="img/xuanchuan.png" width="1080" height="1980" />
 
@@ -15,19 +17,8 @@
 
 ![Alt](https://repobeats.axiom.co/api/embed/f0fe9669cfcf1885296dd928b0299d62d4e006a9.svg "Repobeats analytics image")
 
-## 官方网站：[https://classscreenlock.github.io/](https://classscreenlock.github.io/)
-
-## 集控中心已经迁移：https://github.com/ClassScreenLock/ClassScreenLock_CentralControlServer
-
 </div>
 
-## 你可以加入我们的 QQ 群：1081181845,并且在加入 QQ 群聊时，请注意[社区规定](https://classscreenlock.github.io/docs/qq-group-rules)
-
-> [!NOTE]
-> ClassScreenLock 基于GPL-3协议开源，您可自由使用、修改和分发本项目，修改后的衍生作品同样需要遵循GPL-3协议
-
-> [!Note]
-> 使用本软件前请仔细阅读[用户协议](https://classscreenlock.github.io/eula/)
 --------
 
 ## ClassScreenLock
@@ -178,6 +169,7 @@ https://afdian.com/a/jiugulixiaoniu
 ## 官方文档
 
 查看[官方网站](https://classscreenlock.github.io)
+查看[用户协议](https://classscreenlock.us.ci/eula)
 
 ---
 
