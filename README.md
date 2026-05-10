@@ -83,6 +83,8 @@ ClassScreenLock 不只是锁屏工具，而是一套专为班级多媒体场景�
 
 > 只要您能想到的课堂屏幕管控场景，ClassScreenLock 都在不断进化中。
 
+---
+
 ## 下载与安装
 
 ### 请确认您的设备是否满足以下要求再进行安装
@@ -107,6 +109,7 @@ ClassScreenLock 不只是锁屏工具，而是一套专为班级多媒体场景�
 - **[官方下载中心](https://classscreenlock.github.io/download/)**
 - **安装说明**：下载对应版本的安装包/绿色包，解压后直接运行主程序，无需复杂安装步骤
 
+---
 
 ## 贡献者感谢
 
@@ -133,12 +136,15 @@ ClassScreenLock 不只是锁屏工具，而是一套专为班级多媒体场景�
 | <div align="center"><a href="https://forum.smart-teach.cn/" target="_blank"><img src="https://static.smart-teach.cn/logos/banner.jpg" width="380" alt="智教联盟" style="border:none;background:transparent;"></a></div> | <div align="center"><a href="https://smart-teach.cn/" target="_blank"><img src="https://smart-teach.cn/images/logos/logo-full.png" width="380" alt="汇智卓创" style="border:none;background:transparent;"></a></div> |
 | 感谢智教联盟提供论坛平台支持 | 感谢天津静海汇智卓创文化发展有限公司提供免费下载服务 |
 
+---
 
 ## 支持与反馈
 
 如果您在使用过程中遇到问题，或有功能建议，欢迎通过以下方式反馈：
 - **问题提交**：在GitHub Issues中详细描述问题场景和复现步骤
 - **功能建议**：提交Feature Request，我们会评估并纳入迭代计划
+
+---
 
 ## 赞助
 
@@ -158,6 +164,8 @@ https://afdian.com/a/jiugulixiaoniu
 
 > 你的名字会出现在赞助名单里，债我还不起，但恩情我记得住。
 
+---
+
 ## 联系方式
 
 - [邮箱](ClassScreenLock@outlook.com)
@@ -165,14 +173,19 @@ https://afdian.com/a/jiugulixiaoniu
 - [QQ群：1081181845](https://qm.qq.com/q/1081181845)
 - [官方漏洞枚举库](https://github.com/ClassScreenLock/ClassScreenLock/wiki)
 
+---
+
 ## 官方文档
 
 查看[官方网站](https://classscreenlock.github.io)
+
+---
 
 ## 贡献指南
 
 欢迎所有开发者参与项目贡献，无论是修复Bug、新增功能还是优化文档：
 
+---
 
 ## Star历程
 
