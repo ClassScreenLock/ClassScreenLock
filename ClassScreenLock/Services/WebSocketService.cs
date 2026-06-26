@@ -271,7 +271,7 @@ public class WebSocketService
         };
         
         // Socket.IO 内置断开连接事件
-        _socket.OnDisconnected += async (sender, e) =>
+        _socket.OnDisconnected += (sender, e) =>
         {
             _isConnected = false;
             _isRegistered = false;

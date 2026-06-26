@@ -113,7 +113,7 @@ public class LockScreenService : INotifyPropertyChanged
                 return;
             }
 
-            ApplyLockState(lockStateData);
+            ApplyLockState(lockStateData!);
         }
         catch (Exception ex)
         {
