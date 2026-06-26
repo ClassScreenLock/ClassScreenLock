@@ -1,0 +1,130 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
+             mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="600"
+             x:Class="ClassScreenLock.Views.Sidebar"
+             x:DataType="vm:SidebarViewModel"
+             Classes="Sidebar">
+
+    <UserControl.Resources>
+        <!--
+            复用的侧边栏按钮模板。
+            图标不再单独设灰色（去掉 Foreground="#606060"），
+            统一继承 Button 的 Foreground，确保浅色模式下清晰可见。
+        -->
+        <DataTemplate x:Key="SidebarMenuButtonTemplate" DataType="vm:MenuItemViewModel">
+            <Button Classes="SidebarButton"
+                    Classes.selected="{Binding IsSelected}"
+                    Command="{Binding Command}"
+                    CommandParameter="{Binding Target}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    Padding="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <fluent:SymbolIcon Grid.Column="0"
+                                       Symbol="{Binding Icon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"
+                                       FontSize="16"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center"
+                                       Width="18" Height="18"
+                                       Margin="12,0,10,0"/>
+
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Title}"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Left"
+                               Classes="sidebar-text"
+                               IsVisible="{Binding $parent[UserControl].DataContext.IsExpanded}"
+                               TextTrimming="CharacterEllipsis"
+                               MaxLines="1"
+                               FontSize="13"
+                               Margin="0,0,12,0"/>
+                </Grid>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="Transparent">
+        <Border CornerRadius="0,10,10,0"
+                Width="{Binding SidebarWidth}"
+                Classes="sidebar-background"
+                ClipToBounds="True">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Width" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Border.Transitions>
+            <Grid RowDefinitions="Auto,*,Auto">
+
+                <!-- 顶部区域：侧边栏切换按钮 -->
+                <Border Grid.Row="0" Padding="8,8,8,4">
+                    <Button Classes="SidebarButton"
+                            Command="{Binding ToggleSidebarCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            Padding="0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <fluent:SymbolIcon Grid.Column="0"
+                                               Symbol="{Binding ToggleIcon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"
+                                               FontSize="16"
+                                               Width="18" Height="18"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Center"
+                                               Margin="12,0,10,0"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding ToggleText}"
+                                       VerticalAlignment="Center"
+                                       Classes="sidebar-text"
+                                       IsVisible="{Binding IsExpanded}"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxLines="1"
+                                       FontSize="13"
+                                       Margin="0,0,12,0"/>
+                        </Grid>
+                    </Button>
+                </Border>
+
+                <!-- 菜单项 -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0">
+                    <ItemsControl ItemsSource="{Binding MenuItems}" ItemTemplate="{StaticResource SidebarMenuButtonTemplate}"/>
+                </ScrollViewer>
+
+                <!-- 底部固定项（设置 + 关于） -->
+                <StackPanel Grid.Row="2" Spacing="0" Margin="0,4,0,6">
+                    <Border Height="1"
+                            Classes="sidebar-divider"
+                            Margin="14,6,14,8"
+                            Opacity="0.25"/>
+
+                    <ItemsControl ItemsSource="{Binding BottomMenuItems}" ItemTemplate="{StaticResource SidebarMenuButtonTemplate}"/>
+
+                    <!-- 版本信息 -->
+                    <TextBlock Text="{Binding VersionInfo}"
+                               HorizontalAlignment="Center"
+                               Classes="sidebar-version"
+                               IsVisible="{Binding IsExpanded}"
+                               TextTrimming="CharacterEllipsis"
+                               MaxLines="1"
+                               Margin="12,8,12,4"
+                               Opacity="0.55"
+                               FontSize="11"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

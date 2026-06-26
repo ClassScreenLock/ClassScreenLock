@@ -1,0 +1,122 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="ClassScreenLock.Views.HomeView"
+             x:DataType="vm:HomeViewModel">
+
+    <Grid Margin="20" RowDefinitions="Auto, *, Auto">
+        <!-- 顶部状态栏 -->
+        <Border Grid.Row="0" Classes="card" CornerRadius="8" Padding="20" Margin="0,0,0,20" BoxShadow="0 2 10 0 #20000000">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+                    <Border Width="50" Height="50" CornerRadius="25" Background="{Binding IsLocked, Converter={StaticResource BooleanToStatusBrushConverter}}">
+                        <fluent:SymbolIcon Symbol="{Binding LockStatusIcon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}" FontSize="24" Foreground="White"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding LockStatusText}" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding SystemStatusText}" FontSize="14" Classes="status"/>
+                    </StackPanel>
+                </StackPanel>
+                
+                <Button Grid.Column="2" Classes="accent" Command="{Binding StartLockCommand}" IsEnabled="{Binding CanLock}" IsVisible="{Binding !IsLocked}" Content="{DynamicResource Home_LockNow}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- 中间概览卡片 -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, 20, *, 20, *, 20, *" RowDefinitions="Auto, 20, *">
+            <!-- 下一个计划 -->
+            <Border Grid.Row="0" Grid.Column="0" Classes="card" CornerRadius="8" Padding="15" BoxShadow="0 2 8 0 #10000000">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <fluent:SymbolIcon Symbol="HourglassHalf" Foreground="{DynamicResource SystemAccentColor}" FontSize="16"/>
+                        <TextBlock Text="{DynamicResource Home_NextSchedule}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding NextScheduleText}" FontSize="20" FontWeight="Bold" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- 拦截应用 -->
+            <Border Grid.Row="0" Grid.Column="2" Classes="card" CornerRadius="8" Padding="15" BoxShadow="0 2 8 0 #10000000">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <fluent:SymbolIcon Symbol="Grid" Foreground="{DynamicResource SystemAccentColor}" FontSize="16"/>
+                        <TextBlock Text="{DynamicResource Home_BlockedApps}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding BlockedAppsCount}" FontSize="24" FontWeight="Bold" Margin="0,10,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- 网络拦截 -->
+            <Border Grid.Row="0" Grid.Column="4" Classes="card" CornerRadius="8" Padding="15" BoxShadow="0 2 8 0 #10000000">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <fluent:SymbolIcon Symbol="Building" Foreground="{DynamicResource SystemAccentColor}" FontSize="16"/>
+                        <TextBlock Text="{DynamicResource Home_NetworkInterception}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding BlockedNetworkCount}" FontSize="24" FontWeight="Bold" Margin="0,10,0,0"/>
+                </StackPanel>
+            </Border>
+            
+            <!-- UIAccess提权状态 -->
+            <Border Grid.Row="0" Grid.Column="6" Classes="card" CornerRadius="8" Padding="15" BoxShadow="0 2 8 0 #10000000">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <fluent:SymbolIcon Symbol="Shield" Foreground="{DynamicResource SystemAccentColor}" FontSize="16"/>
+                        <TextBlock Text="{DynamicResource Home_UIAccessElevation}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,10,0,0">
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding HasUiAccess, Converter={StaticResource SuccessStatusBrushConverter}}"/>
+                        <TextBlock Text="{Binding UiAccessStatusText}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            
+            <!-- 快速操作区（动态可编辑） -->
+            <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="7" Classes="card" CornerRadius="8" Padding="20" BoxShadow="0 2 8 0 #10000000">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Home_QuickActions}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Classes="pill" Padding="12,6" Command="{Binding EditQuickActionsCommand}" ToolTip.Tip="{DynamicResource QA_EditTooltip}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <fluent:SymbolIcon Symbol="Edit" FontSize="14"/>
+                                <TextBlock Text="{DynamicResource Home_EditQuickActions}" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding QuickActions}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="4" HorizontalAlignment="Stretch"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:QuickActionItemViewModel">
+                                <Button Command="{Binding $parent[UserControl].((vm:HomeViewModel)DataContext).OpenQuickActionCommand}"
+                                        CommandParameter="{Binding}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        VerticalContentAlignment="Center"
+                                        Padding="0,12"
+                                        Margin="3"
+                                        ToolTip.Tip="{Binding Label}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="{Binding IconName}" FontSize="16" Foreground="{Binding AccentColor}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </Grid>
+        
+        <!-- 底部信息 -->
+        <TextBlock Grid.Row="2" Text="ClassScreenLock v1.15.35.3423 - Creeper" HorizontalAlignment="Center" Classes="status" Margin="0,20,0,0"/>
+    </Grid>
+</UserControl>

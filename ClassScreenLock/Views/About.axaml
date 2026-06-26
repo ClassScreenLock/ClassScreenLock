@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="ClassScreenLock.Views.About"
+             x:DataType="vm:AboutViewModel">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                  Padding="24">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20" MaxWidth="600">
+            <!-- 应用图标和名称 -->
+            <StackPanel HorizontalAlignment="Center" Spacing="8">
+                <Image Source="/ClassScreenLock.ico" Width="64" Height="64" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding AppName}" Classes="h1" HorizontalAlignment="Center"
+                           Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                <TextBlock Text="{Binding AppVersion}" Classes="subtitle" HorizontalAlignment="Center"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+            </StackPanel>
+
+            <!-- 应用描述 -->
+            <TextBlock Text="{Binding AppDescription}"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+
+            <!-- 分隔线 -->
+            <Separator Margin="0,8"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+
+            <!-- 开发者信息 -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="{DynamicResource About_Developer}" Classes="h3"
+                           Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                <TextBlock Text="{Binding Developer}"
+                           Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+            </StackPanel>
+
+            <!-- 许可证信息 -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="{DynamicResource About_License}" Classes="h3"
+                           Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                <TextBlock Text="{Binding License}"
+                           Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+            </StackPanel>
+
+            <!-- 链接按钮 -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" Margin="0,8,0,0">
+                <Button Content="{DynamicResource About_Repository}" Command="{Binding OpenRepositoryCommand}" Classes="outline"/>
+                <Button Content="{DynamicResource About_UserAgreement}" Command="{Binding OpenUserAgreementCommand}" Classes="outline"/>
+            </StackPanel>
+
+            <!-- 版权信息 -->
+            <TextBlock Text="{Binding Copyright}"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                       Margin="0,16,0,0"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

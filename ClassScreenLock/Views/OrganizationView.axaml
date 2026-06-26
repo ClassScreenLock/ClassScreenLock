@@ -1,0 +1,352 @@
+<UserControl
+    x:Class="ClassScreenLock.Views.OrganizationView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+    d:DesignHeight="800"
+    d:DesignWidth="1000"
+    x:DataType="vm:OrganizationViewModel"
+    mc:Ignorable="d">
+
+    <ScrollViewer>
+        <StackPanel Margin="32" Spacing="24">
+            <!--  标题部分  -->
+            <StackPanel Spacing="8">
+                <TextBlock
+                    FontSize="26"
+                    FontWeight="SemiBold"
+                    Text="{DynamicResource Organization_Title}" />
+                <TextBlock
+                    FontSize="14"
+                    Opacity="0.7"
+                    Text="{DynamicResource Organization_Description}" />
+            </StackPanel>
+
+            <!--  已加入组织状态  -->
+            <Border
+                Padding="24"
+                Background="{DynamicResource SystemControlBackgroundListLowBrush}"
+                CornerRadius="12"
+                IsVisible="{Binding HasJoinedOrganization}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="20">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Border
+                                Width="48"
+                                Height="48"
+                                Background="{DynamicResource SystemControlBackgroundAccentBrush}"
+                                CornerRadius="12">
+                                <fluent:SymbolIcon
+                                    Width="24"
+                                    Height="24"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                    Symbol="CheckmarkCircle" />
+                            </Border>
+                            <StackPanel
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Spacing="4">
+                                <TextBlock
+                                    FontSize="20"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Organization_Joined}" />
+                                <TextBlock Opacity="0.7" Text="{DynamicResource Organization_Joined_Description}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border
+                            Padding="16"
+                            Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                            CornerRadius="8">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnDefinitions="120,*">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontWeight="SemiBold"
+                                        Text="组织名称：" />
+                                    <TextBlock Grid.Column="1" Text="{Binding OrganizationName}" />
+                                </Grid>
+                                <Border
+                                    Margin="0,4"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                    BorderThickness="0,0,0,1" />
+                                <Grid ColumnDefinitions="120,*">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontWeight="SemiBold"
+                                        Text="组织描述：" />
+                                    <TextBlock Grid.Column="1" Text="{Binding OrganizationDescription}" />
+                                </Grid>
+                                <Border
+                                    Margin="0,4"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                    BorderThickness="0,0,0,1" />
+                                <Grid ColumnDefinitions="120,*">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontWeight="SemiBold"
+                                        Text="组织 ID：" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        FontFamily="Consolas"
+                                        Text="{Binding OrganizationId}" />
+                                </Grid>
+                                <Border
+                                    Margin="0,4"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                    BorderThickness="0,0,0,1" />
+                                <Grid ColumnDefinitions="120,*">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontWeight="SemiBold"
+                                        Text="加入时间：" />
+                                    <TextBlock Grid.Column="1" Text="{Binding JoinedAtText}" />
+                                </Grid>
+                                <Border
+                                    Margin="0,4"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                    BorderThickness="0,0,0,1" />
+                                <Grid ColumnDefinitions="120,*">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontWeight="SemiBold"
+                                        Text="最后同步：" />
+                                    <TextBlock Grid.Column="1" Text="{Binding LastSyncTimeText}" />
+                                </Grid>
+                                <Border
+                                    Margin="0,4"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                    BorderThickness="0,0,0,1" />
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Button
+                                Padding="24,12"
+                                Classes="accent"
+                                Command="{Binding SyncConfigurationCommand}"
+                                Content="{DynamicResource Organization_SyncConfiguration}"
+                                IsEnabled="{Binding !IsLoading}" />
+                            <Button
+                                Padding="24,12"
+                                Background="#a80000"
+                                Command="{Binding LeaveOrganizationCommand}"
+                                Content="{DynamicResource Organization_LeaveOrganization}"
+                                Foreground="White"
+                                IsEnabled="{Binding !IsLoading}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <fluent:SymbolIcon
+                        Grid.Column="1"
+                        Width="120"
+                        Height="120"
+                        Margin="0,20,20,0"
+                        VerticalAlignment="Top"
+                        Opacity="0.05"
+                        Symbol="Building" />
+                </Grid>
+            </Border>
+
+            <Border
+                Padding="32"
+                Background="{DynamicResource SystemControlBackgroundListLowBrush}"
+                CornerRadius="12"
+                IsVisible="{Binding !HasJoinedOrganization}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="24">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Border
+                                Width="48"
+                                Height="48"
+                                Background="{DynamicResource SystemControlBackgroundAccentBrush}"
+                                CornerRadius="12">
+                                <fluent:SymbolIcon
+                                    Width="24"
+                                    Height="24"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                    Symbol="People" />
+                            </Border>
+                            <StackPanel
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Spacing="4">
+                                <TextBlock
+                                    FontSize="20"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Organization_Join}" />
+                                <TextBlock Opacity="0.7" Text="{DynamicResource Organization_Join_Description}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            Opacity="0.7"
+                            Text="{DynamicResource Organization_Usage_Instruction}"
+                            TextWrapping="Wrap" />
+
+                        <Button
+                            MinWidth="160"
+                            Padding="16,8"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ImportConfigCommand}"
+                            Content="导入配置文件"
+                            IsEnabled="{Binding !IsLoading}" />
+
+                        <StackPanel Margin="0,16,0,0">
+                            <TextBlock
+                                Margin="0,0,0,8"
+                                FontWeight="SemiBold"
+                                Text="{DynamicResource Organization_ServerUrl}" />
+                            <TextBox
+                                Height="48"
+                                Padding="12,8"
+                                VerticalContentAlignment="Center"
+                                Text="{Binding ServerUrl}"
+                                Watermark="{DynamicResource Organization_ServerUrl_Watermark}" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                Opacity="0.6"
+                                Text="{DynamicResource Organization_ServerUrl_Note}" />
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock
+                                Margin="0,0,0,8"
+                                FontWeight="SemiBold"
+                                Text="{DynamicResource Organization_OrganizationId}" />
+                            <TextBox
+                                Height="48"
+                                Padding="12,8"
+                                VerticalContentAlignment="Center"
+                                Text="{Binding OrganizationId}"
+                                Watermark="{DynamicResource Organization_OrganizationId_Watermark}" />
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock
+                                Margin="0,0,0,8"
+                                FontWeight="SemiBold"
+                                Text="{DynamicResource Organization_ContactPhone}" />
+                            <TextBox
+                                Height="48"
+                                Padding="12,8"
+                                VerticalContentAlignment="Center"
+                                Text="{Binding ContactPhone}"
+                                Watermark="{DynamicResource Organization_ContactPhone_Watermark}" />
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock
+                                Margin="0,0,0,8"
+                                FontWeight="SemiBold"
+                                Text="{DynamicResource Organization_ClassName}" />
+                            <TextBox
+                                Height="48"
+                                Padding="12,8"
+                                VerticalContentAlignment="Center"
+                                Text="{Binding ClassName}"
+                                Watermark="{DynamicResource Organization_ClassName_Watermark}" />
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock
+                                Margin="0,0,0,8"
+                                FontWeight="SemiBold"
+                                Text="{DynamicResource Organization_PersonInCharge}" />
+                            <TextBox
+                                Height="48"
+                                Padding="12,8"
+                                VerticalContentAlignment="Center"
+                                Text="{Binding PersonInCharge}"
+                                Watermark="{DynamicResource Organization_PersonInCharge_Watermark}" />
+                        </StackPanel>
+
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            Foreground="#a80000"
+                            IsVisible="{Binding HasError}"
+                            Text="{Binding ErrorMessage}"
+                            TextWrapping="Wrap" />
+
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            Foreground="#008000"
+                            IsVisible="{Binding HasSuccess}"
+                            Text="{Binding SuccessMessage}"
+                            TextWrapping="Wrap" />
+
+                        <Button
+                            MinWidth="160"
+                            Padding="32,12"
+                            HorizontalAlignment="Left"
+                            Classes="accent"
+                            Command="{Binding JoinOrganizationCommand}"
+                            Content="{DynamicResource Organization_JoinOrganization}"
+                            IsEnabled="{Binding !IsLoading}" />
+                    </StackPanel>
+
+                    <fluent:SymbolIcon
+                        Grid.Column="1"
+                        Width="120"
+                        Height="120"
+                        Margin="0,20,20,0"
+                        VerticalAlignment="Top"
+                        Opacity="0.05"
+                        Symbol="PersonAdd" />
+                </Grid>
+            </Border>
+
+            <Border
+                Padding="24"
+                Background="{DynamicResource SystemControlBackgroundListLowBrush}"
+                CornerRadius="12"
+                IsVisible="{Binding IsLoading}">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="12">
+                    <ProgressBar
+                        Width="24"
+                        Height="24"
+                        IsIndeterminate="True" />
+                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Organization_Processing}" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Padding="24"
+                Background="{DynamicResource SystemControlBackgroundListLowBrush}"
+                CornerRadius="12">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <fluent:SymbolIcon
+                            Width="20"
+                            Height="20"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource SystemControlBackgroundAccentBrush}"
+                            Symbol="Info" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Text="{DynamicResource Organization_Usage_Title}" />
+                    </Grid>
+                    <StackPanel Margin="8,0,0,0" Spacing="8">
+                        <TextBlock Text="{DynamicResource Organization_Usage_1}" TextWrapping="Wrap" />
+                        <TextBlock Text="{DynamicResource Organization_Usage_2}" TextWrapping="Wrap" />
+                        <TextBlock Text="{DynamicResource Organization_Usage_3}" TextWrapping="Wrap" />
+                        <TextBlock Text="{DynamicResource Organization_Usage_4}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

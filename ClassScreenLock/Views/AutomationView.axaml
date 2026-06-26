@@ -1,0 +1,847 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:m="clr-namespace:ClassScreenLock.Models"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="ClassScreenLock.Views.AutomationView"
+             x:DataType="vm:AutomationViewModel"
+             x:Name="AutomationRoot">
+
+    <Grid ColumnDefinitions="215,*" RowDefinitions="Auto,*,Auto">
+        <!-- 顶部标题栏 -->
+        <Border Grid.Row="0" Grid.ColumnSpan="2" Padding="24,20" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{DynamicResource Automation_Title}" FontSize="28" FontWeight="SemiBold"/>
+                    <TextBlock Text="{DynamicResource Automation_Description}" Classes="caption" Opacity="0.6"/>
+                </StackPanel>
+                
+                <Border Grid.Column="1" Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                        CornerRadius="8" Padding="16,8" BorderThickness="1" BorderBrush="{DynamicResource SystemControlElevationBorderBrush}">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{DynamicResource Automation_Enable}" FontWeight="Medium"/>
+                            <TextBlock Text="{DynamicResource Automation_Enable_Desc}" FontSize="11" Opacity="0.6"/>
+                        </StackPanel>
+                        <ToggleSwitch IsChecked="{Binding IsAutomationEnabled}" OnContent="" OffContent="" Margin="0,-8,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- 中间内容区 -->
+        <ScrollViewer Grid.Row="1" Grid.ColumnSpan="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+            <Grid ColumnDefinitions="215,*">
+                <!-- 左侧列表 -->
+                <Border Grid.Column="0" BorderThickness="0,0,1,0" BorderBrush="{DynamicResource SystemControlElevationBorderBrush}" Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
+                    <Grid RowDefinitions="Auto,*,Auto">
+                <Border Grid.Row="0" Padding="16">
+                    <StackPanel Spacing="8">
+                        <Button Command="{Binding AddWorkflowCommand}" HorizontalAlignment="Stretch" Classes="accent" Height="40">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <fluent:SymbolIcon Symbol="Add"/>
+                                <TextBlock Text="{DynamicResource Automation_AddWorkflow}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <ListBox Grid.Row="1" ItemsSource="{Binding VisibleWorkflows}" SelectedItem="{Binding SelectedWorkflow}" 
+                         Background="Transparent" BorderThickness="0" Padding="8,0">
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0,2"/>
+                            <Setter Property="CornerRadius" Value="3"/>
+                        </Style>
+                    </ListBox.Styles>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="m:AutomationWorkflow">
+                            <Border Padding="12,12" CornerRadius="4">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Border Grid.Column="0" Width="32" Height="32" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" Margin="0,0,12,0">
+                                        <fluent:SymbolIcon Symbol="Flash" Foreground="{DynamicResource SystemAccentColor}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </Border>
+                                    
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" FontWeight="{Binding IsEnabled, Converter={StaticResource BooleanToStatusBrushConverter}, ConverterParameter='SemiBold|Normal'}" FontSize="14"/>
+                                        <TextBlock Text="{Binding TriggerCount, StringFormat='{}总触发次数: {0}'}" FontSize="12" Opacity="0.6"/>
+                                    </StackPanel>
+                                    <ToggleSwitch Grid.Column="2" IsChecked="{Binding IsEnabled}" OnContent="" OffContent="" MinWidth="0" RenderTransform="scale(0.8)"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Border Grid.Row="2" Padding="16">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{DynamicResource Automation_Operations}" Classes="caption" Opacity="0.5" Margin="4,0"/>
+                        <Grid ColumnDefinitions="*,*">
+                            <Button Grid.Column="0" Command="{Binding DuplicateWorkflowCommand}" HorizontalAlignment="Stretch" Margin="0,0,4,0" Height="36" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <fluent:SymbolIcon Symbol="Copy"/>
+                                    <TextBlock Text="{DynamicResource Automation_Duplicate}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="1" Command="{Binding DeleteWorkflowCommand}" HorizontalAlignment="Stretch" Classes="danger" Margin="4,0,0,0" Height="36">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <fluent:SymbolIcon Symbol="Delete"/>
+                                    <TextBlock Text="{DynamicResource Automation_Delete}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+                <!-- 右侧详情 -->
+                <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" MinWidth="500">
+                    <Border Padding="16,24">
+                <StackPanel Spacing="20" MaxWidth="900" HorizontalAlignment="Stretch">
+                    <StackPanel.Styles>
+                        <Style Selector="Border.Card">
+                            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}"/>
+                            <Setter Property="CornerRadius" Value="4"/>
+                            <Setter Property="Padding" Value="24"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlElevationBorderBrush}"/>
+                            <Setter Property="BoxShadow" Value="0 2 4 0 #10000000"/>
+                        </Style>
+                        <Style Selector="TextBlock.SectionHeader">
+                            <Setter Property="FontSize" Value="18"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Margin" Value="0,0,0,12"/>
+                            <Setter Property="TextWrapping" Value="Wrap"/>
+                            <Setter Property="TextTrimming" Value="None"/>
+                            <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
+                        </Style>
+                        <Style Selector="ListBoxItem:pointerover">
+                            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+                        </Style>
+                    </StackPanel.Styles>
+
+                    
+
+                    <!-- 顶部方案管理区块（与配置风格不同） -->
+                    <Border Classes="Card" Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="{DynamicResource Automation_SchemeManagement}" Classes="SectionHeader"/>
+                            <TextBlock Text="{DynamicResource Automation_SchemeManagement_Description}" Classes="caption" Opacity="0.6"/>
+                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Automation_CurrentScheme}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding AvailableSchemes}" SelectedItem="{Binding CurrentAutomationScheme, Mode=TwoWay}" Width="220"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource Automation_NewScheme}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left">
+                                    <TextBox Text="{Binding NewSchemeName}" Watermark="{DynamicResource Automation_SchemeName_Watermark}" Width="180"/>
+                                    <Button Command="{Binding AddSchemeCommand}" Classes="accent" Padding="12,6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <fluent:SymbolIcon Symbol="Add"/>
+                                            <TextBlock Text="{DynamicResource Automation_AddScheme}"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding RemoveSchemeCommand}" CommandParameter="{Binding CurrentAutomationScheme}" Classes="danger" Padding="12,6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <fluent:SymbolIcon Symbol="Delete"/>
+                                            <TextBlock Text="{DynamicResource Automation_DeleteCurrentScheme}"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <ContentControl Content="{Binding SelectedWorkflow}">
+                        <ContentControl.ContentTemplate>
+                            <DataTemplate x:DataType="m:AutomationWorkflow">
+                                <StackPanel Spacing="20">
+                                    <!-- 基本信息 -->
+                                    <Border Classes="Card">
+                                        <StackPanel Spacing="16">
+                                            <TextBlock Text="{DynamicResource Automation_BasicSettings}" Classes="SectionHeader"/>
+                                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" HorizontalAlignment="Stretch">
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Automation_Name}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" MaxWidth="360" HorizontalAlignment="Left"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource Automation_TriggerCount}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TriggerCount}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- 触发器 -->
+                                    <Border Classes="Card">
+                                        <StackPanel Spacing="12">
+                                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                                <TextBlock Text="{DynamicResource Automation_TriggerSection}" Classes="SectionHeader"/>
+                                                <Menu Grid.Column="1" Background="Transparent">
+                                                    <MenuItem Header="{DynamicResource Automation_AddTrigger}" Classes="accent">
+                                                        <MenuItem.Icon>
+                                                            <fluent:SymbolIcon Symbol="Add"/>
+                                                        </MenuItem.Icon>
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_DailyTime}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="DailyTime">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Clock"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_Interval}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="Interval">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="ArrowSync"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_OnStartup}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="OnStartup">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Power"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                    <MenuItem Header="{DynamicResource Automation_Trigger_ProcessRunning}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="ProcessRunning">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Apps"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                    <MenuItem Header="{DynamicResource Automation_Trigger_ProcessRunning}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="ProcessRunning">
+                                                        <MenuItem.Icon>
+                                                            <fluent:SymbolIcon Symbol="Apps"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_ProcessNotRunning}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="ProcessNotRunning">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Folder"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_NetworkAvailable}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="NetworkAvailable">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Globe"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_NetworkUnavailable}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="NetworkUnavailable">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Globe"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Trigger_FileExists}" Command="{Binding $parent[UserControl].DataContext.AddTriggerCommand}" CommandParameter="FileExists">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Document"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                    </MenuItem>
+                                                </Menu>
+                                                <Button Grid.Column="2" Command="{Binding $parent[UserControl].DataContext.RunAutomationCheckCommand}" Classes="accent" Padding="12,6">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <fluent:SymbolIcon Symbol="Play"/>
+                                                        <TextBlock Text="{DynamicResource Automation_CheckNow}"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
+                                            <TextBlock Text="{DynamicResource Automation_TriggerDescription}" Opacity="0.6"/>
+
+                                            <ItemsControl ItemsSource="{Binding Triggers}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="m:AutomationTrigger">
+                                                        <Border Background="{DynamicResource SystemControlBackgroundChromeLowBrush}" CornerRadius="6" Padding="12,8" Margin="0,0,0,8">
+                                                            <Grid ColumnDefinitions="Auto,*,36">
+                                                                    <Panel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center" Width="20">
+                                                                    <fluent:SymbolIcon Symbol="Clock" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}"/>
+                                                                    <fluent:SymbolIcon Symbol="ArrowSync" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}"/>
+                                                                    <fluent:SymbolIcon Symbol="Power" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
+                                                                    <fluent:SymbolIcon Symbol="Apps" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
+                                                                        <fluent:SymbolIcon Symbol="Folder" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}"/>
+                                                                        <fluent:SymbolIcon Symbol="Globe" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
+                                                                        <fluent:SymbolIcon Symbol="Globe" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
+                                                                        <fluent:SymbolIcon Symbol="Document" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
+                                                                </Panel>
+                                                                <Grid Grid.Column="1" ColumnDefinitions="Auto,*" VerticalAlignment="Center" Margin="0,0,12,0" HorizontalAlignment="Left">
+                                                                    <ComboBox SelectedItem="{Binding Type}" Width="130" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                                        <ComboBox.ItemTemplate>
+                                                                            <DataTemplate>
+                                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                                    <Panel Width="16">
+                                                                                        <fluent:SymbolIcon Symbol="Clock" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}"/>
+                                                                                        <fluent:SymbolIcon Symbol="ArrowSync" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Power" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Apps" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Folder" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Globe" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Globe" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
+                                                                                        <fluent:SymbolIcon Symbol="Document" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
+                                                                                    </Panel>
+                                                                                    <Panel>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_DailyTime}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_Interval}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_OnStartup}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_ProcessRunning}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_ProcessNotRunning}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_NetworkAvailable}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_NetworkUnavailable}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_FileExists}" IsVisible="{Binding Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
+                                                                                    </Panel>
+                                                                                </StackPanel>
+                                                                            </DataTemplate>
+                                                                        </ComboBox.ItemTemplate>
+                                                                        <x:String>DailyTime</x:String>
+                                                                        <x:String>Interval</x:String>
+                                                                        <x:String>OnStartup</x:String>
+                                                                        <x:String>ProcessRunning</x:String>
+                                                                        <x:String>ProcessNotRunning</x:String>
+                                                                        <x:String>NetworkAvailable</x:String>
+                                                                        <x:String>NetworkUnavailable</x:String>
+                                                                        <x:String>FileExists</x:String>
+                                                                    </ComboBox>
+                                                                    
+                                                                    <Panel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0" HorizontalAlignment="Left">
+                                                                        <!-- 每日时间选择 -->
+                                                                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=DailyTime}">
+                                                                            <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableHours}"
+                                                                                      SelectedItem="{Binding Hour}" Width="65"/>
+                                                                            <TextBlock Text="{DynamicResource Automation_Time_Hour}" VerticalAlignment="Center" Classes="caption"/>
+                                                                            <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableMinutes}"
+                                                                                      SelectedItem="{Binding Minute}" Width="65">
+                                                                                <ComboBox.ItemTemplate>
+                                                                                    <DataTemplate>
+                                                                                        <TextBlock Text="{Binding StringFormat={}{0:D2}}"/>
+                                                                                    </DataTemplate>
+                                                                                </ComboBox.ItemTemplate>
+                                                                            </ComboBox>
+                                                                            <TextBlock Text="{DynamicResource Automation_Time_Minute}" VerticalAlignment="Center" Classes="caption"/>
+                                                                        </StackPanel>
+                                                                         
+                                                                        <!-- 间隔分钟输入 -->
+                                                                        <StackPanel Orientation="Horizontal" Spacing="8" 
+                                                                                    IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Interval}">
+                                                                            <NumericUpDown Value="{Binding IntervalMinutes}" Minimum="1" Maximum="1440" Width="120"/>
+                                                                            <TextBlock Text="{DynamicResource Automation_Time_Minutes}" VerticalAlignment="Center" Classes="caption"/>
+                                                                        </StackPanel>
+                                                                         
+                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_OnStartup_Description}" VerticalAlignment="Center" Opacity="0.6"
+                                                                                   IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OnStartup}"/>
+
+                                                                        <!-- 运行特定程序编辑：输入 + 浏览 + 筛选列表 -->
+                                                                        <StackPanel Orientation="Vertical" Spacing="6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}">
+                                                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                                <TextBlock Text="{DynamicResource Automation_CheckInterval_Seconds}" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                                <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableCheckIntervals}"
+                                                                                          SelectedItem="{Binding CheckIntervalSeconds, Mode=TwoWay}"
+                                                                                          Width="140">
+                                                                                    <ComboBox.ItemTemplate>
+                                                                                        <DataTemplate>
+                                                                                            <TextBlock Text="{Binding StringFormat={}{0} {DynamicResource Automation_Time_Seconds}}"/>
+                                                                                        </DataTemplate>
+                                                                                    </ComboBox.ItemTemplate>
+                                                                                </ComboBox>
+                                                                            </StackPanel>
+                                                                            <WrapPanel>
+                                                                                <TextBlock Text="{DynamicResource Automation_Trigger_ProcessRunning_Description}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,8"/>
+                                                                                <TextBox x:Name="TriggerFilterBox" Text="{Binding $parent[UserControl].DataContext.ProcessFilterText}" Watermark="{DynamicResource Automation_ProcessFilter_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                                <Button Command="{Binding $parent[UserControl].DataContext.RefreshProcessesCommand}" Padding="12,6" Margin="0,0,8,8">
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                        <fluent:SymbolIcon Symbol="ArrowSync"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Refresh}"/>
+                                                                                    </StackPanel>
+                                                                                </Button>
+                                                                                <Button Command="{Binding $parent[UserControl].DataContext.UseFilterTextForTriggerCommand}" CommandParameter="{Binding}" Padding="12,6" Margin="0,0,8,8">
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                        <fluent:SymbolIcon Symbol="Checkmark"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Fill}"/>
+                                                                                    </StackPanel>
+                                                                                </Button>
+                                                                            </WrapPanel>
+                                                                        <Popup PlacementTarget="{Binding #TriggerFilterBox}" Placement="BottomEdgeAlignedLeft" IsOpen="{Binding #TriggerFilterBox.IsFocused}">
+                                                                                <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" CornerRadius="6" Padding="4" Width="{Binding #TriggerFilterBox.Width}" MaxHeight="240">
+                                                                                    <ListBox ItemsSource="{Binding $parent[UserControl].DataContext.FilteredSuggestions}"
+                                                                                            SelectionChanged="OnTriggerSuggestionSelected" Tag="{Binding}">
+                                                                                        <ListBox.ItemTemplate>
+                                                                                            <DataTemplate>
+                                                                                                <Grid ColumnDefinitions="Auto,*" Margin="0,2" Tapped="OnTriggerSuggestionTapped">
+                                                                                                    <fluent:SymbolIcon Grid.Column="0" Symbol="{Binding Icon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"/>
+                                                                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                                                                        <TextBlock Text="{Binding Name}"/>
+                                                                                                        <TextBlock Text="{Binding Path}" Classes="caption" Opacity="0.6" TextTrimming="CharacterEllipsis"/>
+                                                                                                    </StackPanel>
+                                                                                                </Grid>
+                                                                                            </DataTemplate>
+                                                                                        </ListBox.ItemTemplate>
+                                                                                    </ListBox>
+                                                                                </Border>
+                                                                            </Popup>
+                                                                        <WrapPanel>
+                                                                            <TextBox Text="{Binding ProcessName}" Watermark="{DynamicResource Automation_ProcessName_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                        </WrapPanel>
+                                                                            <WrapPanel>
+                                                                                <TextBox Text="{Binding FilePath}" Watermark="{DynamicResource Automation_FilePath_Watermark}" Width="360" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                                <Button Command="{Binding $parent[UserControl].DataContext.PickTriggerExeCommand}" CommandParameter="{Binding}" Padding="12,6" Classes="accent" Margin="0,0,8,8">
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                        <fluent:SymbolIcon Symbol="FolderOpen"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Browse}"/>
+                                                                                    </StackPanel>
+                                                                                </Button>
+                                                                            </WrapPanel>
+                                                                        </StackPanel>
+                                                                        <!-- 进程未运行（编辑）：输入 + 弹出建议 -->
+                                                                        <StackPanel Orientation="Vertical" Spacing="6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessNotRunning}">
+                                                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                                <TextBlock Text="{DynamicResource Automation_CheckInterval_Seconds}" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                                <NumericUpDown Value="{Binding CheckIntervalSeconds}" Minimum="1" Maximum="60" Width="120"/>
+                                                                            </StackPanel>
+                                                                            <WrapPanel>
+                                                                                <TextBlock Text="{DynamicResource Automation_Trigger_ProcessNotRunning_Description}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,8"/>
+                                                                                <TextBox x:Name="NotRunningFilterBox" Text="{Binding $parent[UserControl].DataContext.ProcessFilterText}" Watermark="{DynamicResource Automation_ProcessFilter_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                                <Button Command="{Binding $parent[UserControl].DataContext.RefreshProcessesCommand}" Padding="12,6" Margin="0,0,8,8">
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                        <fluent:SymbolIcon Symbol="ArrowSync"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Refresh}"/>
+                                                                                    </StackPanel>
+                                                                                </Button>
+                                                                            </WrapPanel>
+                                                                            <Popup PlacementTarget="{Binding #NotRunningFilterBox}" Placement="BottomEdgeAlignedLeft" IsOpen="{Binding #NotRunningFilterBox.IsFocused}">
+                                                                                <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" CornerRadius="6" Padding="4" Width="{Binding #NotRunningFilterBox.Width}" MaxHeight="240">
+                                                                                    <ListBox ItemsSource="{Binding $parent[UserControl].DataContext.FilteredSuggestions}"
+                                                                                            SelectionChanged="OnTriggerSuggestionSelected" Tag="{Binding}">
+                                                                                        <ListBox.ItemTemplate>
+                                                                                            <DataTemplate>
+                                                                                                <Grid ColumnDefinitions="Auto,*" Margin="0,2" Tapped="OnTriggerSuggestionTapped">
+                                                                                                    <fluent:SymbolIcon Grid.Column="0" Symbol="{Binding Icon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"/>
+                                                                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                                                                        <TextBlock Text="{Binding Name}"/>
+                                                                                                        <TextBlock Text="{Binding Path}" Classes="caption" Opacity="0.6" TextTrimming="CharacterEllipsis"/>
+                                                                                                    </StackPanel>
+                                                                                                </Grid>
+                                                                                            </DataTemplate>
+                                                                                        </ListBox.ItemTemplate>
+                                                                                    </ListBox>
+                                                                                </Border>
+                                                                            </Popup>
+                                                                            <WrapPanel>
+                                                                                <TextBox Text="{Binding ProcessName}" Watermark="{DynamicResource Automation_ProcessName_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                            </WrapPanel>
+                                                                            <WrapPanel>
+                                                                                <TextBox Text="{Binding FilePath}" Watermark="{DynamicResource Automation_FilePath_Watermark}" Width="360" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                                <Button Command="{Binding $parent[UserControl].DataContext.PickTriggerExeCommand}" CommandParameter="{Binding}" Padding="12,6" Classes="accent" Margin="0,0,8,8">
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                        <fluent:SymbolIcon Symbol="FolderOpen"/>
+                                                                                        <TextBlock Text="{DynamicResource Automation_Browse}"/>
+                                                                                    </StackPanel>
+                                                                                </Button>
+                                                                            </WrapPanel>
+                                                                        </StackPanel>
+                                                                        <!-- 文件存在（编辑） -->
+                                                                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}">
+                                                                            <TextBlock Text="{DynamicResource Automation_Trigger_FileExists_Description}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                            <TextBox Text="{Binding FilePath}" Watermark="{DynamicResource Automation_FilePath_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                        </StackPanel>
+                                                                        <!-- 网络可用/不可用提示 -->
+                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_Network_Description}" VerticalAlignment="Center" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkAvailable}"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Trigger_Network_Description}" VerticalAlignment="Center" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkUnavailable}"/>
+                                                                    </Panel>
+                                                                </Grid>
+                                                                <Button Grid.Column="2" Command="{Binding $parent[UserControl].DataContext.RemoveTriggerCommand}" CommandParameter="{Binding}" Classes="danger icon-sm">
+                                                                    <fluent:SymbolIcon Symbol="Dismiss"/>
+                                                                </Button>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- 条件 -->
+                                    <Border Classes="Card">
+                                        <StackPanel Spacing="12">
+                                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                                <TextBlock Text="{DynamicResource Automation_ConditionsSection}" Classes="SectionHeader"/>
+                                                <Menu Grid.Column="1" Background="Transparent">
+                                                    <MenuItem Header="{DynamicResource Automation_AddCondition}">
+                                                        <MenuItem.Icon>
+                                                            <fluent:SymbolIcon Symbol="Add"/>
+                                                        </MenuItem.Icon>
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_IsLocked}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="IsLocked">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="LockClosed"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_TimeRange}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="TimeRange">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Calendar"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_DayOfWeek}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="DayOfWeek">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="CalendarWeekNumbers"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <Separator/>
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_AppBlockingEnabled}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="AppBlockingEnabled">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Prohibited"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_NetworkLockEnabled}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="NetworkLockEnabled">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Shield"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_ProcessRunning}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="ProcessRunning">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Apps"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Condition_FileExists}" Command="{Binding $parent[UserControl].DataContext.AddConditionCommand}" CommandParameter="FileExists">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Document"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                    </MenuItem>
+                                                </Menu>
+                                                <ToggleSwitch Grid.Column="2" IsChecked="{Binding ConditionsEnabled}" OnContent="{DynamicResource Automation_Conditions_Enable}" OffContent="{DynamicResource Automation_Conditions_Disable}"/>
+                                            </Grid>
+                                            <TextBlock Text="{DynamicResource Automation_Conditions_Description}" Opacity="0.6"/>
+
+                                            <ItemsControl ItemsSource="{Binding Conditions}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="m:AutomationCondition">
+                                                        <Border Background="{DynamicResource SystemControlBackgroundChromeLowBrush}" CornerRadius="4" Padding="12,8" Margin="0,0,0,8">
+                                                            <Grid ColumnDefinitions="Auto,*,36">
+                                                                    <Panel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center" Width="20">
+                                                                    <fluent:SymbolIcon Symbol="LockClosed" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=IsLocked}"/>
+                                                                    <fluent:SymbolIcon Symbol="Calendar" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=TimeRange}"/>
+                                                                    <fluent:SymbolIcon Symbol="CalendarWeekNumbers" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=DayOfWeek}"/>
+                                                                        <fluent:SymbolIcon Symbol="Prohibited" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockingEnabled}"/>
+                                                                        <fluent:SymbolIcon Symbol="Shield" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockEnabled}"/>
+                                                                        <fluent:SymbolIcon Symbol="Apps" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}"/>
+                                                                        <fluent:SymbolIcon Symbol="Document" Opacity="0.6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}"/>
+                                                                </Panel>
+                                                                <Panel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0" HorizontalAlignment="Left">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=TimeRange}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_TimeRange}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        
+                                                                        <!-- 开始时间 -->
+                                                                        <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableHours}"
+                                                                                  SelectedItem="{Binding StartHour}" Width="65"/>
+                                                                        <TextBlock Text=":" VerticalAlignment="Center" Margin="-4,0"/>
+                                                                        <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableMinutes}"
+                                                                                  SelectedItem="{Binding StartMinute}" Width="65">
+                                                                            <ComboBox.ItemTemplate>
+                                                                                <DataTemplate>
+                                                                                    <TextBlock Text="{Binding StringFormat={}{0:D2}}"/>
+                                                                                </DataTemplate>
+                                                                            </ComboBox.ItemTemplate>
+                                                                        </ComboBox>
+
+                                                                        <TextBlock Text="{DynamicResource Automation_TimeRange_To}" VerticalAlignment="Center" Margin="8,0"/>
+
+                                                                        <!-- 结束时间 -->
+                                                                        <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableHours}"
+                                                                                  SelectedItem="{Binding EndHour}" Width="65"/>
+                                                                        <TextBlock Text=":" VerticalAlignment="Center" Margin="-4,0"/>
+                                                                        <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.AvailableMinutes}"
+                                                                                  SelectedItem="{Binding EndMinute}" Width="65">
+                                                                            <ComboBox.ItemTemplate>
+                                                                                <DataTemplate>
+                                                                                    <TextBlock Text="{Binding StringFormat={}{0:D2}}"/>
+                                                                                </DataTemplate>
+                                                                            </ComboBox.ItemTemplate>
+                                                                        </ComboBox>
+                                                                    </StackPanel>
+                                                                    <!-- 锁定状态 -->
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=IsLocked}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_IsLocked}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <ToggleSwitch IsChecked="{Binding Bool}" OnContent="{DynamicResource Automation_Condition_IsLocked_On}" OffContent="{DynamicResource Automation_Condition_IsLocked_Off}"/>
+                                                                    </StackPanel>
+                                                                    <!-- 应用拦截已启用 -->
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockingEnabled}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_AppBlocking}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <ToggleSwitch IsChecked="{Binding Bool}" OnContent="{DynamicResource Automation_Condition_Enabled}" OffContent="{DynamicResource Automation_Condition_Disabled}"/>
+                                                                    </StackPanel>
+                                                                    <!-- 网络拦截已启用 -->
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockEnabled}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_NetworkLock}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <ToggleSwitch IsChecked="{Binding Bool}" OnContent="{DynamicResource Automation_Condition_Enabled}" OffContent="{DynamicResource Automation_Condition_Disabled}"/>
+                                                                    </StackPanel>
+                                                                    <!-- 星期 -->
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=DayOfWeek}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_DayOfWeek}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_DayOfWeek_Description}" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+                                                                    <!-- 进程运行中（条件）：输入 + 浏览 + 筛选列表 -->
+                                                                    <StackPanel Orientation="Vertical" Spacing="6" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ProcessRunning}">
+                                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                            <TextBlock Text="{DynamicResource Automation_Condition_ProcessRunning}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                            <TextBox x:Name="ConditionFilterBox" Text="{Binding $parent[UserControl].DataContext.ProcessFilterText}" Watermark="{DynamicResource Automation_ProcessFilter_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                            <Button Command="{Binding $parent[UserControl].DataContext.RefreshProcessesCommand}" Padding="12,6">
+                                                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                    <fluent:SymbolIcon Symbol="ArrowSync"/>
+                                                                                    <TextBlock Text="{DynamicResource Automation_Refresh}"/>
+                                                                                </StackPanel>
+                                                                            </Button>
+                                                                            <Button Command="{Binding $parent[UserControl].DataContext.UseFilterTextForConditionCommand}" CommandParameter="{Binding}" Padding="12,6">
+                                                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                    <fluent:SymbolIcon Symbol="Checkmark"/>
+                                                                                    <TextBlock Text="{DynamicResource Automation_Fill}"/>
+                                                                                </StackPanel>
+                                                                            </Button>
+                                                                        </StackPanel>
+                                                                        <Popup PlacementTarget="{Binding #ConditionFilterBox}" Placement="BottomEdgeAlignedLeft" IsOpen="{Binding #ConditionFilterBox.IsFocused}">
+                                                                            <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" CornerRadius="6" Padding="4" Width="{Binding #ConditionFilterBox.Width}" MaxHeight="240">
+                                                                                <ListBox ItemsSource="{Binding $parent[UserControl].DataContext.FilteredSuggestions}"
+                                                                                        SelectionChanged="OnConditionSuggestionSelected" Tag="{Binding}">
+                                                                                    <ListBox.ItemTemplate>
+                                                                                        <DataTemplate>
+                                                                                            <Grid ColumnDefinitions="Auto,*" Margin="0,2" Tapped="OnConditionSuggestionTapped">
+                                                                                                <fluent:SymbolIcon Grid.Column="0" Symbol="{Binding Icon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}"/>
+                                                                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                                                                    <TextBlock Text="{Binding Name}"/>
+                                                                                                    <TextBlock Text="{Binding Path}" Classes="caption" Opacity="0.6" TextTrimming="CharacterEllipsis"/>
+                                                                                                </StackPanel>
+                                                                                            </Grid>
+                                                                                        </DataTemplate>
+                                                                                    </ListBox.ItemTemplate>
+                                                                                </ListBox>
+                                                                            </Border>
+                                                                        </Popup>
+                                                                        <WrapPanel>
+                                                                            <TextBox Text="{Binding ProcessName}" Watermark="{DynamicResource Automation_ProcessName_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                        </WrapPanel>
+                                                                        <WrapPanel>
+                                                                            <TextBox Text="{Binding FilePath}" Watermark="{DynamicResource Automation_FilePath_Watermark}" Width="360" Classes="clear" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                                                            <Button Command="{Binding $parent[UserControl].DataContext.PickConditionExeCommand}" CommandParameter="{Binding}" Padding="12,6" Classes="accent" Margin="0,0,8,8">
+                                                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                    <fluent:SymbolIcon Symbol="FolderOpen"/>
+                                                                                    <TextBlock Text="{DynamicResource Automation_Browse}"/>
+                                                                                </StackPanel>
+                                                                            </Button>
+                                                                        </WrapPanel>
+                                                                    </StackPanel>
+                                                                    <!-- 文件存在（条件） -->
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=FileExists}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Condition_FileExists}" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,8,0"/>
+                                                                        <TextBox Text="{Binding FilePath}" Watermark="{DynamicResource Automation_FilePath_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                    </StackPanel>
+                                                                </Panel>
+                                                                <Button Grid.Column="2" Command="{Binding $parent[UserControl].DataContext.RemoveConditionCommand}" CommandParameter="{Binding}" Classes="danger icon-sm">
+                                                                    <fluent:SymbolIcon Symbol="Dismiss"/>
+                                                                </Button>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- 执行行动 -->
+                                    <Border Classes="Card">
+                                        <StackPanel Spacing="12">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="{DynamicResource Automation_ActionsSection}" Classes="SectionHeader"/>
+                                                <Menu Grid.Column="1" Background="Transparent">
+                                                    <MenuItem Header="{DynamicResource Automation_AddAction}" Classes="accent">
+                                                        <MenuItem.Icon>
+                                                            <fluent:SymbolIcon Symbol="Flash"/>
+                                                        </MenuItem.Icon>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_LockFull}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="LockFull">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="PersonLock"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_Shutdown}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="Shutdown">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Power"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_Restart}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="Restart">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="ArrowSync"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <Separator/>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_NetworkLockOn}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="NetworkLockOn">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Shield"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_NetworkLockOff}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="NetworkLockOff">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="LockOpen"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_AppBlockOn}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="AppBlockOn">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Prohibited"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_AppBlockOff}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="AppBlockOff">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="CheckmarkCircle"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <Separator/>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_WebcamCapture}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="WebcamCapture">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Camera"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_ScreenShot}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="ScreenShot">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Image"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_PlaySound}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="PlaySound">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Speaker2"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <Separator/>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_OpenUrl}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="OpenUrl">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Link"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_RunProcess}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="RunProcess">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Play"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <Separator/>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_BasicProtectionOn}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="BasicProtectionOn">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Shield"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                        <MenuItem Header="{DynamicResource Automation_Action_BasicProtectionOff}" Command="{Binding $parent[UserControl].DataContext.AddActionCommand}" CommandParameter="BasicProtectionOff">
+                                                            <MenuItem.Icon>
+                                                                <fluent:SymbolIcon Symbol="Shield"/>
+                                                            </MenuItem.Icon>
+                                                        </MenuItem>
+                                                    </MenuItem>
+                                                </Menu>
+                                            </Grid>
+                                            <TextBlock Text="{DynamicResource Automation_Actions_Description}" Opacity="0.6"/>
+
+                                            <ItemsControl ItemsSource="{Binding Actions}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="m:AutomationAction">
+                                                        <Border Background="{DynamicResource SystemControlBackgroundChromeLowBrush}" CornerRadius="6" Padding="12,8" Margin="0,0,0,8">
+                                                            <Grid ColumnDefinitions="Auto,*,36">
+                                                                <Panel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center" Width="20">
+                                                                    <fluent:SymbolIcon Symbol="PersonLock" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=LockFull}"/>
+                                                                    <fluent:SymbolIcon Symbol="Power" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Shutdown}"/>
+                                                                    <fluent:SymbolIcon Symbol="ArrowSync" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Restart}"/>
+                                                                    <fluent:SymbolIcon Symbol="Shield" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOn}"/>
+                                                                    <fluent:SymbolIcon Symbol="LockOpen" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOff}"/>
+                                                                    <fluent:SymbolIcon Symbol="Prohibited" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOn}"/>
+                                                                    <fluent:SymbolIcon Symbol="CheckmarkCircle" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOff}"/>
+                                                                    <fluent:SymbolIcon Symbol="Camera" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=WebcamCapture}"/>
+                                                                        <fluent:SymbolIcon Symbol="Image" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ScreenShot}"/>
+                                                                        <fluent:SymbolIcon Symbol="Speaker2" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=PlaySound}"/>
+                                                                        <fluent:SymbolIcon Symbol="Link" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OpenUrl}"/>
+                                                                        <fluent:SymbolIcon Symbol="Play" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=RunProcess}"/>
+                                                                        <fluent:SymbolIcon Symbol="Shield" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOn}"/>
+                                                                        <fluent:SymbolIcon Symbol="Shield" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOff}"/>
+                                                                </Panel>
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0" HorizontalAlignment="Left" Spacing="8">
+                                                                    <!-- 文本说明 -->
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_LockFull_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=LockFull}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_Shutdown_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Shutdown}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_Restart_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Restart}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_NetworkLockOn_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOn}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_NetworkLockOff_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NetworkLockOff}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_AppBlockOn_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOn}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_AppBlockOff_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=AppBlockOff}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_BasicProtectionOn_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOn}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_BasicProtectionOff_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BasicProtectionOff}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_WebcamCapture_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=WebcamCapture}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_ScreenShot_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ScreenShot}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_PlaySound_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=PlaySound}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_OpenUrl_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OpenUrl}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_RunProcess_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=RunProcess}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{DynamicResource Automation_Action_Notify_Display}" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Notify}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=WebcamCapture}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Delay_Seconds}" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                        <ComboBox ItemsSource="{Binding #AutomationRoot.DataContext.AvailableCaptureDelays}" SelectedItem="{Binding DelaySeconds}" Width="100">
+                                                                            <ComboBox.ItemTemplate>
+                                                                                <DataTemplate>
+                                                                                    <TextBlock Text="{Binding}"/>
+                                                                                </DataTemplate>
+                                                                            </ComboBox.ItemTemplate>
+                                                                        </ComboBox>
+                                                                    </StackPanel>
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=ScreenShot}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Delay_Seconds}" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                        <ComboBox ItemsSource="{Binding #AutomationRoot.DataContext.AvailableCaptureDelays}" SelectedItem="{Binding DelaySeconds}" Width="100">
+                                                                            <ComboBox.ItemTemplate>
+                                                                                <DataTemplate>
+                                                                                    <TextBlock Text="{Binding}"/>
+                                                                                </DataTemplate>
+                                                                            </ComboBox.ItemTemplate>
+                                                                        </ComboBox>
+                                                                    </StackPanel>
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Notify}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Action_Notify_Label}" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                        <TextBox Text="{Binding Text}" Watermark="{DynamicResource Automation_Action_Notify_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                    </StackPanel>
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=OpenUrl}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Action_OpenUrl_Label}" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                        <TextBox Text="{Binding Text}" Watermark="https://" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                    </StackPanel>
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=RunProcess}">
+                                                                        <TextBlock Text="{DynamicResource Automation_Action_RunProcess_Label}" VerticalAlignment="Center" Opacity="0.6"/>
+                                                                        <TextBox Text="{Binding Text}" Watermark="{DynamicResource Automation_Action_RunProcess_Watermark}" Width="300" Classes="clear" HorizontalAlignment="Left"/>
+                                                                        <Button Command="{Binding $parent[UserControl].DataContext.PickRunProcessExeCommand}" CommandParameter="{Binding}" Padding="12,6" Classes="accent">
+                                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                <fluent:SymbolIcon Symbol="FolderOpen"/>
+                                                                                <TextBlock Text="{DynamicResource Automation_Browse}"/>
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                    </StackPanel>
+                                                                </StackPanel>
+                                                                <Button Grid.Column="2" Command="{Binding $parent[UserControl].DataContext.RemoveActionCommand}" CommandParameter="{Binding}" Classes="danger icon-sm">
+                                                                    <fluent:SymbolIcon Symbol="Dismiss"/>
+                                                                </Button>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                </StackPanel>
+                            </DataTemplate>
+                        </ContentControl.ContentTemplate>
+                    </ContentControl>
+                    
+                    <!-- 未选中时的提示 -->
+                    <Border IsVisible="{Binding SelectedWorkflow, Converter={StaticResource IsNullConverter}}" 
+                            VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,100,0,0">
+                        <StackPanel Spacing="16" HorizontalAlignment="Center">
+                            <fluent:SymbolIcon Symbol="Bot" Width="64" Height="64" Opacity="0.1"/>
+                            <TextBlock Text="{DynamicResource Automation_SelectWorkflow_Prompt}" Opacity="0.4" FontSize="16"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+                </ScrollViewer>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- 底部警告栏 -->
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+                BorderThickness="0,1,0,0" BorderBrush="{DynamicResource SystemControlElevationBorderBrush}"
+                IsVisible="{Binding !IsAutomationEnabled}" Padding="16,10">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <fluent:SymbolIcon Symbol="Warning" Foreground="{DynamicResource SystemFillColorCautionBrush}" Width="16" Height="16" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="0" Text="{DynamicResource Automation_Disabled_Warning}"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                </StackPanel>
+                <Button Grid.Column="2" Content="{DynamicResource Automation_EnableNow}" Command="{Binding ToggleAutomationCommand}"
+                        Classes="accent" Padding="16,6" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,85 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="480"
+        x:Class="ClassScreenLock.Views.SplashWindow"
+        Width="560"
+        Height="380"
+        WindowStartupLocation="CenterScreen"
+        SystemDecorations="None"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Icon="avares://ClassScreenLock/ClassScreenLock.ico"
+        RequestedThemeVariant="Default"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <LinearGradientBrush x:Key="SplashBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1A1A1A" Offset="0"/>
+                        <GradientStop Color="#2D2D2D" Offset="1"/>
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="ProgressBackgroundBrush" Color="#333333"/>
+                    <SolidColorBrush x:Key="ProgressForegroundBrush" Color="#0078D4"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <LinearGradientBrush x:Key="SplashBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#F6F6F6" Offset="0"/>
+                        <GradientStop Color="#FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="ProgressBackgroundBrush" Color="#E0E0E0"/>
+                    <SolidColorBrush x:Key="ProgressForegroundBrush" Color="#0078D4"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border Background="{DynamicResource SplashBackgroundBrush}"
+            CornerRadius="14"
+            ClipToBounds="True"
+            BoxShadow="0 10 30 0 #2A000000"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <Grid RowDefinitions="*,Auto,Auto">
+                <Image x:Name="LogoImage"
+                       Grid.Row="0"
+                       Source="avares://ClassScreenLock/Assets/CSL.png"
+                       Width="360"
+                       MaxHeight="150"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+
+                <StackPanel Grid.Row="1" HorizontalAlignment="Center" Spacing="6" Margin="0,0,0,10">
+                    <TextBlock x:Name="StatusText" Opacity="0.85" HorizontalAlignment="Center" Text="正在启动" FontSize="16"/>
+                    <TextBlock x:Name="PercentText" Opacity="0.9" HorizontalAlignment="Center" FontSize="16" FontWeight="Medium" Text=""/>
+                    <TextBlock x:Name="VersionText" Opacity="0.6" HorizontalAlignment="Center" FontSize="12"/>
+                </StackPanel>
+
+                <!-- Fluent UI 风格底条进度条 -->
+                <Border Grid.Row="2" 
+                        Background="{DynamicResource ProgressBackgroundBrush}"
+                        Height="6"
+                        CornerRadius="0,0,14,14">
+                    <Border x:Name="ProgressIndicator"
+                            Background="{DynamicResource ProgressForegroundBrush}"
+                            Height="6"
+                            Width="0"
+                            HorizontalAlignment="Left"
+                            CornerRadius="0,0,14,0">
+                        <Border.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Width" Duration="0:0:0.4" Easing="QuadraticEaseOut"/>
+                            </Transitions>
+                        </Border.Transitions>
+                    </Border>
+                </Border>
+        </Grid>
+    </Border>
+</Window>

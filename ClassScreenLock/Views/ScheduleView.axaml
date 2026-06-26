@@ -1,0 +1,701 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:models="clr-namespace:ClassScreenLock.Models"
+             xmlns:converters="clr-namespace:ClassScreenLock.Converters"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+             x:Class="ClassScreenLock.Views.ScheduleView"
+             x:DataType="vm:ScheduleViewModel"
+             Name="Root">
+
+    <UserControl.Resources>
+        <converters:TimePointTypeToBrushConverter x:Key="TypeToBrushConverter"/>
+        <converters:IsNullConverter x:Key="IsNullConverter"/>
+        <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
+        <converters:EqualityMultiConverter x:Key="EqualConverter"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.circle">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="Button.circle:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.circle">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="ToggleButton.circle:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.circle:checked">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
+        </Style>
+        <Style Selector="Button.pill">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}"/>
+        </Style>
+        <Style Selector="Button.pill:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.pill">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.pill:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.pill:checked">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
+        </Style>
+        <Style Selector="Button.pill.accent">
+            <Setter Property="CornerRadius" Value="18"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+            <!-- 1. 左侧：时间表列表 (大屏固定) -->
+            <Border Grid.Column="0" 
+                    Width="260"
+                    IsVisible="{Binding !IsMobileView}"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                    BorderThickness="0,0,1,0"
+                    ZIndex="1">
+                <Grid RowDefinitions="Auto,*">
+                    <!-- 标题和操作 -->
+                    <Border Grid.Row="0" Padding="16,20,16,10">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{DynamicResource Sidebar_Schedule}" Classes="h3" FontWeight="Bold"/>
+                            <UniformGrid Columns="2" Rows="3" RowSpacing="8" ColumnSpacing="8">
+                                <Button Command="{Binding AddWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,8" Classes="accent">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="Add" FontSize="14"/>
+                                        <TextBlock Text="{DynamicResource Schedule_Add}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding CopyWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="Copy" FontSize="14"/>
+                                        <TextBlock Text="{DynamicResource Schedule_Copy}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Click="ImportSchedule_Click" HorizontalAlignment="Stretch" Padding="0,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="ArrowDown" FontSize="14"/>
+                                        <TextBlock Text="{DynamicResource Schedule_Import}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Click="ExportSchedule_Click" HorizontalAlignment="Stretch" Padding="0,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="ArrowUp" FontSize="14"/>
+                                        <TextBlock Text="{DynamicResource Schedule_Export}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ClearWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,8" Classes="danger">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="Eraser" FontSize="14"/>
+                                        <TextBlock Text="{DynamicResource Schedule_Clear}"/>
+                                    </StackPanel>
+                                </Button>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 周课表列表 -->
+                    <ListBox Grid.Row="1" 
+                             ItemsSource="{Binding WeeklySchedules}" 
+                             SelectedItem="{Binding SelectedWeekly, Mode=TwoWay}"
+                             Background="Transparent"
+                             Margin="8,0,8,16">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="CornerRadius" Value="6"/>
+                                <Setter Property="Margin" Value="0,2"/>
+                                <Setter Property="Padding" Value="12,10"/>
+                            </Style>
+                        </ListBox.Styles>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:WeeklyScheduleFile">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                        <fluent:SymbolIcon Symbol="Calendar" FontSize="16" Opacity="0.85"/>
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- 1.1 左侧：时间表列表 (小屏浮层) -->
+            <Border Grid.Column="0" Grid.ColumnSpan="4"
+                    Width="280"
+                    HorizontalAlignment="Left"
+                    IsVisible="{Binding ShowSchedulePanel}"
+                    Classes="overlay-panel"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="0,0,1,0"
+                    ZIndex="40"
+                    BoxShadow="0 0 30 0 #40000000">
+                <Grid RowDefinitions="Auto,*">
+                    <!-- 标题和关闭按钮 -->
+                    <Border Grid.Row="0" Padding="20,24,16,16" Classes="overlay-panel-header" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="{DynamicResource Sidebar_Schedule}" Classes="h3" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" 
+                                    Command="{Binding CloseSchedulePanelCommand}" 
+                                    Classes="transparent" Width="36" Height="36" Padding="0">
+                                <fluent:SymbolIcon Symbol="Dismiss" FontSize="16"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Grid.Row="1">
+                        <!-- 操作按钮 -->
+                        <Border Padding="16,16,16,8">
+                            <UniformGrid Columns="2" Rows="3" RowSpacing="12" ColumnSpacing="12">
+                                <Button Command="{Binding AddWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,10" Classes="accent">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="Add" FontSize="14"/>
+                                        <TextBlock Text="{DynamicResource Schedule_Add}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding CopyWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,10">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="Copy" FontSize="14"/>
+                                        <TextBlock Text="{DynamicResource Schedule_Copy}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Click="ImportSchedule_Click" HorizontalAlignment="Stretch" Padding="0,10">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="ArrowDown" FontSize="14"/>
+                                        <TextBlock Text="{DynamicResource Schedule_Import}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Click="ExportSchedule_Click" HorizontalAlignment="Stretch" Padding="0,10">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="ArrowUp" FontSize="14"/>
+                                        <TextBlock Text="{DynamicResource Schedule_Export}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ClearWeeklyCommand}" HorizontalAlignment="Stretch" Padding="0,10" Classes="danger">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="Eraser" FontSize="14"/>
+                                        <TextBlock Text="{DynamicResource Schedule_Clear}"/>
+                                    </StackPanel>
+                                </Button>
+                            </UniformGrid>
+                        </Border>
+
+                        <!-- 列表 -->
+                        <ListBox ItemsSource="{Binding WeeklySchedules}" 
+                                 SelectedItem="{Binding SelectedWeekly, Mode=TwoWay}"
+                                 Background="Transparent"
+                                 Margin="8,8,8,16">
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem">
+                                    <Setter Property="CornerRadius" Value="8"/>
+                                    <Setter Property="Margin" Value="0,2"/>
+                                    <Setter Property="Padding" Value="16,12"/>
+                                </Style>
+                            </ListBox.Styles>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:WeeklyScheduleFile">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                                            <fluent:SymbolIcon Symbol="Calendar" FontSize="18" Opacity="0.85"/>
+                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 2. 中间：时间点列表 -->
+            <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*"
+                  IsVisible="{Binding IsListVisible}"
+                  ZIndex="0">
+                <!-- 工具栏 -->
+                <Border Grid.Row="0" Classes="overlay-panel-header" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <WrapPanel Grid.Column="0" ItemSpacing="8">
+                            <Button Command="{Binding ToggleSchedulePanelCommand}"
+                                    IsVisible="{Binding IsMobileView}"
+                                    Width="36" Height="36" Padding="0"
+                                    ToolTip.Tip="{DynamicResource Sidebar_Schedule}">
+                                <fluent:SymbolIcon Symbol="List" FontSize="16"/>
+                            </Button>
+                            <Button Command="{Binding AddClassCommand}" Classes="accent" Padding="12,6" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <fluent:SymbolIcon Symbol="Video" FontSize="16" Foreground="White"/>
+                                    <TextBlock Text="{DynamicResource Schedule_Class}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding AddBreakCommand}" Classes="accent" Padding="12,6" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <fluent:SymbolIcon Symbol="DrinkToGo" FontSize="16" Foreground="White"/>
+                                    <TextBlock Text="{DynamicResource Schedule_Break}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding AddDividerCommand}" Padding="12,6" IsVisible="{Binding !IsMobileView}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <fluent:SymbolIcon Symbol="MoreHorizontal" FontSize="16"/>
+                                    <TextBlock Text="{DynamicResource Schedule_Divider}"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding AddActionCommand}" Padding="12,6" IsVisible="{Binding !IsMobileView}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <fluent:SymbolIcon Symbol="Flash" FontSize="16"/>
+                                    <TextBlock Text="{DynamicResource Schedule_Action}"/>
+                                </StackPanel>
+                            </Button>
+                            <Separator Margin="8,0"/>
+                        </WrapPanel>
+                        
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                            <Button Command="{Binding MoveSelectedUpCommand}" IsEnabled="{Binding SelectedTimePoint, Converter={StaticResource IsNotNullConverter}}" Classes="circle" ToolTip.Tip="{DynamicResource Schedule_MoveUp}">
+                                <fluent:SymbolIcon Symbol="ArrowUp" FontSize="16"/>
+                            </Button>
+                            <Button Command="{Binding MoveSelectedDownCommand}" IsEnabled="{Binding SelectedTimePoint, Converter={StaticResource IsNotNullConverter}}" Classes="circle" ToolTip.Tip="{DynamicResource Schedule_MoveDown}">
+                                <fluent:SymbolIcon Symbol="ArrowDown" FontSize="16"/>
+                            </Button>
+                            <Button Command="{Binding SortTimePointsCommand}" IsEnabled="{Binding CanSortTimePoints}" Classes="circle" ToolTip.Tip="{DynamicResource Schedule_Sort}">
+                                <fluent:SymbolIcon Symbol="ArrowSort" FontSize="16"/>
+                            </Button>
+                            <Button Click="ImportSchedule_Click" Classes="circle" ToolTip.Tip="{DynamicResource Schedule_Import}">
+                                <fluent:SymbolIcon Symbol="ArrowDown" FontSize="16"/>
+                            </Button>
+                            <Button Click="ExportSchedule_Click" Classes="circle" ToolTip.Tip="{DynamicResource Schedule_Export}">
+                                <fluent:SymbolIcon Symbol="ArrowUp" FontSize="16"/>
+                            </Button>
+                            <Button Command="{Binding ToggleSettingsCommand}" 
+                                    IsVisible="{Binding CanToggleSettings}"
+                                    Width="36" Height="36" Padding="0" ToolTip.Tip="{DynamicResource Schedule_Info}">
+                                <fluent:SymbolIcon Symbol="Settings" FontSize="16"/>
+                            </Button>
+                            <Button Command="{Binding LoadSchedulesCommand}" Width="36" Height="36" Padding="0" ToolTip.Tip="{DynamicResource Schedule_Refresh}">
+                                <fluent:SymbolIcon Symbol="ArrowSync" FontSize="16"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <TextBlock Grid.Row="1"
+                           Margin="16,8,16,0"
+                           Opacity="0.9"
+                           TextWrapping="Wrap"
+                           Text="{Binding TodayScheduleSummary}"/>
+
+                <!-- 周课表编辑 -->
+                <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <Border Padding="16">
+                        <StackPanel>
+                        <!-- 小窗模式下的时间表基本设置 -->
+                        <Border IsVisible="{Binding IsMobileView}" 
+                                Margin="0,0,0,16" 
+                                Padding="16"
+                                Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                                CornerRadius="12">
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
+                                <!-- 第一行：名称和操作 -->
+                                <TextBox Grid.Row="0" Grid.Column="0"
+                                         Text="{Binding SelectedSchedule.Name}"
+                                         Watermark="{DynamicResource Schedule_NameWatermark}"
+                                         Classes="clear"
+                                         Width="180" Height="40"
+                                         FontWeight="Bold"
+                                         VerticalAlignment="Center"
+                                         Margin="0,0,8,0"/>
+                                
+                                <Button Grid.Row="0" Grid.Column="1"
+                                        Command="{Binding SaveCurrentScheduleCommand}"
+                                        Classes="accent"
+                                        Width="36" Height="36" Padding="0"
+                                        ToolTip.Tip="{DynamicResource Schedule_Save}">
+                                    <fluent:SymbolIcon Symbol="Save" FontSize="16"/>
+                                </Button>
+
+                                <!-- 第二行：默认时长 -->
+                                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                            Orientation="Horizontal"
+                                            Spacing="20"
+                                            Margin="0,12,0,0">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{DynamicResource Schedule_Class}" VerticalAlignment="Center" Opacity="0.85"/>
+                                        <NumericUpDown Value="{Binding SelectedSchedule.DefaultClassDuration}"
+                                                       Width="80" Height="32"
+                                                       Minimum="1" Maximum="120"
+                                                       ShowButtonSpinner="False"
+                                                       Classes="clear"
+                                                       VerticalAlignment="Center"/>
+                                        <TextBlock Text="min" VerticalAlignment="Center" Opacity="0.85"/>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{DynamicResource Schedule_Break}" VerticalAlignment="Center" Opacity="0.85"/>
+                                        <NumericUpDown Value="{Binding SelectedSchedule.DefaultBreakDuration}"
+                                                       Width="80" Height="32"
+                                                       Minimum="1" Maximum="120"
+                                                       ShowButtonSpinner="False"
+                                                       Classes="clear"
+                                                       VerticalAlignment="Center"/>
+                                        <TextBlock Text="min" VerticalAlignment="Center" Opacity="0.85"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <TextBlock IsVisible="{Binding IsMobileView}" Text="{DynamicResource Schedule_WeeklySchedule}" FontWeight="Bold" Margin="4,0,0,12"/>
+
+                        <Border Margin="0,0,0,12" Padding="12"
+                                Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                                CornerRadius="12">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
+                                    <TextBlock Text="{DynamicResource Schedule_WeeklyRotationSettings}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{DynamicResource Schedule_RotationWeeksAndStartDate}" Opacity="0.85"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="8" HorizontalAlignment="Right">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                        <TextBlock Text="{DynamicResource Schedule_RotationWeeks}" VerticalAlignment="Center" Opacity="0.85"/>
+                                        <ComboBox ItemsSource="{Binding WeeklyCycleOptions}"
+                                                  SelectedItem="{Binding WeeklyCycleCount, Mode=TwoWay}"
+                                                  Width="120" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <Button Command="{Binding SaveAndBackupCommand}"
+                                                Classes="pill accent"
+                                                Padding="12,6"
+                                                VerticalAlignment="Center"
+                                                ToolTip.Tip="{DynamicResource Schedule_SaveAndBackup}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <fluent:SymbolIcon Symbol="Save" FontSize="14"/>
+                                                <TextBlock Text="{DynamicResource Schedule_SaveAndBackup}"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                        <TextBlock Text="{DynamicResource Schedule_StartDate}" VerticalAlignment="Center" Opacity="0.85"/>
+                                        <StackPanel Spacing="4" HorizontalAlignment="Right">
+                                            <Grid ColumnDefinitions="*,Auto" Width="220">
+                                                <TextBox Grid.Column="0"
+                                                         Text="{Binding TermStartDateText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                                         Watermark="{DynamicResource Schedule_DateFormatHint}"
+                                                         Height="36"
+                                                         Classes="clear"
+                                                         VerticalAlignment="Center"/>
+                                                <Button Grid.Column="1"
+                                                        Classes="pill"
+                                                        Width="36" Height="36"
+                                                        Padding="0"
+                                                        VerticalAlignment="Center"
+                                                        Margin="4,0,0,0">
+                                                    <fluent:SymbolIcon Symbol="Calendar" FontSize="16"/>
+                                                    <Button.Flyout>
+                                                        <Flyout Placement="Bottom">
+                                                            <Border Padding="12"
+                                                                    Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                                                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="8"
+                                                                    BoxShadow="0 4 16 0 #40000000">
+                                                                <StackPanel Spacing="8">
+                                                                <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                                                                        CornerRadius="12"
+                                                                        Padding="8">
+                                                                    <Calendar SelectedDate="{Binding TermStartDateCalendar, Mode=TwoWay}"
+                                                                              Width="280"
+                                                                              Height="300"/>
+                                                                </Border>
+                                                                <Button Command="{Binding ClearTermStartDateCommand}"
+                                                                        Classes="danger"
+                                                                        HorizontalAlignment="Stretch"
+                                                                        Content="{DynamicResource Schedule_ClearTermStartDate}"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </Flyout>
+                                                    </Button.Flyout>
+                                                </Button>
+                                            </Grid>
+                                            <TextBlock Text="{Binding TermStartDateValidationMessage}"
+                                                       IsVisible="{Binding IsTermStartDateInvalid}"
+                                                       Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                                       TextWrapping="Wrap"
+                                                       MaxWidth="220"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <TabControl SelectedIndex="{Binding SelectedDayTabIndex, Mode=TwoWay}">
+                            <TabItem Header="{DynamicResource Schedule_Monday}"/>
+                            <TabItem Header="{DynamicResource Schedule_Tuesday}"/>
+                            <TabItem Header="{DynamicResource Schedule_Wednesday}"/>
+                            <TabItem Header="{DynamicResource Schedule_Thursday}"/>
+                            <TabItem Header="{DynamicResource Schedule_Friday}"/>
+                            <TabItem Header="{DynamicResource Schedule_Saturday}"/>
+                            <TabItem Header="{DynamicResource Schedule_Sunday}"/>
+                        </TabControl>
+
+                        <ListBox ItemsSource="{Binding SelectedSchedule.TimePoints}" 
+                                 SelectedItem="{Binding SelectedTimePoint, Mode=TwoWay}" 
+                                 Background="Transparent"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 Margin="0,8,0,0">
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem">
+                                    <Setter Property="CornerRadius" Value="12"/>
+                                    <Setter Property="Margin" Value="0,4"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="BorderThickness" Value="1"/>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                    <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+                                </Style>
+                            </ListBox.Styles>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:TimePoint">
+                                    <Border Padding="20,16">
+                                        <Grid ColumnDefinitions="120,Auto,*,Auto">
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="{Binding StartTime, StringFormat=\{0:hh\\:mm\}}" FontWeight="SemiLight"/>
+                                                <TextBlock Text="-" FontWeight="SemiLight" Opacity="0.85"/>
+                                                <TextBlock Text="{Binding EndTime, StringFormat=\{0:hh\\:mm\}}" FontWeight="SemiLight"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Duration, StringFormat=\{0\} min}" Opacity="0.85" Margin="2,0,0,0"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Width="4" Height="32" Margin="12,0" CornerRadius="2" Background="{Binding Type, Converter={StaticResource TypeToBrushConverter}}"/>
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding TypeDisplayName}" Opacity="0.85"/>
+                                        </StackPanel>
+                                            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                                <Button Command="{Binding $parent[UserControl].((vm:ScheduleViewModel)DataContext).DeleteTimePointCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Classes="transparent" Width="36" Height="36" Padding="0" ToolTip.Tip="{DynamicResource Schedule_Delete}">
+                                                    <fluent:SymbolIcon Symbol="Delete" FontSize="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                                </Button>
+                                                <fluent:SymbolIcon Symbol="ChevronRight" FontSize="12" Opacity="0.85" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                     </StackPanel>
+                    </Border>
+                 </ScrollViewer>
+             </Grid>
+
+            <!-- 3. 右侧：全局设置 (大屏下始终可见) -->
+            <!-- 在中屏模式下，它也是一个覆盖层 -->
+            <Border Grid.Column="2" Grid.ColumnSpan="2"
+                    Width="320"
+                    HorizontalAlignment="Right"
+                    IsVisible="{Binding ShowSettingsPanelWithSchedule}"
+                    Classes="overlay-panel"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1,0,0,0"
+                    BoxShadow="0 0 20 0 #20000000">
+                <Grid RowDefinitions="Auto,*">
+                    <Border Grid.Row="0" Padding="20,16" Classes="overlay-panel-header" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                                <fluent:SymbolIcon Symbol="Settings" FontSize="18" VerticalAlignment="Center" Opacity="0.85"/>
+                                <TextBlock Text="{DynamicResource Schedule_Info}" Classes="subtitle" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Command="{Binding CloseSettingsCommand}"
+                                    IsVisible="{Binding !IsLargeView}"
+                                    Classes="transparent" Width="36" Height="36" Padding="0">
+                                <fluent:SymbolIcon Symbol="Dismiss" FontSize="14"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+                    
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                        <Border Padding="20">
+                            <StackPanel Spacing="24">
+                                <!-- 基本设置 -->
+                            <Border Classes="card" Padding="16">
+                                <StackPanel Spacing="16">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="{DynamicResource Schedule_Label}" Classes="caption" FontWeight="SemiBold" Opacity="0.85"/>
+                                        <TextBox Text="{Binding SelectedSchedule.Name}" Watermark="{DynamicResource Schedule_NameWatermark}" Classes="clear"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 默认时长设置 -->
+                            <Border Classes="card" Padding="16">
+                                <StackPanel Spacing="16">
+                                    <TextBlock Text="{DynamicResource Schedule_DefaultClassDuration}" Classes="caption" FontWeight="Bold" Opacity="0.85"/>
+                                    <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
+                                        <Grid Grid.Row="0" ColumnDefinitions="*,80">
+                                            <TextBlock Text="{DynamicResource Schedule_Class}" VerticalAlignment="Center"/>
+                                            <NumericUpDown Grid.Column="1" Value="{Binding SelectedSchedule.DefaultClassDuration}" Minimum="1" Maximum="120" HorizontalAlignment="Right" ShowButtonSpinner="False"/>
+                                        </Grid>
+                                        <Grid Grid.Row="1" ColumnDefinitions="*,80">
+                                            <TextBlock Text="{DynamicResource Schedule_Break}" VerticalAlignment="Center"/>
+                                            <NumericUpDown Grid.Column="1" Value="{Binding SelectedSchedule.DefaultBreakDuration}" Minimum="1" Maximum="120" HorizontalAlignment="Right" ShowButtonSpinner="False"/>
+                                        </Grid>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <StackPanel Spacing="12">
+                                <Button Content="{DynamicResource Schedule_Save}" Command="{Binding SaveCurrentScheduleCommand}" Classes="accent" HorizontalAlignment="Stretch" Height="40"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- 4. 右侧：详情编辑 (现代风格卡片) -->
+            <Border Grid.Column="1" Grid.ColumnSpan="3"
+                    Width="380"
+                    HorizontalAlignment="Right"
+                    IsVisible="{Binding IsDetailVisible}"
+                    Classes="overlay-panel"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1,0,0,0"
+                    ZIndex="50"
+                    BoxShadow="0 0 30 0 #40000000">
+                <Grid RowDefinitions="Auto,*">
+                    <!-- 详情页页眉 -->
+                    <Border Grid.Row="0" Padding="16" Classes="overlay-panel-header" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                                <fluent:SymbolIcon Symbol="Edit" FontSize="18" VerticalAlignment="Center" Opacity="0.85"/>
+                                <TextBlock Text="{DynamicResource Schedule_TimePointDetail}" Classes="subtitle" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Command="{Binding CloseDetailCommand}" Classes="transparent" Width="36" Height="36" Padding="0">
+                                <fluent:SymbolIcon Symbol="Dismiss" FontSize="14"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- 详情内容 -->
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                        <Border Padding="20">
+                            <StackPanel Spacing="24">
+                                <!-- 基本信息组 -->
+                                <Border Classes="card" Padding="16">
+                                    <StackPanel Spacing="16">
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="{DynamicResource Schedule_Label}" Classes="caption" FontWeight="SemiBold" Opacity="0.85"/>
+                                            <TextBox Text="{Binding SelectedTimePoint.Label, TargetNullValue=''}" Watermark="{DynamicResource Schedule_LabelWatermark}" Classes="clear"/>
+                                        </StackPanel>
+
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="{DynamicResource Schedule_Type}" Classes="caption" FontWeight="SemiBold" Opacity="0.85"/>
+                                            <ComboBox ItemsSource="{Binding AllTimePointTypes}" 
+                                                      SelectedItem="{Binding SelectedTimePoint.Type, Mode=TwoWay, TargetNullValue=Class}"
+                                                      HorizontalAlignment="Stretch">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <Border Width="10" Height="10" CornerRadius="5" Background="{Binding Converter={StaticResource TypeToBrushConverter}}"/>
+                                                            <TextBlock Text="{Binding}"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- 时间设置组 -->
+                                <Border Classes="card" Padding="16">
+                                    <StackPanel Spacing="16">
+                                        <TextBlock Text="{DynamicResource Schedule_TimeArrangement}" Classes="caption" FontWeight="SemiBold" Opacity="0.85"/>
+                                        <Grid RowDefinitions="Auto,Auto" RowSpacing="20">
+                                            <!-- 开始时间 / 结束时间 -->
+                                            <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="16">
+                                                <StackPanel Grid.Column="0" Spacing="8">
+                                                    <TextBlock Text="{DynamicResource Schedule_StartTime}" Opacity="0.85"/>
+                                                    <Grid ColumnDefinitions="*,Auto,*">
+                                                        <ComboBox ItemsSource="{Binding HourOptions}" SelectedItem="{Binding SelectedTimePoint.StartHour, TargetNullValue=0}" HorizontalAlignment="Stretch"/>
+                                                        <TextBlock Grid.Column="1" Text=":" VerticalAlignment="Center" Margin="4,0"/>
+                                                        <ComboBox Grid.Column="2" ItemsSource="{Binding MinuteOptions}" SelectedItem="{Binding SelectedTimePoint.StartMinute, TargetNullValue=0}" HorizontalAlignment="Stretch"/>
+                                                    </Grid>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Spacing="8">
+                                                    <TextBlock Text="{DynamicResource Schedule_EndTime}" Opacity="0.85"/>
+                                                    <Grid ColumnDefinitions="*,Auto,*">
+                                                        <ComboBox ItemsSource="{Binding HourOptions}" SelectedItem="{Binding SelectedTimePoint.EndHour, TargetNullValue=0}" HorizontalAlignment="Stretch"/>
+                                                        <TextBlock Grid.Column="1" Text=":" VerticalAlignment="Center" Margin="4,0"/>
+                                                        <ComboBox Grid.Column="2" ItemsSource="{Binding MinuteOptions}" SelectedItem="{Binding SelectedTimePoint.EndMinute, TargetNullValue=0}" HorizontalAlignment="Stretch"/>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 持续时间 -->
+                                            <StackPanel Grid.Row="1" Spacing="8">
+                                                <TextBlock Text="{DynamicResource Schedule_Duration}" Opacity="0.85"/>
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <NumericUpDown Grid.Column="0" Value="{Binding SelectedTimePoint.Duration, TargetNullValue=0}" Minimum="0" Maximum="1440" ShowButtonSpinner="False" Classes="clear"/>
+                                                    <TextBlock Grid.Column="1" Text="min" VerticalAlignment="Center" Margin="8,0,0,0" Opacity="0.85"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- 备注 -->
+                                <Border Classes="card" Padding="16">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="{DynamicResource Schedule_Description}" Classes="caption" FontWeight="SemiBold" Opacity="0.85"/>
+                                        <TextBox Text="{Binding SelectedTimePoint.Description}"
+                                                 AcceptsReturn="True"
+                                                 Height="100"
+                                                 Watermark="{DynamicResource Schedule_DescriptionWatermark}"
+                                                 VerticalContentAlignment="Top"
+                                                 Classes="clear"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Button Content="{DynamicResource Schedule_Save}" 
+                                        Command="{Binding SaveCurrentScheduleCommand}" 
+                                        Classes="accent" 
+                                        HorizontalAlignment="Stretch"
+                                        Height="40"
+                                        Margin="0,10,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

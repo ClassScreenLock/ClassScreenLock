@@ -1,0 +1,232 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:models="clr-namespace:ClassScreenLock.Models"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
+             x:Class="ClassScreenLock.Views.LockSettingsView"
+             x:DataType="vm:LockSettingsViewModel">
+
+    <ScrollViewer Padding="24">
+        <StackPanel Spacing="24" MaxWidth="1000" HorizontalAlignment="Stretch">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{DynamicResource LockSettings_Title}" Classes="h1"/>
+                    <TextBlock Text="配置屏幕锁定和程序运行的行为" Classes="caption" Opacity="0.6"/>
+                </StackPanel>
+                
+                <Button Grid.Column="1" 
+                        Command="{Binding SaveSettingsCommand}"
+                        Classes="accent"
+                        Padding="16,8"
+                        VerticalAlignment="Top">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <fluent:SymbolIcon Symbol="Save" Width="16" Height="16"/>
+                        <TextBlock Text="{DynamicResource Btn_Save}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+
+            <!-- 锁屏显示与文字效果设置 -->
+            <Border Classes="card" Padding="20">
+                <StackPanel Spacing="20">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <fluent:SymbolIcon Symbol="TextFont" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                        <TextBlock Text="锁屏文字显示效果" Classes="h2" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+                        <!-- 背景透明度 -->
+                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <TextBlock Text="背景遮罩透明度" Classes="subtitle"/>
+                            <TextBlock Text="调节锁屏时的暗色遮罩强度，数值越小越透明" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Slider Minimum="0.1" Maximum="0.8" SmallChange="0.05" LargeChange="0.1" Width="200" Value="{Binding LockBackgroundOpacity}"/>
+                            <TextBlock Text="{Binding LockBackgroundOpacity, StringFormat=0.00}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
+                        </StackPanel>
+
+                        <!-- 文字阴影透明度 -->
+                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
+                            <TextBlock Text="文字阴影强度" Classes="subtitle"/>
+                            <TextBlock Text="提升文字与背景的对比度，避免在浅色背景下看不清" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Slider Minimum="0.3" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" Width="200" Value="{Binding LockTextShadowOpacity}"/>
+                            <TextBlock Text="{Binding LockTextShadowOpacity, StringFormat=0.00}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
+                        </StackPanel>
+
+                        <!-- 文字阴影模糊半径 -->
+                        <StackPanel Grid.Row="2" Grid.Column="0" Spacing="4">
+                            <TextBlock Text="文字描边/阴影宽度" Classes="subtitle"/>
+                            <TextBlock Text="控制文字周围发光/描边范围，数值越大越厚重" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Slider Minimum="2" Maximum="16" SmallChange="1" LargeChange="2" Width="200" Value="{Binding LockTextShadowBlurRadius}"/>
+                            <TextBlock Text="{Binding LockTextShadowBlurRadius, StringFormat=0}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 预览区域 -->
+                    <Grid Margin="0,8,0,0">
+                        <Border Background="Black" CornerRadius="12" Opacity="{Binding LockBackgroundOpacity}"/>
+                        <Border Background="Transparent" CornerRadius="12" Padding="20">
+                            <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                <TextBlock Text="锁屏文字效果预览" FontSize="16" Opacity="0.8" HorizontalAlignment="Center"/>
+                                <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                    <TextBlock Text="屏幕已锁定" FontSize="32" FontWeight="Light" Foreground="White" HorizontalAlignment="Center">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#CC000000"
+                                                              BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                              Opacity="{Binding LockTextShadowOpacity}"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                    <TextBlock Text="12:34:56" FontSize="56" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#E6000000"
+                                                              BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                              Opacity="{Binding LockTextShadowOpacity}"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                    <TextBlock Text="距离下节课：10:00" FontSize="18" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#CC000000"
+                                                              BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                              Opacity="{Binding LockTextShadowOpacity}"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- 锁屏状态文件保护设置 -->
+            <Border Classes="card" Padding="20">
+                <StackPanel Spacing="20">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <fluent:SymbolIcon Symbol="ShieldKeyhole" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                        <TextBlock Text="锁屏状态文件保护" Classes="h2" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Text="通过创建锁屏状态文件，在程序异常退出后自动恢复锁屏状态。适用于防止学生强制结束进程绕过锁屏。" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="12">
+                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <TextBlock Text="启用状态文件检查" Classes="subtitle"/>
+                            <TextBlock Text="定时检查锁屏状态文件，如果检测到文件存在则触发锁屏" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ToggleSwitch Grid.Row="0" Grid.Column="1" IsChecked="{Binding EnableLockStateFileCheck}" VerticalAlignment="Center"/>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4" IsEnabled="{Binding EnableLockStateFileCheck}">
+                            <TextBlock Text="检查间隔（秒）" Classes="subtitle"/>
+                            <TextBlock Text="每隔多少秒检查一次状态文件，间隔越短响应越快但CPU占用略高" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <NumericUpDown Grid.Row="1" Grid.Column="1" 
+                                       Value="{Binding LockStateFileCheckIntervalSeconds}"
+                                       Minimum="1" Maximum="60" Increment="1"
+                                       Width="120" VerticalAlignment="Center"
+                                       IsEnabled="{Binding EnableLockStateFileCheck}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- 程序豁免与置顶设置 -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+                <!-- 置顶豁免设置 -->
+                <Border Grid.Column="0" Classes="card" Padding="20">
+                    <StackPanel Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <fluent:SymbolIcon Symbol="Shield" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                            <TextBlock Text="{DynamicResource LockSettings_TopmostExempt}" Classes="h3" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{DynamicResource LockSettings_TopmostExempt_Desc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                            <TextBox Text="{Binding NewAllowedApp}" Watermark="{DynamicResource LockSettings_AddApp_Watermark}" Margin="0,0,8,0"/>
+                            <Button Grid.Column="1" Command="{Binding AddAllowedAppCommand}" Classes="accent" Width="40" Height="40" Padding="0">
+                                <fluent:SymbolIcon Symbol="Add" Width="16" Height="16"/>
+                            </Button>
+                        </Grid>
+
+                        <ItemsControl ItemsSource="{Binding AllowedTopmostApps}" Height="200">
+                            <ItemsControl.Template>
+                                <ControlTemplate>
+                                    <ScrollViewer>
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                                            CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <fluent:SymbolIcon Symbol="Maximize" Width="14" Height="14" Opacity="0.5"/>
+                                                <TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="13"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveAllowedAppCommand}" 
+                                                    CommandParameter="{Binding}" Classes="transparent" Width="32" Height="32" Padding="0">
+                                                <fluent:SymbolIcon Symbol="Dismiss" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- 强制置顶设置 -->
+                <Border Grid.Column="1" Classes="card" Padding="20">
+                    <StackPanel Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <fluent:SymbolIcon Symbol="Pin" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                            <TextBlock Text="{DynamicResource LockSettings_ForcedTopmost}" Classes="h3" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{DynamicResource LockSettings_ForcedTopmost_Desc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                            <TextBox Text="{Binding NewForcedApp}" Watermark="{DynamicResource AppManagement_Name}" Margin="0,0,8,0"/>
+                            <Button Grid.Column="1" Command="{Binding AddForcedAppCommand}" Classes="accent" Width="40" Height="40" Padding="0">
+                                <fluent:SymbolIcon Symbol="Add" Width="16" Height="16"/>
+                            </Button>
+                        </Grid>
+
+                        <ItemsControl ItemsSource="{Binding ForcedTopmostApps}" Height="200">
+                            <ItemsControl.Template>
+                                <ControlTemplate>
+                                    <ScrollViewer>
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                                            CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <fluent:SymbolIcon Symbol="ArrowUp" Width="14" Height="14" Opacity="0.5"/>
+                                                <TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="13"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveForcedAppCommand}" 
+                                                    CommandParameter="{Binding}" Classes="transparent" Width="32" Height="32" Padding="0">
+                                                <fluent:SymbolIcon Symbol="Dismiss" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,560 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+        xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+        xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
+        mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080"
+        x:Class="ClassScreenLock.Views.LockWindow"
+        x:DataType="vm:LockWindowViewModel"
+        Title="Screen Locked"
+        WindowState="FullScreen"
+        SystemDecorations="None"
+        Topmost="True"
+        ShowInTaskbar="False"
+        RequestedThemeVariant="Dark"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        KeyDown="Window_OnKeyDown"
+        KeyUp="Window_OnKeyUp">
+
+    <Window.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="FontFamily" Value="{DynamicResource GlobalFontFamily}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Background" Value="#3D3D3D"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="BorderBrush" Value="#4D4D4D"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="Padding" Value="10,0"/>
+        </Style>
+        <!-- 软键盘按钮样式 -->
+        <Style Selector="Button.keypad">
+            <Setter Property="Width" Value="50"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Background" Value="#3D3D3D"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#4D4D4D"/>
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+        <Style Selector="Button.keypad:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#4D4D4D"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
+        </Style>
+        <Style Selector="Button.keypad:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="Opacity" Value="0.8"/>
+        </Style>
+        
+        <!-- 功能键样式 -->
+        <Style Selector="Button.keypad-func">
+            <Setter Property="Background" Value="#4D4D4D"/>
+            <Setter Property="Width" Value="80"/>
+        </Style>
+        <Style Selector="Button.keypad.caps-on">
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- 强制输入框在各种状态下保持深色背景和白色文字 -->
+        <Style Selector="TextBox /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#3D3D3D"/>
+            <Setter Property="BorderBrush" Value="#4D4D4D"/>
+        </Style>
+        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#4D4D4D"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
+        </Style>
+        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#3D3D3D"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="TextBox:focus">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#3D3D3D"/>
+        </Style>
+        <!-- 解决水印文字颜色和居中 -->
+        <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Opacity" Value="0.5"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <!-- 解锁按钮样式 -->
+        <Style Selector="Button.keypad:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="Opacity" Value="0.8"/>
+        </Style>
+        
+        <!-- 关机按钮样式 -->
+        <Style Selector="Button.shutdown-btn">
+            <Setter Property="Background" Value="#33FF5252"/>
+            <Setter Property="Foreground" Value="#FF5252"/>
+            <Setter Property="BorderBrush" Value="#4DFF5252"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Opacity" Value="0.7"/>
+        </Style>
+        <Style Selector="Button.shutdown-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#4DFF5252"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="Button.shutdown-btn:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#66FF5252"/>
+            <Setter Property="Opacity" Value="0.9"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid>
+        <Border Background="Black" Opacity="{Binding LockBackgroundOpacity}"/>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="40" IsVisible="{Binding !IsLoginVisible}">
+            <!-- 图标和标题 -->
+            <StackPanel Spacing="16" HorizontalAlignment="Center">
+                <fluent:SymbolIcon Symbol="LockClosed" FontSize="80" Foreground="White" Opacity="0.9"/>
+                <TextBlock Text="{DynamicResource LockScreen_Locked}" FontSize="48" FontWeight="Light" Foreground="White" HorizontalAlignment="Center">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="#CC000000" BlurRadius="{Binding LockTextShadowBlurRadius}" Opacity="{Binding LockTextShadowOpacity}"/>
+                    </TextBlock.Effect>
+                </TextBlock>
+            </StackPanel>
+
+            <TextBlock Text="{Binding CurrentTime}" FontSize="120" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center">
+                <TextBlock.Effect>
+                    <DropShadowEffect Color="#E6000000" BlurRadius="{Binding LockTextShadowBlurRadius}" Opacity="{Binding LockTextShadowOpacity}"/>
+                </TextBlock.Effect>
+            </TextBlock>
+
+            <Border Background="#40000000" CornerRadius="12" Padding="32,16" HorizontalAlignment="Center"
+                    IsVisible="{Binding HasCountdown}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding NextClassLabel}" FontSize="20" Foreground="White" Opacity="0.9" HorizontalAlignment="Center">
+                        <TextBlock.Effect>
+                            <DropShadowEffect Color="#CC000000" BlurRadius="{Binding LockTextShadowBlurRadius}" Opacity="{Binding LockTextShadowOpacity}"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                    <TextBlock Text="{Binding CountdownText}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
+                        <TextBlock.Effect>
+                            <DropShadowEffect Color="#CC000000" BlurRadius="{Binding LockTextShadowBlurRadius}" Opacity="{Binding LockTextShadowOpacity}"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Spacing="24" HorizontalAlignment="Center" Margin="0,40,0,0">
+                <Button Command="{Binding UnlockEarlyCommand}" 
+                        Classes="outline" 
+                        Height="50" 
+                        Padding="32,0" 
+                        CornerRadius="25"
+                        BorderBrush="White"
+                        Foreground="White">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <fluent:SymbolIcon Symbol="LockOpen" FontSize="18" Foreground="White"/>
+                        <TextBlock Text="{DynamicResource LockScreen_UnlockEarly}" VerticalAlignment="Center" Foreground="White"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding RelockCommand}" 
+                        Classes="outline" 
+                        Height="50" 
+                        Padding="32,0" 
+                        CornerRadius="25"
+                        BorderBrush="White"
+                        Foreground="White"
+                        IsVisible="{Binding CanRelock}">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <fluent:SymbolIcon Symbol="LockClosed" FontSize="18" Foreground="White"/>
+                        <TextBlock Text="重新锁定" VerticalAlignment="Center" Foreground="White"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- 底部信息 -->
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,40" IsVisible="{Binding !IsLoginVisible}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Column="0" Text="{DynamicResource LockScreen_Tagline}" 
+                       Foreground="White" 
+                       Opacity="0.6"
+                       FontSize="14"
+                       VerticalAlignment="Center">
+                <TextBlock.Effect>
+                    <DropShadowEffect Color="#CC000000" BlurRadius="{Binding LockTextShadowBlurRadius}" Opacity="{Binding LockTextShadowOpacity}"/>
+                </TextBlock.Effect>
+            </TextBlock>
+        </Grid>
+        
+        <!-- 右下角关机按钮 -->
+        <Button Command="{Binding ShowShutdownDialogCommand}"
+                Classes="shutdown-btn"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,30,30"
+                IsVisible="{Binding !IsLoginVisible}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <fluent:SymbolIcon Symbol="Power" FontSize="16" Foreground="#FF5252"/>
+                <TextBlock Text="{DynamicResource LockScreen_Shutdown}" VerticalAlignment="Center" FontWeight="Medium" Foreground="#FF5252"/>
+            </StackPanel>
+        </Button>
+        
+        <!-- 关机确认对话框 -->
+        <Panel ZIndex="200">
+            <Border Background="#80000000" 
+                    IsVisible="{Binding IsShutdownDialogVisible}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    x:Name="ShutdownOverlay">
+                <Border.Transitions>
+                    <Transitions>
+                        <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="LinearEasing"/>
+                    </Transitions>
+                </Border.Transitions>
+            </Border>
+            
+            <Border Background="#2D2D2D" 
+                    CornerRadius="12" 
+                    Padding="24" 
+                    Width="320"
+                    BoxShadow="0 10 40 0 #CC000000" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding IsShutdownDialogVisible}"
+                    RenderTransformOrigin="0.5,0.5"
+                    x:Name="ShutdownDialog">
+                <Border.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Border.RenderTransform>
+                <Border.Transitions>
+                    <Transitions>
+                        <DoubleTransition Property="Opacity" Duration="0:0:0.25" Easing="QuadraticEaseOut"/>
+                        <DoubleTransition Property="(ScaleTransform.ScaleX)" Duration="0:0:0.25" Easing="QuadraticEaseOut"/>
+                        <DoubleTransition Property="(ScaleTransform.ScaleY)" Duration="0:0:0.25" Easing="QuadraticEaseOut"/>
+                    </Transitions>
+                </Border.Transitions>
+                
+                <StackPanel Spacing="16">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
+                        <fluent:SymbolIcon Symbol="Power" FontSize="32" Foreground="#FF5252"/>
+                        <TextBlock Text="{DynamicResource LockScreen_ConfirmShutdown}" FontSize="24" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <TextBlock Text="{Binding ShutdownCountdownText}"
+                               FontSize="14"
+                               Foreground="White"
+                               Opacity="0.8"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               IsVisible="{Binding IsShutdownCountdownActive}"
+                               MinHeight="20"/>
+                    
+                    <TextBlock Text="{DynamicResource LockScreen_ConfirmShutdownMessage}"
+                               FontSize="14"
+                               Foreground="White"
+                               Opacity="0.8"
+                               HorizontalAlignment="Center"
+                               IsVisible="{Binding !IsShutdownCountdownActive}"/>
+                    
+                    <TextBlock Text="{DynamicResource LockScreen_ShutdownCountdownTip}"
+                               FontSize="12"
+                               Foreground="White"
+                               Opacity="0.5"
+                               HorizontalAlignment="Center"
+                               IsVisible="{Binding !IsShutdownCountdownActive}"/>
+                    
+                    <ProgressBar Value="{Binding ShutdownCountdown}"
+                                 Maximum="5"
+                                 Minimum="0"
+                                 Height="4"
+                                 CornerRadius="2"
+                                 Foreground="#FF5252"
+                                 Background="#4DFF5252"
+                                 IsVisible="{Binding IsShutdownCountdownActive}"/>
+                    
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,8,0,0">
+                        <Button Grid.Column="0"
+                                Command="{Binding CancelShutdownCommand}"
+                                Content="{DynamicResource LockScreen_Cancel}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="40"
+                                CornerRadius="8"
+                                Background="Transparent"
+                                BorderThickness="1"
+                                BorderBrush="#4D4D4D"
+                                Foreground="White"/>
+                        <Button Grid.Column="1"
+                                Command="{Binding ConfirmShutdownCommand}"
+                                IsVisible="{Binding !IsShutdownCountdownActive}"
+                                Content="{DynamicResource LockScreen_ConfirmShutdown}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="40"
+                                CornerRadius="8"
+                                Background="#4DFF5252"
+                                Foreground="White"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Panel>
+
+        <!-- 登录覆盖层 -->
+        <Border Background="#CC000000" IsVisible="{Binding IsLoginVisible}" ZIndex="100">
+            <Grid RowDefinitions="*,Auto">
+                <!-- 登录表单 -->
+                <Border Grid.Row="0" Background="#2D2D2D" CornerRadius="16" Padding="20" Width="450" BoxShadow="0 10 30 0 #80000000" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel Spacing="10">
+                        <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                            <fluent:SymbolIcon Symbol="ShieldPerson" FontSize="48" Foreground="{DynamicResource SystemAccentColor}"/>
+                            <TextBlock Text="{DynamicResource LockScreen_Authentication}" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </StackPanel>
+                        
+                        <TextBox Text="{Binding Username}" 
+                                 Watermark="{DynamicResource LockScreen_EnterUsername}"
+                                 Height="45" 
+                                 Width="350"
+                                 CornerRadius="8"
+                                 HorizontalAlignment="Center"
+                                 GotFocus="TextBox_OnGotFocus"
+                                 Name="UsernameBox"/>
+
+                        <Grid Width="350" HorizontalAlignment="Center" IsVisible="{Binding IsPasswordInputVisible}">
+                            <TextBox Text="{Binding Password}" 
+                                     Watermark="{DynamicResource LockScreen_EnterPassword}"
+                                     PasswordChar="{Binding PasswordChar}" 
+                                     Height="45" 
+                                     CornerRadius="8"
+                                     Padding="45,0"
+                                     HorizontalAlignment="Stretch"
+                                     GotFocus="TextBox_OnGotFocus"
+                                     Name="PasswordBox"
+                                     TextInput="PasswordBox_OnTextInput"/>
+                            <Button Command="{Binding TogglePasswordVisibilityCommand}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Width="45"
+                                    Height="45"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                                <fluent:SymbolIcon Symbol="{Binding PasswordIcon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}" 
+                                            Width="16" Height="16" Foreground="White" Opacity="0.5"/>
+                            </Button>
+                        </Grid>
+
+                        <TextBox Text="{Binding TwoFactorCode}"
+                                 IsVisible="{Binding IsTwoFactorInputVisible}"
+                                 Watermark="{DynamicResource LockScreen_EnterTwoFactorCode}"
+                                 MaxLength="6"
+                                 Height="45" 
+                                 Width="350"
+                                 CornerRadius="8"
+                                 HorizontalAlignment="Center"
+                                 GotFocus="TextBox_OnGotFocus"
+                                 Name="TwoFactorBox"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" Margin="0,4,0,0">
+                            <TextBlock Text="{DynamicResource LockScreen_CapsLockOn}" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding IsCapsLockEnabled}"/>
+                            <TextBlock Text="{DynamicResource LockScreen_CapsLockOff}" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding !IsCapsLockEnabled}"/>
+                            <TextBlock Text="{DynamicResource LockScreen_SymbolMode}" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding IsSymbolModeEnabled}"/>
+                            <TextBlock Text="{DynamicResource LockScreen_LetterMode}" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding !IsSymbolModeEnabled}"/>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <Button
+                                Grid.Column="0"
+                                Command="{Binding CancelLoginCommand}" 
+                                Content="{DynamicResource LockScreen_Cancel}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Height="45"
+                                CornerRadius="8"
+                                Background="Transparent"
+                                BorderThickness="1"
+                                BorderBrush="#4D4D4D"/>
+                            <Button
+                                Grid.Column="1"
+                                Command="{Binding VerifyUnlockCommand}" 
+                                Content="{DynamicResource LockScreen_VerifyAndUnlock}"
+                                Classes="accent"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Height="45"
+                                CornerRadius="8"/>
+                        </Grid>
+                        
+                        <TextBlock Text="{Binding ErrorMessage}" 
+                                   Foreground="#FF5252" 
+                                   HorizontalAlignment="Center" 
+                                   IsVisible="{Binding HasError}"
+                                   TextAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 虚拟键盘 (固定在底部，避免被输入框挤走) -->
+                <Border Grid.Row="1" Background="#2D2D2D" CornerRadius="16" Padding="15" Width="700" BoxShadow="0 10 30 0 #80000000" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,30">
+                    <StackPanel Spacing="5">
+                        <!-- 第一行: 数字 -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Classes="keypad" Content="1" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="1"/>
+                            <Button Classes="keypad" Content="2" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="2"/>
+                            <Button Classes="keypad" Content="3" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="3"/>
+                            <Button Classes="keypad" Content="4" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="4"/>
+                            <Button Classes="keypad" Content="5" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="5"/>
+                            <Button Classes="keypad" Content="6" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="6"/>
+                            <Button Classes="keypad" Content="7" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="7"/>
+                            <Button Classes="keypad" Content="8" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="8"/>
+                            <Button Classes="keypad" Content="9" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="9"/>
+                            <Button Classes="keypad" Content="0" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="0"/>
+                            <Button Classes="keypad keypad-func" Command="{Binding BackspaceCommand}">
+                                <fluent:SymbolIcon Symbol="Backspace" FontSize="18"/>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- 字母模式行 -->
+                        <StackPanel x:Name="LetterRows" Spacing="5" IsVisible="{Binding IsLetterModeVisible}">
+                            <!-- 第二行: QWERTY -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Classes="keypad" Content="q" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="q"/>
+                                <Button Classes="keypad" Content="w" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="w"/>
+                                <Button Classes="keypad" Content="e" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="e"/>
+                                <Button Classes="keypad" Content="r" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="r"/>
+                                <Button Classes="keypad" Content="t" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="t"/>
+                                <Button Classes="keypad" Content="y" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="y"/>
+                                <Button Classes="keypad" Content="u" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="u"/>
+                                <Button Classes="keypad" Content="i" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="i"/>
+                                <Button Classes="keypad" Content="o" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="o"/>
+                                <Button Classes="keypad" Content="p" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="p"/>
+                            </StackPanel>
+
+                            <!-- 第三行: ASDFG -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Classes="keypad" Content="a" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="a"/>
+                                <Button Classes="keypad" Content="s" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="s"/>
+                                <Button Classes="keypad" Content="d" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="d"/>
+                                <Button Classes="keypad" Content="f" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="f"/>
+                                <Button Classes="keypad" Content="g" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="g"/>
+                                <Button Classes="keypad" Content="h" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="h"/>
+                                <Button Classes="keypad" Content="j" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="j"/>
+                                <Button Classes="keypad" Content="k" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="k"/>
+                                <Button Classes="keypad" Content="l" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="l"/>
+                                <Button Classes="keypad keypad-func" Content="{DynamicResource LockScreen_Clear}" Width="14" Height="14" Command="{Binding ClearFocusedFieldCommand}"/>
+                            </StackPanel>
+
+                            <!-- 第四行: ZXCVB + 空格/快捷 -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Classes="keypad" Content="z" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="z"/>
+                                <Button Classes="keypad" Content="x" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="x"/>
+                                <Button Classes="keypad" Content="c" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="c"/>
+                                <Button Classes="keypad" Content="v" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="v"/>
+                                <Button Classes="keypad" Content="b" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="b"/>
+                                <Button Classes="keypad" Content="n" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="n"/>
+                                <Button Classes="keypad" Content="m" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="m"/>
+                                <Button Classes="keypad" Content="." Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="."/>
+                                <Button Classes="keypad" Content="_" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="_"/>
+                                <Button Classes="keypad keypad-func" Content="{DynamicResource LockScreen_Space}" Width="14" Height="14" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter=" "/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- 符号模式行 -->
+                        <StackPanel x:Name="SymbolRows" Spacing="5" IsVisible="{Binding IsSymbolModeEnabled}">
+                            <!-- 常用符号第一行 -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Classes="keypad" Content="@" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="@"/>
+                                <Button Classes="keypad" Content="#" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="#"/>
+                                <Button Classes="keypad" Content="$" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="$"/>
+                                <Button Classes="keypad" Content="%" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="%"/>
+                                <Button Classes="keypad" Content="&amp;" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="&amp;"/>
+                                <Button Classes="keypad" Content="(" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="("/>
+                                <Button Classes="keypad" Content=")" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter=")"/>
+                                <Button Classes="keypad" Content="-" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="-"/>
+                                <Button Classes="keypad" Content="+" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="+"/>
+                                <Button Classes="keypad" Content="=" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="="/>
+                            </StackPanel>
+
+                            <!-- 常用符号第二行 -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Classes="keypad" Content="!" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="!"/>
+                                <Button Classes="keypad" Content="?" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="?"/>
+                                <Button Classes="keypad" Content="," Command="{Binding AppendToFocusedFieldCommand}" CommandParameter=","/>
+                                <Button Classes="keypad" Content="." Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="."/>
+                                <Button Classes="keypad" Content=":" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter=":"/>
+                                <Button Classes="keypad" Content=";" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter=";"/>
+                                <Button Classes="keypad" Content="/" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="/"/>
+                                <Button Classes="keypad" Content="\\" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="\\"/>
+                                <Button Classes="keypad" Content="[" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="["/>
+                                <Button Classes="keypad" Content="]" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="]"/>
+                            </StackPanel>
+
+                            <!-- 符号第三行: 中文标点 + 空格 -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Classes="keypad" Content="（" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="（"/>
+                                <Button Classes="keypad" Content="）" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="）"/>
+                                <Button Classes="keypad" Content="。" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="。"/>
+                                <Button Classes="keypad" Content="，" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="，"/>
+                                <Button Classes="keypad" Content="？" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="？"/>
+                                <Button Classes="keypad" Content="！" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="！"/>
+                                <Button Classes="keypad" Content="·" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="·"/>
+                                <Button Classes="keypad keypad-func" Content="{DynamicResource LockScreen_Space}" Width="14" Height="14" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter=" "/>
+                                <Button Classes="keypad keypad-func" Content="{DynamicResource LockScreen_Admin}" Width="14" Height="14" Command="{Binding AppendToFocusedFieldCommand}" CommandParameter="admin"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- 模式切换行 -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+                            <Button x:Name="CapsKey"
+                                    Classes="keypad keypad-func"
+                                    Classes.caps-on="{Binding IsCapsLockEnabled}"
+                                    Width="120"
+                                    Command="{Binding ToggleCapsLockCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <fluent:SymbolIcon Symbol="ArrowUp" FontSize="16"/>
+                                    <TextBlock Text="{DynamicResource LockScreen_Caps}" IsVisible="{Binding IsCapsLockEnabled}"/>
+                                    <TextBlock Text="{DynamicResource LockScreen_Lowercase}" IsVisible="{Binding !IsCapsLockEnabled}"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="SymbolKey"
+                                    Classes="keypad keypad-func"
+                                    Width="120"
+                                    Margin="8,0,0,0"
+                                    Command="{Binding ToggleSymbolModeCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <fluent:SymbolIcon Symbol="NumberSymbol" FontSize="16"/>
+                                    <TextBlock Text="{DynamicResource LockScreen_Symbols}"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 解锁按钮 -->
+                            <Button Classes="keypad keypad-func"
+                                    Width="120"
+                                    Margin="8,0,0,0"
+                                    Command="{Binding VerifyUnlockCommand}"
+                                    Background="{DynamicResource SystemAccentColor}"
+                                    BorderBrush="{DynamicResource SystemAccentColor}">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <fluent:SymbolIcon Symbol="LockOpen" FontSize="16"/>
+                                    <TextBlock Text="{DynamicResource LockScreen_Unlock}"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

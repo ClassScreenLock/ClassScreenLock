@@ -1,0 +1,333 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:models="clr-namespace:ClassScreenLock.Models"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:converters="clr-namespace:ClassScreenLock.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="ClassScreenLock.Views.AppManagementView"
+             x:DataType="vm:AppManagementViewModel">
+
+    <UserControl.Resources>
+        <converters:SidebarIconConverter x:Key="SidebarIconConverter"/>
+        <converters:BlockedRuleKindIconConverter x:Key="BlockedRuleKindIconConverter"/>
+        <converters:BlockedRuleKindTextConverter x:Key="BlockedRuleKindTextConverter"/>
+    </UserControl.Resources>
+
+    <Design.DataContext>
+        <vm:AppManagementViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- 标题和工具栏 -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="24,24,24,16">
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="{DynamicResource AppManagement_Title}" Classes="h1"/>
+                <TextBlock Text="管理应用程序运行权限及安全防护" Classes="caption" Opacity="0.6"/>
+            </StackPanel>
+            
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <CheckBox Content="显示所有进程" 
+                          IsChecked="{Binding ShowAllProcesses}" 
+                          VerticalAlignment="Center"/>
+                
+                <TextBox Text="{Binding SearchText}" 
+                         Watermark="搜索应用..." 
+                         Width="200" 
+                         VerticalAlignment="Center">
+                    <TextBox.InnerLeftContent>
+                        <fluent:SymbolIcon Symbol="Search" FontSize="14" Margin="8,0,0,0" Opacity="0.5"/>
+                    </TextBox.InnerLeftContent>
+                </TextBox>
+
+                <Button Command="{Binding RefreshAppsCommand}" Classes="accent" Width="36" Height="36" Padding="0" ToolTip.Tip="{DynamicResource AppManagement_Refresh}">
+                    <fluent:SymbolIcon Symbol="ArrowSync" FontSize="16"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- 内容区域：左右布局 -->
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*" Margin="24,0,24,24">
+            <!-- 副侧边栏 -->
+            <Border Grid.Column="0" 
+                    Width="{Binding SidebarWidth}"
+                    Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                    CornerRadius="8" 
+                    Padding="4,8"
+                    Margin="0,0,16,0">
+                <Border.Transitions>
+                    <Transitions>
+                        <DoubleTransition Property="Width" Duration="0:0:0.2" />
+                    </Transitions>
+                </Border.Transitions>
+                <Grid RowDefinitions="*,Auto">
+                    <StackPanel Grid.Row="0" Spacing="4">
+                        <ListBox SelectedIndex="{Binding SelectedSubTabIndex}"
+                                 Background="Transparent" BorderThickness="0">
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem">
+                                    <Setter Property="Padding" Value="12,10"/>
+                                    <Setter Property="CornerRadius" Value="6"/>
+                                    <Setter Property="Margin" Value="4,2"/>
+                                </Style>
+                            </ListBox.Styles>
+                            <ListBoxItem ToolTip.Tip="{DynamicResource AppManagement_RunningApps}">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <fluent:SymbolIcon Symbol="ClipboardText" FontSize="16" Opacity="0.7"/>
+                                    <TextBlock Text="{DynamicResource AppManagement_RunningApps}" 
+                                               IsVisible="{Binding IsSidebarExpanded}"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem ToolTip.Tip="{DynamicResource AppManagement_BlockedApps}">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <fluent:SymbolIcon Symbol="Prohibited" FontSize="16" Opacity="0.7"/>
+                                    <TextBlock Text="{DynamicResource AppManagement_BlockedApps}" 
+                                               IsVisible="{Binding IsSidebarExpanded}"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem ToolTip.Tip="基础防护">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <fluent:SymbolIcon Symbol="Shield" FontSize="16" Opacity="0.7"/>
+                                    <TextBlock Text="{DynamicResource AppManagement_BasicProtection}"
+                                               IsVisible="{Binding IsSidebarExpanded}"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                        </ListBox>
+                    </StackPanel>
+
+                    <!-- 收缩按钮 -->
+                    <Button Grid.Row="1" VerticalAlignment="Bottom" 
+                            Command="{Binding ToggleSidebarCommand}"
+                            Classes="transparent"
+                            HorizontalAlignment="Stretch"
+                            Margin="4,0,4,8"
+                            Padding="12,10"
+                            ToolTip.Tip="{Binding IsSidebarExpanded, Converter={StaticResource SidebarIconConverter}, ConverterParameter='Tooltip'}">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <fluent:SymbolIcon Symbol="{Binding IsSidebarExpanded, Converter={StaticResource SidebarIconConverter}}" 
+                                         Width="16" Height="16" Opacity="0.7"/>
+                            <TextBlock Text="收起侧边栏" 
+                                       IsVisible="{Binding IsSidebarExpanded}"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- 主内容区 -->
+            <Border Grid.Column="1" 
+                    Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                    CornerRadius="8" 
+                    Padding="20">
+                <Carousel SelectedIndex="{Binding SelectedSubTabIndex}">
+                    <!-- 1. 运行中的应用 -->
+                    <Grid RowDefinitions="*">
+                        <DataGrid ItemsSource="{Binding RunningApps}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserSortColumns="True"
+                                  GridLinesVisibility="Horizontal"
+                                  SelectionMode="Single"
+                                  Background="Transparent"
+                                  RowHeight="42"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Styles>
+                                <Style Selector="DataGridRow">
+                                    <Setter Property="ContextMenu">
+                                        <ContextMenu>
+                                            <MenuItem Header="{DynamicResource AppManagement_AddToBlocked}"
+                                                      Command="{Binding $parent[DataGrid].((vm:AppManagementViewModel)DataContext).AddToBlockedCommand}"
+                                                      CommandParameter="{Binding}"/>
+                                            <Separator/>
+                                            <MenuItem Header="{DynamicResource AppManagement_KillProcess}"
+                                                      Command="{Binding $parent[DataGrid].((vm:AppManagementViewModel)DataContext).KillProcessCommand}"
+                                                      CommandParameter="{Binding}"/>
+                                            <Separator/>
+                                            <MenuItem Header="{DynamicResource AppManagement_OpenFileLocation}"
+                                                      Command="{Binding $parent[DataGrid].((vm:AppManagementViewModel)DataContext).OpenFileLocationCommand}"
+                                                      CommandParameter="{Binding}"/>
+                                            <MenuItem Header="{DynamicResource AppManagement_CopyPath}"
+                                                      Command="{Binding $parent[DataGrid].((vm:AppManagementViewModel)DataContext).CopyPathCommand}"
+                                                      CommandParameter="{Binding}"/>
+                                            <MenuItem Header="{DynamicResource AppManagement_CopyProcessName}"
+                                                      Command="{Binding $parent[DataGrid].((vm:AppManagementViewModel)DataContext).CopyProcessNameCommand}"
+                                                      CommandParameter="{Binding}"/>
+                                        </ContextMenu>
+                                    </Setter>
+                                </Style>
+                            </DataGrid.Styles>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="类型" Binding="{Binding Category}" SortMemberPath="CategoryOrder"/>
+                                <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}"/>
+                                <DataGridTemplateColumn Header="{DynamicResource AppManagement_Name}" SortMemberPath="Name">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="models:AppInfo">
+                                            <StackPanel Orientation="Horizontal" Spacing="12" Margin="12,0" VerticalAlignment="Center">
+                                                <Panel Width="24" Height="24" VerticalAlignment="Center">
+                                                    <Image Source="{Binding Icon}" Width="20" Height="20" IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                                    <fluent:SymbolIcon Symbol="Cube" FontSize="16" Opacity="0.4" IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNull}}"/>
+                                                </Panel>
+                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="CPU" Binding="{Binding CpuUsageString}" Width="70"/>
+                                <DataGridTextColumn Header="内存" Binding="{Binding MemoryUsageString}" Width="90"/>
+                                <DataGridTextColumn Header="磁盘 I/O 速率" Binding="{Binding IoRate}" Width="110"/>
+                                <DataGridTextColumn Header="磁盘 I/O 总量" Binding="{Binding TotalIoUsage}" Width="120"/>
+                                <DataGridTextColumn Header="路径" Binding="{Binding ExecutablePath}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock IsVisible="{Binding !HasRunningApps}" Text="没有匹配的应用" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.5"/>
+                    </Grid>
+
+                    <!-- 2. 阻止列表 -->
+                    <Grid RowDefinitions="Auto,Auto,Auto,*">
+                        <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="启用阻止列表" FontSize="14" FontWeight="SemiBold"/>
+                                    <TextBlock Text="开启后将自动拦截下方列表中的程序" Classes="caption" Opacity="0.7"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" 
+                                              IsChecked="{Binding IsAppBlockingEnabled}" 
+                                              OnContent="已开启" OffContent="已关闭"/>
+                            </Grid>
+                        </Border>
+
+                        <Button Grid.Row="1" Click="PickFileToBlock_Click" Classes="accent" HorizontalAlignment="Stretch" Margin="0,0,0,16">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <fluent:SymbolIcon Symbol="Add" FontSize="14"/>
+                                <TextBlock Text="{DynamicResource AppManagement_AddPath}"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Border Grid.Row="2" 
+                                x:Name="DropZone"
+                                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" 
+                                CornerRadius="8" 
+                                BorderBrush="{DynamicResource SystemAccentColor}"
+                                BorderThickness="2"
+                                Padding="20"
+                                Margin="0,0,0,16"
+                                DragDrop.AllowDrop="True"
+                                DragDrop.DragEnter="DropZone_DragEnter"
+                                DragDrop.DragLeave="DropZone_DragLeave"
+                                DragDrop.Drop="DropZone_Drop">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                <fluent:SymbolIcon Symbol="ArrowUpload" FontSize="32" Opacity="0.5" HorizontalAlignment="Center"/>
+                                <TextBlock Text="拖放文件到此处添加到阻止列表" 
+                                           HorizontalAlignment="Center" 
+                                           Opacity="0.7"
+                                           FontSize="14"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding BlockedRules}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:BlockedRule">
+                                        <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="6" Padding="16,12" Margin="0,0,0,8">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                                <fluent:SymbolIcon Grid.Column="0"
+                                                                    Symbol="{Binding Kind, Converter={StaticResource BlockedRuleKindIconConverter}}"
+                                                                    FontSize="14" Opacity="0.7"
+                                                                    VerticalAlignment="Center"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding Value}"
+                                                               VerticalAlignment="Center"
+                                                               TextWrapping="Wrap"
+                                                               Margin="0,0,8,0"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Kind, Converter={StaticResource BlockedRuleKindTextConverter}}"
+                                                               FontSize="11" Opacity="0.6"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="2"
+                                                        Command="{Binding $parent[UserControl].((vm:AppManagementViewModel)DataContext).RemoveFromBlockedCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Classes="danger" Width="32" Height="32" Padding="0" VerticalAlignment="Center">
+                                                    <fluent:SymbolIcon Symbol="Delete" FontSize="12"/>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <!-- 3. 基础防护 -->
+                    <Grid RowDefinitions="Auto,Auto,*">
+                        <StackPanel Grid.Row="0" Spacing="16" Margin="0,0,0,16">
+                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="20">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="全局防护开关" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                                        <TextBlock Text="开启后将根据下方规则自动拦截违规软件和脚本" Classes="caption" Opacity="0.8" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                                    </StackPanel>
+                                    <ToggleSwitch Grid.Column="1" 
+                                                  IsChecked="{Binding IsBasicProtectionEnabled}" 
+                                                  OnContent="已开启" OffContent="已关闭"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- 备份与恢复机制 -->
+                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="20">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Spacing="4">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <fluent:SymbolIcon Symbol="History" FontSize="14" Opacity="0.7"/>
+                                            <TextBlock Text="备份与恢复机制" FontSize="14" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                        <TextBlock Text="启用防护前自动备份配置，解除时自动恢复并校验完整性" Classes="caption" Opacity="0.7"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" 
+                                            Command="{Binding ManualRestoreCommand}" 
+                                            Classes="accent"
+                                            IsEnabled="{Binding !IsBasicProtectionEnabled}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <fluent:SymbolIcon Symbol="ArrowUndo" FontSize="14"/>
+                                            <TextBlock Text="手动恢复"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding ProtectionRules}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:ProtectionRule">
+                                        <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="8" Padding="20" Margin="0,0,0,12">
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <Panel Grid.Column="0" Width="40" Height="40" Margin="0,0,16,0">
+                                                    <Ellipse Fill="{DynamicResource SystemAccentColor}" Opacity="0.1"/>
+                                                    <fluent:SymbolIcon Symbol="Shield" FontSize="18" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                </Panel>
+                                                
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                                    <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                                                    <TextBlock Text="{Binding Description}" FontSize="12" Opacity="0.8" TextWrapping="Wrap" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                                                </StackPanel>
+                                                
+                                                <ToggleSwitch Grid.Column="2" 
+                                                              IsChecked="{Binding IsEnabled}" 
+                                                              Command="{Binding $parent[UserControl].((vm:AppManagementViewModel)DataContext).ToggleProtectionRuleCommand}" 
+                                                              CommandParameter="{Binding}"
+                                                              OnContent="开启" OffContent="关闭"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Carousel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

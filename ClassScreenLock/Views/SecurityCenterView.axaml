@@ -1,0 +1,1014 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:models="clr-namespace:ClassScreenLock.Models"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="ClassScreenLock.Views.SecurityCenterView"
+             x:DataType="vm:SecurityCenterViewModel">
+
+    <Design.DataContext>
+        <vm:SecurityCenterViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto, *" Margin="32">
+        <!-- 标题部分 -->
+        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,32">
+            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                <Border Background="{DynamicResource SystemAccentColorLightBrush}" 
+                        Width="56" Height="56" CornerRadius="12">
+                    <fluent:SymbolIcon Symbol="ShieldCheckmark" FontSize="28" 
+                                Foreground="{DynamicResource SystemAccentColor}"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center" Spacing="4">
+                    <TextBlock Text="{DynamicResource SecurityCenter_Title}" Classes="h1" Margin="0"/>
+                    <TextBlock Text="{DynamicResource SecurityCenter_Subtitle}" Classes="caption" Opacity="0.6"/>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- 内容部分 -->
+        <TabControl Grid.Row="1" Classes="FluentTabControl">
+            <!-- 身份验证与概览 -->
+            <TabItem Header="{DynamicResource SecurityCenter_Authentication}">
+                <ScrollViewer>
+                    <StackPanel Spacing="24" Margin="0,16,0,0">
+                        <!-- 登录卡片 -->
+                        <Border Classes="card" Padding="32">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Spacing="24">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="{DynamicResource SecurityCenter_AdminAuthTitle}" Classes="h2"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_AdminAuthDesc}" Classes="caption" Opacity="0.7"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Spacing="20" IsVisible="{Binding !IsAuthenticated}">
+                                        <StackPanel Spacing="12">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_Username}" Classes="caption" FontWeight="SemiBold"/>
+                                            <TextBox Text="{Binding Username}" Watermark="{DynamicResource SecurityCenter_EnterUsername}" Width="320" HorizontalAlignment="Left" VerticalContentAlignment="Center" Classes="clear"/>
+                                        </StackPanel>
+
+                                        <StackPanel Spacing="12" IsVisible="{Binding IsLoginPasswordVisible}">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_Password}" Classes="caption" FontWeight="SemiBold"/>
+                                            <Grid ColumnDefinitions="*,Auto" Width="320" HorizontalAlignment="Left">
+                                                <TextBox Text="{Binding LoginPassword, Mode=TwoWay}" 
+                                                         PasswordChar="{Binding PasswordChar}" 
+                                                         Watermark="{DynamicResource SecurityCenter_EnterPassword}" 
+                                                         Padding="10,0,35,0"
+                                                         VerticalContentAlignment="Center"
+                                                         HorizontalAlignment="Stretch"
+                                                         Classes="clear"/>
+                                                <Button Command="{Binding TogglePasswordVisibilityCommand}"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Width="32"
+                                                        Height="32"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center"
+                                                        Margin="0,0,2,0">
+                                                    <fluent:SymbolIcon Symbol="{Binding PasswordIcon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}" 
+                                                                Width="14" Height="14" 
+                                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                                                                Opacity="0.6"/>
+                                                </Button>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <StackPanel Spacing="12" IsVisible="{Binding IsLoginTwoFactorVisible}">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_TwoFactorCode}" Classes="caption" FontWeight="SemiBold"/>
+                                            <TextBox Text="{Binding LoginTwoFactorCode}" 
+                                                     Watermark="{DynamicResource SecurityCenter_EnterTwoFactorCode}" 
+                                                     MaxLength="6"
+                                                     Width="320" 
+                                                     HorizontalAlignment="Left"
+                                                     Classes="clear"/>
+                                        </StackPanel>
+
+                                        <TextBlock Text="{Binding LoginMessage}" Classes="caption" 
+                                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                                                   IsVisible="{Binding LoginMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                   TextWrapping="Wrap"/>
+                                        
+                                        <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
+                                            <Button Content="{DynamicResource SecurityCenter_Login}" Command="{Binding LoginCommand}" 
+                                                    Classes="accent" Width="140" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.7">
+                                            <fluent:SymbolIcon Symbol="Info" FontSize="14"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_RemainingAttempts}" Classes="caption"/>
+                                            <TextBlock Text="{Binding RemainingAttempts}" Classes="caption" FontWeight="Bold"/>
+                                        </StackPanel>
+
+                                        <Border Background="{DynamicResource SystemAccentColorLightBrush}" Padding="12" CornerRadius="8" IsVisible="{Binding IsLocked}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <fluent:SymbolIcon Symbol="Clock" FontSize="16" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                <TextBlock Text="{Binding LockoutMessage}" Classes="caption" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="32" IsVisible="{Binding IsAuthenticated}">
+                                        <Border Background="{DynamicResource SystemAccentColorLightBrush}" 
+                                                CornerRadius="12" Padding="20">
+                                            <StackPanel Orientation="Horizontal" Spacing="20">
+                                                <Border Width="48" Height="48" CornerRadius="24" Background="{DynamicResource SystemAccentColor}">
+                                                    <fluent:SymbolIcon Symbol="ShieldPerson" FontSize="24" 
+                                                                Foreground="White"/>
+                                                </Border>
+                                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{DynamicResource SecurityCenter_AdminPrivilegeActive}" FontWeight="Bold" FontSize="18"/>
+                                                    <TextBlock Text="{DynamicResource SecurityCenter_AdminPrivilegeDesc}" Classes="caption"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <UniformGrid Columns="4" Margin="0,10">
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_CurrentAccount}" Classes="caption" Opacity="0.6"/>
+                                                <TextBlock Text="{Binding Username}" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_IdentityType}" Classes="caption" Opacity="0.6"/>
+                                                <TextBlock Text="{Binding AccountTypeText}" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_LoginStatus}" Classes="caption" Opacity="0.6"/>
+                                                <TextBlock Text="{Binding AccountStatusText}" FontWeight="SemiBold" Foreground="{DynamicResource SystemAccentColor}"/>
+                                            </StackPanel>
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_LoginTime}" Classes="caption" Opacity="0.6"/>
+                                                <TextBlock Text="{Binding LoginTimeText}" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </UniformGrid>
+
+                                        <Button Content="{DynamicResource SecurityCenter_LogoutSession}" Command="{Binding LogoutCommand}" 
+                                                Classes="outline" Width="160" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                
+                                <fluent:SymbolIcon Grid.Column="1" Symbol="PersonLock" FontSize="120" 
+                                            Opacity="0.05" VerticalAlignment="Top" Margin="0,20,20,0"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 密码安全 -->
+            <TabItem Header="{DynamicResource SecurityCenter_SecurityCenterTab}">
+                <ScrollViewer>
+                    <StackPanel Spacing="20" Margin="0,16,0,0">
+                        <Border Classes="card" Padding="24" IsVisible="{Binding !IsAuthenticated}">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <fluent:SymbolIcon Symbol="LockClosed" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLogin}" Classes="h3"/>
+                                </StackPanel>
+                                <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLoginDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Spacing="20" IsVisible="{Binding IsAuthenticated}">
+                            <!-- 账户管理 (仅超级管理员可见) -->
+                            <StackPanel IsVisible="{Binding IsSuperAdmin}" Spacing="20">
+                                <Border Classes="card" Padding="20">
+                                    <StackPanel Spacing="16">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <fluent:SymbolIcon Symbol="PersonAdd" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_CreateNewAccount}" Classes="h3"/>
+                                        </StackPanel>
+                                        
+                                        <WrapPanel Orientation="Horizontal">
+                                            <StackPanel Spacing="8" Margin="0,0,16,8">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_Username}" Classes="caption"/>
+                                                <TextBox Text="{Binding NewAccountUsername}" Width="200" Watermark="{DynamicResource SecurityCenter_EnterNewUsername}" Classes="clear"/>
+                                            </StackPanel>
+                                            <StackPanel Spacing="8" Margin="0,0,16,8">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_Password}" Classes="caption"/>
+                                                <TextBox Text="{Binding NewAccountPassword}" PasswordChar="●" Width="200" Watermark="{DynamicResource SecurityCenter_SetInitialPassword}" Classes="clear"/>
+                                            </StackPanel>
+                                            <StackPanel Spacing="8" Margin="0,0,16,8">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_AccountType}" Classes="caption"/>
+                                                <ComboBox ItemsSource="{Binding AvailableAccountTypes}" 
+                                                          SelectedItem="{Binding NewAccountType}" 
+                                                          Width="150">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Converter={StaticResource AccountTypeToStringConverter}}"/>
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                            </StackPanel>
+                                            <Button Content="{DynamicResource SecurityCenter_CreateAccount}" Command="{Binding CreateAccountCommand}" 
+                                                    Classes="accent" VerticalAlignment="Bottom" Margin="0,0,0,8" Height="34"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Classes="card" Padding="0">
+                                    <Grid RowDefinitions="Auto, 300">
+                                        <Border Grid.Row="0" Padding="20,16">
+                                            <Grid ColumnDefinitions="*, Auto, Auto, Auto">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_ExistingAccounts}" Classes="h3" VerticalAlignment="Center"/>
+                                                <Button Grid.Column="3" Command="{Binding RefreshAccountsCommand}" Classes="FluentIconButton">
+                                                    <fluent:SymbolIcon Symbol="ArrowSync"/>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                        
+                                        <ListBox Grid.Row="1" ItemsSource="{Binding Accounts}" Background="Transparent" Padding="12">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate x:DataType="models:AccountModel">
+                                                    <Border Background="{DynamicResource SystemControlBackgroundAltMediumHighBrush}" 
+                                                            CornerRadius="10" Margin="4,6" Padding="20" Classes="account-card">
+                                                        <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                                                            <Border Background="{DynamicResource SystemAccentColorLightBrush}" 
+                                                                    Width="48" Height="48" CornerRadius="24" Margin="0,0,20,0">
+                                                                <fluent:SymbolIcon Symbol="Person" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                            </Border>
+                                                            
+                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <TextBlock Text="{Binding Username}" FontWeight="Bold"/>
+                                                                    <Border Background="{DynamicResource SystemAccentColor}" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding AccountType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='SuperAdmin'}">
+                                                                        <TextBlock Text="{DynamicResource SecurityCenter_SuperAdministrator}" Foreground="White"/>
+                                                                    </Border>
+                                                                </StackPanel>
+                                                                <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.6">
+                                                                    <TextBlock Text="{Binding AccountType, Converter={StaticResource AccountTypeToStringConverter}}" Classes="caption"/>
+                                                                    <TextBlock Text="•" Classes="caption"/>
+                                                                    <TextBlock Text="{DynamicResource SecurityCenter_LastActive}" Classes="caption"/>
+                                                                    <TextBlock Text="{Binding LastLoginAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}" Classes="caption"/>
+                                                                </StackPanel>
+                                                            </StackPanel>
+
+                                                            <Border Grid.Column="2" VerticalAlignment="Center" Margin="0,0,16,0"
+                                                                    Padding="10,4" CornerRadius="6"
+                                                                    Background="{Binding IsLocked, Converter={StaticResource BooleanToStatusBrushConverter}}">
+                                                                <TextBlock Text="{Binding IsLocked, Converter={StaticResource BooleanToStatusTextConverter}}"
+                                                                           Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+                                                            </Border>
+
+                                                            <Button Grid.Column="3" 
+                                                                    Command="{Binding $parent[UserControl].((vm:SecurityCenterViewModel)DataContext).DeleteAccountCommand}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Classes="danger icon-sm">
+                                                                <fluent:SymbolIcon Symbol="Delete" FontSize="16"/>
+                                                            </Button>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </Grid>
+                                </Border>
+                                
+                                <Separator Margin="0,10"/>
+                            </StackPanel>
+
+                            <!-- 修改密码 -->
+                            <Border Classes="card" Padding="24">
+                                <StackPanel Spacing="16">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="{DynamicResource SecurityCenter_PasswordSecurity}" Classes="h3"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_ChangePasswordDesc}" Classes="caption" Opacity="0.7"/>
+                                    </StackPanel>
+
+                                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto" RowSpacing="12" ColumnSpacing="16">
+                                        <TextBlock Text="{DynamicResource SecurityCenter_CurrentPassword}" Classes="caption" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1" Text="{Binding CurrentPassword}" PasswordChar="●" Watermark="{DynamicResource SecurityCenter_VerifyCurrentPassword}"
+                                                 Width="320" HorizontalAlignment="Left" Classes="clear"/>
+
+                                        <TextBlock Grid.Row="1" Text="{DynamicResource SecurityCenter_NewPassword}" Classes="caption" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NewPassword}" PasswordChar="●" Watermark="{DynamicResource SecurityCenter_EnterStrongPassword}"
+                                                 Width="320" HorizontalAlignment="Left" Classes="clear"/>
+
+                                        <TextBlock Grid.Row="2" Text="{DynamicResource SecurityCenter_ConfirmNewPassword}" Classes="caption" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ConfirmPassword}" PasswordChar="●" Watermark="{DynamicResource SecurityCenter_RepeatNewPassword}"
+                                                 Width="320" HorizontalAlignment="Left" Classes="clear"/>
+                                    </Grid>
+
+                                    <TextBlock Text="{Binding PasswordValidationErrors}" Classes="caption" 
+                                               Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}" 
+                                               TextWrapping="Wrap"/>
+
+                                    <Button Content="{DynamicResource SecurityCenter_UpdatePassword}" Command="{Binding ChangePasswordCommand}" 
+                                            Classes="accent" HorizontalAlignment="Right" Width="140" Height="36"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Classes="card" Padding="24">
+                                <StackPanel Spacing="16">
+                                    <TextBlock Text="{DynamicResource SecurityCenter_PasswordStrength}" Classes="h3"/>
+                                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding PasswordStrengthScore}" 
+                                                 Height="8" CornerRadius="4"/>
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBlock Text="{DynamicResource SecurityCenter_CurrentAssessment}" Classes="caption"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding PasswordStrengthLabel}" 
+                                                   FontWeight="Bold" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    </Grid>
+                                    
+                                    <Button Content="{DynamicResource SecurityCenter_GenerateStrongPassword}" Command="{Binding GenerateStrongPasswordCommand}" 
+                                            HorizontalAlignment="Stretch"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Classes="card" Padding="24">
+                                <StackPanel Spacing="16">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_TwoFactorAuth}" Classes="h3"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_TwoFactorDesc}" Classes="caption" Opacity="0.7"/>
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsTwoFactorEnabled}" 
+                                                      Command="{Binding SetupTwoFactorCommand}"
+                                                      OnContent="{DynamicResource SecurityCenter_Enabled}" OffContent="{DynamicResource SecurityCenter_Disabled}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" IsVisible="{Binding IsTwoFactorConfigured}">
+                                        <TextBlock Text="{DynamicResource SecurityCenter_LoginVerificationMode}" VerticalAlignment="Center"/>
+                                        <ComboBox Grid.Column="1" Width="260" Margin="12,0,0,0"
+                                                  ItemsSource="{Binding LoginVerificationModeOptions}"
+                                                  SelectedItem="{Binding SelectedLoginVerificationMode}"/>
+                                    </Grid>
+
+                                    <StackPanel Spacing="16" IsVisible="{Binding IsSettingUpTwoFactor}">
+                                        <Separator/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_SetupTwoFactor}" FontWeight="Bold"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_ScanQRCodeDesc}" 
+                                                   Classes="caption" TextWrapping="Wrap"/>
+                                        
+                                        <Border Background="White" Padding="8" CornerRadius="8" Width="200" Height="200" HorizontalAlignment="Center"
+                                                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1">
+                                            <Image Source="{Binding QrCodeBitmap}" Stretch="Uniform"/>
+                                        </Border>
+
+                                        <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" Padding="12" CornerRadius="8"
+                                                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1">
+                                            <SelectableTextBlock Text="{Binding TwoFactorSecret}" 
+                                                                HorizontalAlignment="Center" 
+                                                                FontFamily="Consolas" 
+                                                                FontSize="16" 
+                                                                FontWeight="Bold"/>
+                                        </Border>
+
+                                        <TextBlock Text="{DynamicResource SecurityCenter_Enter6DigitCodeDesc}" Classes="caption"/>
+                                        <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto">
+                                            <TextBox Text="{Binding TwoFactorInputCode}" Watermark="{DynamicResource SecurityCenter_TwoFactorCode}" MaxLength="6" Width="160" Classes="clear"/>
+                                            <Button Grid.Column="1" Content="{DynamicResource SecurityCenter_VerifyAndEnable}" 
+                                                    Command="{Binding VerifyAndEnableTwoFactorCommand}" 
+                                                    Classes="accent" Margin="8,0,0,0"/>
+                                        </Grid>
+                                        <Button Content="{DynamicResource SecurityCenter_CancelSetup}" Command="{Binding CancelTwoFactorSetupCommand}" 
+                                                HorizontalAlignment="Stretch" Classes="outline"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Classes="card" Padding="24">
+                                <StackPanel Spacing="16">
+                                    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="Shield" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_SecurityCenterOverview}" Classes="h3"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SecurityCenterOverviewDesc}" 
+                                               Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 软件安全 -->
+            <TabItem Header="{DynamicResource SecurityCenter_SoftwareSecurity}">
+                <ScrollViewer>
+                    <StackPanel Spacing="20" Margin="0,16,0,0">
+                        <Border Classes="card" Padding="24" IsVisible="{Binding !IsAuthenticated}">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <fluent:SymbolIcon Symbol="LockClosed" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLogin}" Classes="h3"/>
+                                </StackPanel>
+                                <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLoginForSoftwareSecurity}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Spacing="20" IsVisible="{Binding IsAuthenticated}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SoftwareSecurity}" Classes="h2"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SoftwareSecurityDesc}" Classes="caption" Opacity="0.6"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Border Classes="card" Padding="24">
+                                <StackPanel Spacing="20">
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <fluent:SymbolIcon Symbol="EyeOff" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_ScreenCaptureProtection}" Classes="h3" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EnableScreenCaptureProtection}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_ScreenCaptureProtectionDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableSoftwareSecurity}" OnContent="" OffContent=""/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,8,0,0">
+                                        <fluent:SymbolIcon Symbol="CheckmarkCircle" Width="16" Height="16" Foreground="Green" Opacity="0.8"/>
+                                        <TextBlock Grid.Column="1" Text="{DynamicResource SecurityCenter_PreventScreenRecording}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4,0,0">
+                                        <fluent:SymbolIcon Symbol="CheckmarkCircle" Width="16" Height="16" Foreground="Green" Opacity="0.8"/>
+                                        <TextBlock Grid.Column="1" Text="{DynamicResource SecurityCenter_PreventScreenshot}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4,0,0">
+                                        <fluent:SymbolIcon Symbol="CheckmarkCircle" Width="16" Height="16" Foreground="Green" Opacity="0.8"/>
+                                        <TextBlock Grid.Column="1" Text="{DynamicResource SecurityCenter_PreventRemoteDesktop}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Classes="card" Padding="24">
+                                <StackPanel Spacing="20">
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <fluent:SymbolIcon Symbol="Clock" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_LockStateFileCheck}" Classes="h3" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EnableStateFileCheck}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EnableStateFileCheckDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableLockStateFileCheck}" OnContent="" OffContent=""/>
+                                    </Grid>
+
+                                    <Border Height="1" Background="#20000000" Margin="0,12,0,0"/>
+
+                                    <Grid ColumnDefinitions="*,Auto" IsEnabled="{Binding EnableLockStateFileCheck}">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_CheckInterval}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_CheckIntervalDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <NumericUpDown Value="{Binding LockStateFileCheckIntervalSeconds}"
+                                                       Minimum="1" Maximum="60" Increment="1"
+                                                       Width="120" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 权限管理 -->
+            <TabItem Header="{DynamicResource SecurityCenter_AccessControl}" IsEnabled="{Binding IsSuperAdmin}">
+                <ScrollViewer>
+                    <StackPanel Spacing="20" Margin="0,16,0,0">
+                        <!-- 授权与操作 -->
+                        <Border Classes="card" Padding="24">
+                            <StackPanel Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <fluent:SymbolIcon Symbol="ShieldPerson" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_BasicFunctionAuth}" Classes="h3"/>
+                                </StackPanel>
+
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Power" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_ExitAppPermission}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding ExitAppLevel}"/>
+                                        <Button Grid.Column="3" Content="{DynamicResource SecurityCenter_Execute}" Command="{Binding ExitAppCommand}" Classes="FluentIconButton"/>
+                                    </Grid>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="card" Padding="24">
+                            <StackPanel Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <fluent:SymbolIcon Symbol="Organization" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SidebarPermissions}" Classes="h3"/>
+                                </StackPanel>
+
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Home" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_Home}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarHomeLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="LockClosed" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_LockSettings}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarLockSettingsLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="WeatherMoon" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_BreakTimeLockSettings}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding BreakTimeLockSettingsLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Calendar" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_Schedule}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarScheduleLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Grid" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_AppManagement}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarAppManagementLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Building" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_NetworkInterception}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarNetworkInterceptionLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="ClipboardText" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_SecurityLogs}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarSecurityLogsLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Camera" FontSize="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_ScreenshotHistory}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarScreenshotHistoryLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Video" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_WebcamHistory}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarWebcamHistoryLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Bot" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_Automation}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarAutomationLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="ShieldPerson" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_SecurityCenter}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarSecurityCenterLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="People" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_Organization}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarOrganizationLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Settings" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_Settings}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarSettingsLevel}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <fluent:SymbolIcon Symbol="Info" Width="16" Height="16" Opacity="0.8"/>
+                                            <TextBlock Text="{DynamicResource Sidebar_About}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="2" Width="140" ItemsSource="{Binding AuthorizationLevels}" SelectedItem="{Binding SidebarAboutLevel}"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <Separator Margin="0,8"/>
+                                <Button Content="{DynamicResource SecurityCenter_SavePermissions}" Command="{Binding ApplyAuthorizationSettingsCommand}"
+                                        Classes="accent" HorizontalAlignment="Right" Width="140"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 锁屏中心 -->
+            <TabItem Header="{DynamicResource SecurityCenter_LockCenter}">
+                <ScrollViewer>
+                    <StackPanel Spacing="20" Margin="0,16,0,0">
+                        <Border Classes="card" Padding="24" IsVisible="{Binding !IsAuthenticated}">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <fluent:SymbolIcon Symbol="LockClosed" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLogin}" Classes="h3"/>
+                                </StackPanel>
+                                <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLoginForLockCenter}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Spacing="20" IsVisible="{Binding IsAuthenticated}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="{DynamicResource SecurityCenter_LockCenter}" Classes="h2"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_LockCenterDesc}" Classes="caption" Opacity="0.6"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Command="{Binding SaveLockSettingsCommand}" Classes="accent" Padding="16,8" VerticalAlignment="Top">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <fluent:SymbolIcon Symbol="Save" Width="16" Height="16"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_Save}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <Border Classes="card" Padding="20" IsEnabled="{Binding CanEditBreakTimeLock}">
+                                <StackPanel Spacing="20">
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <fluent:SymbolIcon Symbol="LockClosed" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                        <TextBlock Text="{DynamicResource SecurityCenter_BreakTimeLock}" Classes="h3" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EnableBreakTimeLock}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EnableBreakTimeLockDesc}" Classes="caption" Opacity="0.7"/>
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableBreakTimeLock}" OnContent="" OffContent=""/>
+                                    </Grid>
+
+                                    <Border Height="1" Background="#20000000" Margin="0,12,0,0"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_LockMode}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_LockModeDesc}" Classes="caption" Opacity="0.7"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="1" Width="220" SelectedIndex="{Binding BreakTimeLockMode}">
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_LockModeProtectionOnly}"/>
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_LockModeFull}"/>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Border Height="1" Background="#20000000" Margin="0,12,0,0"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_LockWaitTime}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_LockWaitTimeDesc}" Classes="caption" Opacity="0.7"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                            <NumericUpDown Minimum="5" Maximum="300" Value="{Binding LockTimeout}" Width="120"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_Seconds}" VerticalAlignment="Center" Classes="caption"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Border Height="1" Background="#20000000" Margin="0,12,0,0"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_AutoUnlock}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_AutoUnlockDesc}" Classes="caption" Opacity="0.7"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EarlyUnlockMinutes}" VerticalAlignment="Center" Classes="caption"/>
+                                            <NumericUpDown Value="{Binding AutoUnlockBeforeClassMinutes}" Minimum="1" Maximum="30" Width="120"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Border Height="1" Background="#20000000" Margin="0,12,0,0"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_ShowFloatingLockWidget}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_ShowFloatingLockWidgetDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding ShowFloatingLockWidget}" OnContent="" OffContent=""/>
+                                    </Grid>
+
+                                    <Border Height="1" Background="#20000000" Margin="0,12,0,0"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EarlyUnlockMinLevel}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_EarlyUnlockMinLevelDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="1" Width="220" SelectedIndex="{Binding EarlyUnlockMinAccountTypeIndex}">
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_SuperAdministrator}"/>
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_Administrator}"/>
+                                            <ComboBoxItem Content="{DynamicResource SecurityCenter_OrdinaryUser}"/>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Border Height="1" Background="#20000000" Margin="0,12,0,0"/>
+
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{DynamicResource SecurityCenter_MaxLockDuration}" Classes="subtitle"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_MaxLockDurationDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ComboBox Grid.Column="1" Width="220" 
+                                                  SelectedIndex="{Binding MaxLockDurationIndex}" 
+                                                  ItemsSource="{Binding MaxLockDurationOptions}"
+                                                  MaxDropDownHeight="400"/>
+                                    </Grid>
+
+                                    <Border Height="1" Background="#20000000" Margin="0,12,0,0"/>
+
+                                    <StackPanel Spacing="12">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <fluent:SymbolIcon Symbol="TextFont" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                            <TextBlock Text="{DynamicResource SecurityCenter_LockTextDisplayEffect}" Classes="h2" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+                                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_BackgroundMaskOpacity}" Classes="subtitle"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_BackgroundMaskOpacityDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Slider Minimum="0.1" Maximum="0.8" SmallChange="0.05" LargeChange="0.1" Width="200" Value="{Binding LockBackgroundOpacity}"/>
+                                                <TextBlock Text="{Binding LockBackgroundOpacity, StringFormat=0.00}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_TextShadowIntensity}" Classes="subtitle"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_TextShadowIntensityDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Slider Minimum="0.3" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" Width="200" Value="{Binding LockTextShadowOpacity}"/>
+                                                <TextBlock Text="{Binding LockTextShadowOpacity, StringFormat=0.00}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Row="2" Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="{DynamicResource SecurityCenter_TextStrokeWidth}" Classes="subtitle"/>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_TextStrokeWidthDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Slider Minimum="2" Maximum="16" SmallChange="1" LargeChange="2" Width="200" Value="{Binding LockTextShadowBlurRadius}"/>
+                                                <TextBlock Text="{Binding LockTextShadowBlurRadius, StringFormat=0}" Classes="caption" Width="50" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Grid Margin="0,8,0,0">
+                                            <Border Background="Black" CornerRadius="12" Opacity="{Binding LockBackgroundOpacity}"/>
+                                            <Border Background="Transparent" CornerRadius="12" Padding="20">
+                                                <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                                    <TextBlock Text="{DynamicResource SecurityCenter_LockTextPreview}" FontSize="16" Opacity="0.8" HorizontalAlignment="Center"/>
+                                                    <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                                        <TextBlock Text="{DynamicResource SecurityCenter_ScreenLocked}" FontSize="32" FontWeight="Light" Foreground="White" HorizontalAlignment="Center">
+                                                            <TextBlock.Effect>
+                                                                <DropShadowEffect Color="#CC000000"
+                                                                                  BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                                                  Opacity="{Binding LockTextShadowOpacity}"/>
+                                                            </TextBlock.Effect>
+                                                        </TextBlock>
+                                                        <TextBlock Text="12:34:56" FontSize="56" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center">
+                                                            <TextBlock.Effect>
+                                                                <DropShadowEffect Color="#E6000000"
+                                                                                  BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                                                  Opacity="{Binding LockTextShadowOpacity}"/>
+                                                            </TextBlock.Effect>
+                                                        </TextBlock>
+                                                        <TextBlock Text="{DynamicResource SecurityCenter_DistanceToNextClass}" FontSize="18" Foreground="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center">
+                                                            <TextBlock.Effect>
+                                                                <DropShadowEffect Color="#CC000000"
+                                                                                  BlurRadius="{Binding LockTextShadowBlurRadius}"
+                                                                                  Opacity="{Binding LockTextShadowOpacity}"/>
+                                                            </TextBlock.Effect>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </StackPanel>
+                                    
+                                    <Border Height="1" Background="#20000000" Margin="0,12,0,0"/>
+
+                                    <!-- 窗口置顶保护设置 -->
+                                    <StackPanel Spacing="16">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <fluent:SymbolIcon Symbol="ArrowCircleUp" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                            <TextBlock Text="窗口置顶保护" Classes="h2" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <TextBlock Text="通过定时刷新窗口置顶状态，防止其他程序覆盖锁屏界面。数值越小保护越强，但会略微增加CPU占用。" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+
+                                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto" RowSpacing="12">
+                                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="置顶刷新间隔" Classes="subtitle"/>
+                                                <TextBlock Text="控制置顶状态检查的频率，数值越小保护越强，但会略微增加CPU占用" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <ComboBox ItemsSource="{Binding TopmostRefreshIntervalOptions}" 
+                                                          SelectedItem="{Binding TopmostRefreshInterval}"
+                                                          Width="150" HorizontalAlignment="Right">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding StringFormat={}{0}ms}"/>
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- 档位说明 -->
+                                        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" CornerRadius="8" Padding="16" Margin="0,8,0,0">
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Text="档位参考" Classes="subtitle"/>
+                                                <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="4">
+                                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="1档:" Classes="caption" Opacity="0.7"/>
+                                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="0.01ms - 极限保护，最高CPU占用" Classes="caption"/>
+                                                    
+                                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="4档:" Classes="caption" Opacity="0.7"/>
+                                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="0.5ms - 极强保护，适合高对抗" Classes="caption"/>
+                                                    
+                                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="6档:" Classes="caption" Opacity="0.7"/>
+                                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="5ms - 强保护，推荐默认设置" Classes="caption"/>
+                                                    
+                                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="8档:" Classes="caption" Opacity="0.7"/>
+                                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="25ms - 中等保护，平衡性能" Classes="caption"/>
+                                                    
+                                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="10档:" Classes="caption" Opacity="0.7"/>
+                                                    <TextBlock Grid.Row="4" Grid.Column="1" Text="100ms - 轻度保护，低CPU占用" Classes="caption"/>
+                                                    
+                                                    <TextBlock Grid.Row="5" Grid.Column="0" Text="12档:" Classes="caption" Opacity="0.7"/>
+                                                    <TextBlock Grid.Row="5" Grid.Column="1" Text="500ms - 最弱保护，极致性能" Classes="caption"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <Border Height="1" Background="#20000000" Margin="0,12,0,0"/>
+
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+                                        <Border Grid.Column="0" Classes="card" Padding="20">
+                                            <StackPanel Spacing="16">
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                    <fluent:SymbolIcon Symbol="Shield" FontSize="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                    <TextBlock Text="{DynamicResource SecurityCenter_TopmostExemptionSettings}" Classes="h3" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_TopmostExemptionSettingsDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+
+                                                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                                                    <TextBox Text="{Binding NewAllowedApp}" Watermark="{DynamicResource SecurityCenter_EnterProcessNameOrKeyword}" Margin="0,0,8,0"/>
+                                                    <Button Grid.Column="1" Command="{Binding AddAllowedAppCommand}" Classes="accent icon-md">
+                                                        <fluent:SymbolIcon Symbol="Add" Width="16" Height="16"/>
+                                                    </Button>
+                                                </Grid>
+
+                                                <ItemsControl ItemsSource="{Binding AllowedTopmostApps}" Height="200">
+                                                    <ItemsControl.Template>
+                                                        <ControlTemplate>
+                                                            <ScrollViewer>
+                                                                <ItemsPresenter/>
+                                                            </ScrollViewer>
+                                                        </ControlTemplate>
+                                                    </ItemsControl.Template>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                                                                    CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
+                                                                <Grid ColumnDefinitions="*,Auto">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                        <fluent:SymbolIcon Symbol="Maximize" Width="14" Height="14" Opacity="0.5"/>
+                                                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+                                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveAllowedAppCommand}" 
+                                                                            CommandParameter="{Binding}" Classes="transparent icon-sm">
+                                                                        <fluent:SymbolIcon Symbol="Dismiss" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                                                    </Button>
+                                                                </Grid>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Grid.Column="1" Classes="card" Padding="20">
+                                            <StackPanel Spacing="16">
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                    <fluent:SymbolIcon Symbol="Pin" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                                    <TextBlock Text="{DynamicResource SecurityCenter_ForcedTopmostSettings}" Classes="h3" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{DynamicResource SecurityCenter_ForcedTopmostSettingsDesc}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+
+                                                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                                                    <TextBox Text="{Binding NewForcedApp}" Watermark="{DynamicResource SecurityCenter_EnterProcessNameOrKeyword}" Margin="0,0,8,0"/>
+                                                    <Button Grid.Column="1" Command="{Binding AddForcedAppCommand}" Classes="accent icon-md">
+                                                        <fluent:SymbolIcon Symbol="Add" Width="16" Height="16"/>
+                                                    </Button>
+                                                </Grid>
+
+                                                <ItemsControl ItemsSource="{Binding ForcedTopmostApps}" Height="200">
+                                                    <ItemsControl.Template>
+                                                        <ControlTemplate>
+                                                            <ScrollViewer>
+                                                                <ItemsPresenter/>
+                                                            </ScrollViewer>
+                                                        </ControlTemplate>
+                                                    </ItemsControl.Template>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                                                                    CornerRadius="6" Margin="0,0,0,8" Padding="12,8">
+                                                                <Grid ColumnDefinitions="*,Auto">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                        <fluent:SymbolIcon Symbol="ArrowUp" Width="14" Height="14" Opacity="0.5"/>
+                                                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+                                                                    <Button Grid.Column="1" Command="{Binding $parent[UserControl].DataContext.RemoveForcedAppCommand}" 
+                                                                            CommandParameter="{Binding}" Classes="transparent icon-sm">
+                                                                        <fluent:SymbolIcon Symbol="Dismiss" Width="14" Height="14" Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"/>
+                                                                    </Button>
+                                                                </Grid>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 安全报告 -->
+            <TabItem Header="{DynamicResource SecurityCenter_SecurityReport}">
+                <StackPanel Margin="0,16,0,0" Spacing="20">
+                    <Border Classes="card" Padding="24" IsVisible="{Binding !IsAuthenticated}">
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                <fluent:SymbolIcon Symbol="LockClosed" Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}"/>
+                                <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLogin}" Classes="h3"/>
+                            </StackPanel>
+                            <TextBlock Text="{DynamicResource SecurityCenter_NeedAdminLoginForSecurityReport}" Classes="caption" Opacity="0.7" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card" Padding="24" IsVisible="{Binding IsAuthenticated}">
+                        <StackPanel Spacing="20">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SystemSecurityOverview}" Classes="h3"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_Last30DaysSecurityEvents}" Classes="caption" Opacity="0.6"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="{DynamicResource SecurityCenter_RefreshReport}" Command="{Binding RefreshReportCommand}" Classes="FluentIconButton">
+                                    <fluent:SymbolIcon Symbol="ArrowSync"/>
+                                </Button>
+                            </Grid>
+
+                            <Separator/>
+
+                            <TextBlock Text="{Binding SecurityReportText}" FontSize="16" LineHeight="32" 
+                                       TextWrapping="Wrap" Opacity="0.8"/>
+                            
+                            <Border Background="{DynamicResource SystemAccentColorLightBrush}" CornerRadius="8" Padding="16">
+                                <StackPanel Orientation="Horizontal" Spacing="16">
+                                    <fluent:SymbolIcon Symbol="Shield" Width="24" Height="24" Foreground="{DynamicResource SystemAccentColor}"/>
+                                    <TextBlock Text="{DynamicResource SecurityCenter_SystemRunningNormally}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

@@ -1,0 +1,309 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+        xmlns:models="clr-namespace:ClassScreenLock.Models"
+        xmlns:fluent="using:FluentIcons.Avalonia"
+        xmlns:dataConv="clr-namespace:Avalonia.Data.Converters;assembly=Avalonia.Base"
+        mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="680"
+        x:Class="ClassScreenLock.Views.QuickActionEditorView"
+        x:DataType="vm:QuickActionEditorViewModel"
+        Title="{DynamicResource QA_EditorTitle}"
+        Width="960" Height="680"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        MinWidth="780" MinHeight="560"
+        ShowInTaskbar="False"
+        SystemDecorations="None"
+        Background="Transparent">
+
+    <!-- 外层带阴影的圆角容器 -->
+    <Border Classes="qa-editor-shell"
+            BorderBrush="#33000000"
+            BorderThickness="1"
+            CornerRadius="14"
+            Margin="12"
+            BoxShadow="0 16 48 0 #40000000">
+
+        <Grid RowDefinitions="Auto,*,Auto">
+
+            <!-- ============ 标题栏（可拖动） ============ -->
+            <Border Grid.Row="0"
+                    Classes="qa-editor-titlebar"
+                    CornerRadius="14,14,0,0"
+                    Padding="24,18"
+                    BorderBrush="#15000000"
+                    BorderThickness="0,0,0,1"
+                    PointerPressed="OnTitleBarPointerPressed">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+                        <!-- 渐变图标背景 -->
+                        <Border Width="40" Height="40" CornerRadius="10"
+                                Background="#0078D4"
+                                BoxShadow="0 4 12 0 #400078D4">
+                            <fluent:SymbolIcon Symbol="Apps" FontSize="22" Foreground="White"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="{DynamicResource QA_EditorTitle}"
+                                       FontSize="18" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="{DynamicResource QA_EditorSubtitle}"
+                                       FontSize="12" Opacity="0.65"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Classes="qa-iconbtn"
+                            Click="OnCloseClick"
+                            ToolTip.Tip="{DynamicResource Common_Close}">
+                        <fluent:SymbolIcon Symbol="Dismiss" FontSize="14"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ============ 主体：左选中 + 右候选 ============ -->
+            <Grid Grid.Row="1" ColumnDefinitions="340,*">
+
+                <!-- 左侧：已选中的快速操作 -->
+                <Border Grid.Column="0"
+                        Classes="qa-editor-section"
+                        BorderBrush="#15000000"
+                        BorderThickness="0,0,1,0">
+                    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="20,20,20,16">
+
+                        <!-- 标题 + 计数徽章 -->
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                            <TextBlock Grid.Column="0"
+                                       Text="{DynamicResource QA_SelectedTitle}"
+                                       FontWeight="SemiBold" FontSize="15"
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                       VerticalAlignment="Center"/>
+                            <Border Grid.Column="1"
+                                    Background="#0078D4"
+                                    CornerRadius="10"
+                                    Padding="8,2">
+                                <TextBlock Text="{Binding SelectedCount, StringFormat={}{0}/8}"
+                                           FontSize="11" FontWeight="SemiBold"
+                                           Foreground="White"/>
+                            </Border>
+                        </Grid>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="{DynamicResource QA_SelectedHint}"
+                                   FontSize="11" Opacity="0.6"
+                                   Margin="0,0,0,12"
+                                   TextWrapping="Wrap"/>
+
+                        <!-- 重置按钮 -->
+                        <Button Grid.Row="2"
+                                Margin="0,0,0,12"
+                                Command="{Binding ResetToDefaultCommand}"
+                                HorizontalAlignment="Stretch"
+                                Classes="qa-candidate"
+                                Padding="0,8">
+                            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                <fluent:SymbolIcon Symbol="ArrowReset" FontSize="13" Foreground="#0078D4"/>
+                                <TextBlock Text="{DynamicResource QA_ResetDefault}" FontSize="12" Foreground="#0078D4"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 选中列表 -->
+                        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+                            <Grid>
+                                <ItemsControl ItemsSource="{Binding Selected}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="vm:QuickActionItemViewModel">
+                                            <Border Classes="qa-editor-item"
+                                                    Padding="12,10"
+                                                    Margin="0,0,0,8">
+                                                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+
+                                                    <!-- 序号徽章 -->
+                                                    <Border Grid.Column="0"
+                                                            Width="32" Height="32" CornerRadius="8"
+                                                            Background="{Binding AccentColor}"
+                                                            Opacity="0.95"
+                                                            VerticalAlignment="Center">
+                                                        <fluent:SymbolIcon Symbol="{Binding IconName}"
+                                                                            FontSize="16" Foreground="White"
+                                                                            HorizontalAlignment="Center"
+                                                                            VerticalAlignment="Center"/>
+                                                    </Border>
+
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,8,0">
+                                                        <TextBlock Text="{Binding Label}"
+                                                                   FontSize="13" FontWeight="SemiBold"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                        <TextBlock Text="{Binding Description}"
+                                                                   FontSize="11" Opacity="0.6"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Margin="0,1,0,0"/>
+                                                    </StackPanel>
+
+                                                    <Button Grid.Column="2"
+                                                            Classes="qa-iconbtn"
+                                                            Command="{Binding $parent[Window].((vm:QuickActionEditorViewModel)DataContext).MoveUpCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="{DynamicResource QA_MoveUp}">
+                                                        <fluent:SymbolIcon Symbol="ChevronUp" FontSize="12"/>
+                                                    </Button>
+                                                    <Button Grid.Column="3"
+                                                            Classes="qa-iconbtn"
+                                                            Margin="2,0,0,0"
+                                                            Command="{Binding $parent[Window].((vm:QuickActionEditorViewModel)DataContext).MoveDownCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="{DynamicResource QA_MoveDown}">
+                                                        <fluent:SymbolIcon Symbol="ChevronDown" FontSize="12"/>
+                                                    </Button>
+                                                    <Button Grid.Column="4"
+                                                            Classes="qa-iconbtn qa-iconbtn-danger"
+                                                            Margin="2,0,0,0"
+                                                            Command="{Binding $parent[Window].((vm:QuickActionEditorViewModel)DataContext).RemoveCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="{DynamicResource QA_Remove}">
+                                                        <fluent:SymbolIcon Symbol="Dismiss" FontSize="12" Foreground="#E81123"/>
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- 空状态 -->
+                                <StackPanel IsVisible="{Binding Selected.Count, Converter={x:Static dataConv:ObjectConverters.IsNull}}"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                    <fluent:SymbolIcon Symbol="Apps" FontSize="40" Opacity="0.3"/>
+                                    <TextBlock Text="{DynamicResource QA_EmptyHint}" FontSize="12" Opacity="0.5" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <!-- 底部提示 -->
+                        <TextBlock Grid.Row="4"
+                                   Text="{DynamicResource QA_MaxHint}"
+                                   FontSize="11" Opacity="0.5"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,8,0,0"/>
+                    </Grid>
+                </Border>
+
+                <!-- 右侧：候选功能（按分类） -->
+                <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" Margin="24,20,24,16">
+
+                    <!-- 标题区 -->
+                    <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,12">
+                        <TextBlock Text="{DynamicResource QA_AvailableTitle}"
+                                   FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="{DynamicResource QA_AvailableHint}"
+                                   FontSize="12" Opacity="0.65"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- 候选列表 -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,2,0">
+                        <ItemsControl ItemsSource="{Binding Categories}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="vm:QuickActionCategoryGroup">
+                                    <StackPanel Spacing="10" Margin="0,0,0,18">
+                                        <!-- 分类标题 + 装饰条 -->
+                                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,4">
+                                            <Border Grid.Column="0"
+                                                    Width="4" Height="16" CornerRadius="2"
+                                                    Background="#0078D4"
+                                                    VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Category}"
+                                                       FontWeight="SemiBold" FontSize="13"
+                                                       Margin="8,0,0,0"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding Items.Count, StringFormat={}{0}}"
+                                                       FontSize="11" Opacity="0.5"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+
+                                        <ItemsControl ItemsSource="{Binding Items}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="vm:QuickActionItemViewModel">
+                                                    <Button Classes="qa-candidate"
+                                                            Margin="0,4,8,4"
+                                                            Command="{Binding $parent[Window].((vm:QuickActionEditorViewModel)DataContext).AddCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="{Binding Description}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <Border Width="20" Height="20" CornerRadius="5"
+                                                                    Background="{Binding AccentColor}"
+                                                                    Opacity="0.9">
+                                                                <fluent:SymbolIcon Symbol="{Binding IconName}"
+                                                                                    FontSize="12" Foreground="White"
+                                                                                    HorizontalAlignment="Center"
+                                                                                    VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <TextBlock Text="{Binding Label}" FontSize="12" FontWeight="Normal"
+                                                                       VerticalAlignment="Center"
+                                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+
+            <!-- ============ 底部按钮栏 ============ -->
+            <Border Grid.Row="2"
+                    Classes="qa-editor-titlebar"
+                    CornerRadius="0,0,14,14"
+                    Padding="24,16"
+                    BorderBrush="#15000000"
+                    BorderThickness="0,1,0,0">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <!-- 状态信息（带图标） -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <fluent:SymbolIcon Symbol="Info" FontSize="14" Opacity="0.6"
+                                           Foreground="{DynamicResource SystemAccentColor}"
+                                           IsVisible="{Binding StatusMessage, Converter={x:Static dataConv:StringConverters.IsNotNullOrEmpty}}"/>
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   VerticalAlignment="Center"
+                                   FontSize="12" Opacity="0.7"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="1"
+                            Content="{DynamicResource Common_Cancel}"
+                            Click="OnCloseClick"
+                            Classes="qa-candidate"
+                            Padding="22,8"
+                            Margin="0,0,8,0">
+                        <TextBlock Text="{DynamicResource Common_Cancel}" FontSize="13"/>
+                    </Button>
+                    <Button Grid.Column="2"
+                            Click="OnSaveClick"
+                            Classes="accent"
+                            Padding="22,8"
+                            CornerRadius="8">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <fluent:SymbolIcon Symbol="Save" FontSize="14" Foreground="White"/>
+                            <TextBlock Text="{DynamicResource Common_Save}" FontSize="13" Foreground="White" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

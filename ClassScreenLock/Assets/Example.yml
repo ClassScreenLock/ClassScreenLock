@@ -1,0 +1,599 @@
+version: 1
+subjects:
+- name: 英语
+  simplified_name: 英
+  teacher: 李老师
+  room: ''
+- name: 数学
+  simplified_name: 数
+  teacher: 张老师
+  room: ''
+- name: 语文
+  simplified_name: 语
+  teacher: 王老师
+  room: ''
+- name: 道法
+  simplified_name: 道
+  teacher: 黄老师
+  room: ''
+- name: 历史
+  simplified_name: 历
+  teacher: 孙老师
+  room: ''
+- name: 物理
+  simplified_name: 物
+  teacher: 赵老师
+  room: ''
+- name: 化学
+  simplified_name: 化
+  teacher: 陈老师
+  room: ''
+- name: 体育
+  simplified_name: 体
+  teacher: 刘老师
+  room: ''
+- name: 班会
+  simplified_name: 班
+  teacher: 班主任
+  room: ''
+schedules:
+- name: 周一课程表
+  classes:
+  - subject: 英语
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 英语
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 数学
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 语文
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 道法
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 化学
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 物理
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 体育
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: ''
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 1
+  weeks: odd
+- name: 周二课程表
+  classes:
+  - subject: 语文
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 语文
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 数学
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 历史
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 体育
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 物理
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 英语
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 英语
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: ''
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 2
+  weeks: odd
+- name: 周三课程表
+  classes:
+  - subject: 英语
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 英语
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 道法
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 语文
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 语文
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 数学
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 物理
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 化学
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: 体育
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 3
+  weeks: odd
+- name: 周四课程表
+  classes:
+  - subject: 语文
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 英语
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 语文
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 数学
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 道法
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 体育
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 历史
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 化学
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: ''
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 4
+  weeks: odd
+- name: 周五课程表
+  classes:
+  - subject: 英语
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 数学
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 数学
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 英语
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 历史
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 语文
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 物理
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 化学
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: 班会
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 5
+  weeks: odd
+- name: 周六课程表
+  classes:
+  - subject: 英语
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 英语
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 数学
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 语文
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 道法
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 化学
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 物理
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 体育
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: ''
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 6
+  weeks: odd
+- name: 周天课程表
+  classes:
+  - subject: 英语
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 英语
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 数学
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 语文
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 道法
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 化学
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 物理
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 体育
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: ''
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 7
+  weeks: odd
+- name: 周天课程表
+  classes:
+  - subject: 英语
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 英语
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 数学
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 语文
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 道法
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 化学
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 物理
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 体育
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: ''
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 7
+  weeks: even
+- name: 周六课程表
+  classes:
+  - subject: 英语
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 英语
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 数学
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 语文
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 道法
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 化学
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 物理
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 体育
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: ''
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 6
+  weeks: even
+- name: 周五课程表
+  classes:
+  - subject: 英语
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 数学
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 数学
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 英语
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 历史
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 语文
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 物理
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 化学
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: 班会
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 5
+  weeks: even
+- name: 周四课程表
+  classes:
+  - subject: 语文
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 英语
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 语文
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 数学
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 道法
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 体育
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 历史
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 化学
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: ''
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 4
+  weeks: even
+- name: 周三课程表
+  classes:
+  - subject: 英语
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 英语
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 道法
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 语文
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 语文
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 数学
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 物理
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 化学
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: 体育
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 3
+  weeks: even
+- name: 周二课程表
+  classes:
+  - subject: 语文
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 语文
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 数学
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 历史
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 体育
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 物理
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 英语
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 英语
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: ''
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 2
+  weeks: even
+- name: 周一课程表
+  classes:
+  - subject: 英语
+    start_time: 07:30:00
+    end_time: 08:00:00
+  - subject: 英语
+    start_time: 08:00:00
+    end_time: 08:45:00
+  - subject: 数学
+    start_time: 09:15:00
+    end_time: 10:00:00
+  - subject: 语文
+    start_time: 10:15:00
+    end_time: 11:00:00
+  - subject: 道法
+    start_time: 11:15:00
+    end_time: 12:05:00
+  - subject: 化学
+    start_time: 14:10:00
+    end_time: 14:50:00
+  - subject: 物理
+    start_time: 15:00:00
+    end_time: 15:40:00
+  - subject: 体育
+    start_time: 15:50:00
+    end_time: 16:30:00
+  - subject: ''
+    start_time: 16:40:00
+    end_time: 17:20:00
+  - subject: ''
+    start_time: 17:30:00
+    end_time: 18:10:00
+  - subject: 英语
+    start_time: 19:00:00
+    end_time: 19:50:00
+  - subject: ''
+    start_time: 20:00:00
+    end_time: 20:50:00
+  enable_day: 1
+  weeks: even

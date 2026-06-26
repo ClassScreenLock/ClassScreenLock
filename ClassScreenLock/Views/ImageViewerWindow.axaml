@@ -1,0 +1,117 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+        xmlns:converters="clr-namespace:ClassScreenLock.Converters"
+        xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+        x:Class="ClassScreenLock.Views.ImageViewerWindow"
+        x:DataType="vm:IImageViewerViewModel"
+        Icon="/ClassScreenLock.ico"
+        Title="{Binding CurrentViewingImage.FileName}"
+        WindowStartupLocation="CenterScreen"
+        SystemDecorations="Full"
+        Background="Black"
+        KeyDown="OnKeyDown">
+
+    <Window.Resources>
+        <converters:StringToBitmapConverter x:Key="StringToBitmapConverter"/>
+        <converters:StringEqualsConverter x:Key="StringEqualsConverter"/>
+    </Window.Resources>
+
+    <Window.Styles>
+        <Style Selector="ToggleButton.viewer-mode:checked">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.viewer-mode:checked:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentDarkBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.viewer-mode:checked:pressed">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentDarkerBrush}"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="*,Auto">
+        <Grid Grid.Row="0">
+            <ScrollViewer x:Name="ImageScrollViewer" 
+                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" AllowAutoHide="True"
+                          PointerWheelChanged="OnPointerWheelChanged"
+                          PointerPressed="OnPointerPressed"
+                          PointerMoved="OnPointerMoved"
+                          PointerReleased="OnPointerReleased">
+                <ScrollViewer.GestureRecognizers>
+                    <PinchGestureRecognizer />
+                </ScrollViewer.GestureRecognizers>
+                <LayoutTransformControl HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <LayoutTransformControl.LayoutTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="{Binding ZoomLevel}" ScaleY="{Binding ZoomLevel}"/>
+                            <RotateTransform Angle="{Binding Rotation}"/>
+                        </TransformGroup>
+                    </LayoutTransformControl.LayoutTransform>
+                    <LayoutTransformControl.RenderTransform>
+                        <TranslateTransform X="{Binding PanX}" Y="{Binding PanY}"/>
+                    </LayoutTransformControl.RenderTransform>
+                    <Image Source="{Binding CurrentViewingImage.FilePath, Converter={StaticResource StringToBitmapConverter}}"
+                           Stretch="Uniform" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                </LayoutTransformControl>
+            </ScrollViewer>
+
+            <Button HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20"
+                    Command="{Binding PreviousImageCommand}" Background="#33000000" Foreground="White"
+                    Padding="15,20" CornerRadius="4" BorderThickness="0">
+                <fluent:SymbolIcon Symbol="ChevronLeft" Width="24" Height="24"/>
+                <Button.Styles>
+                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                        <Setter Property="Background" Value="#66000000"/>
+                    </Style>
+                </Button.Styles>
+            </Button>
+            
+            <Button HorizontalAlignment="Right" VerticalAlignment="Center" Margin="20"
+                    Command="{Binding NextImageCommand}" Background="#33000000" Foreground="White"
+                    Padding="15,20" CornerRadius="4" BorderThickness="0">
+                <fluent:SymbolIcon Symbol="ChevronRight" Width="24" Height="24"/>
+                <Button.Styles>
+                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                        <Setter Property="Background" Value="#66000000"/>
+                    </Style>
+                </Button.Styles>
+            </Button>
+        </Grid>
+
+        <Border Grid.Row="1" Background="#CC202020" Padding="12" HorizontalAlignment="Stretch" CornerRadius="0">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto" VerticalAlignment="Center">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2">
+                    <ToggleButton Classes="viewer-mode" IsChecked="True" ToolTip.Tip="查看" Background="Transparent" BorderThickness="0" Padding="12" CornerRadius="8">
+                        <fluent:SymbolIcon Symbol="Cursor" Width="20" Height="20" Foreground="White"/>
+                    </ToggleButton>
+                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding ZoomOutCommand}" ToolTip.Tip="缩小" Background="Transparent" BorderThickness="0" Padding="12" CornerRadius="8">
+                    <fluent:SymbolIcon Symbol="ZoomOut" Width="20" Height="20" Foreground="White"/>
+                </Button>
+                <Button Grid.Column="2" Command="{Binding ZoomInCommand}" ToolTip.Tip="放大" Background="Transparent" BorderThickness="0" Padding="12" CornerRadius="8">
+                    <fluent:SymbolIcon Symbol="ZoomIn" Width="20" Height="20" Foreground="White"/>
+                </Button>
+                <Slider Grid.Column="3" Minimum="0.1" Maximum="12" Value="{Binding ZoomLevel}" Width="220" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="4" Text="{Binding ZoomLevel, StringFormat='{}{0:P0}'}" Foreground="White" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                <Button Grid.Column="5" Command="{Binding ResetViewCommand}" ToolTip.Tip="重置视图" Background="Transparent" BorderThickness="0" Padding="12" CornerRadius="8">
+                    <fluent:SymbolIcon Symbol="ArrowSync" Width="20" Height="20" Foreground="White"/>
+                </Button>
+                <StackPanel Grid.Column="6" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                    <Button Command="{Binding RotateLeftCommand}" ToolTip.Tip="左旋" Background="Transparent" BorderThickness="0" Padding="12" CornerRadius="8">
+                        <fluent:SymbolIcon Symbol="ArrowUndo" Width="20" Height="20" Foreground="White"/>
+                    </Button>
+                    <Button Command="{Binding RotateRightCommand}" ToolTip.Tip="右旋" Background="Transparent" BorderThickness="0" Padding="12" CornerRadius="8">
+                        <fluent:SymbolIcon Symbol="ArrowRedo" Width="20" Height="20" Foreground="White"/>
+                    </Button>
+                </StackPanel>
+                <Button Grid.Column="7" Command="{Binding DeleteScreenshotCommand}" CommandParameter="{Binding CurrentViewingImage}" 
+                        ToolTip.Tip="删除" Background="Transparent" BorderThickness="0" Padding="12" CornerRadius="8">
+                    <fluent:SymbolIcon Symbol="Delete" Width="20" Height="20" Foreground="#FF4444"/>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,159 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="240" d:DesignHeight="320"
+             x:Class="ClassScreenLock.Views.TrayMenuView"
+             Width="240"
+             Cursor="Hand">
+
+    <UserControl.Styles>
+        <Style Selector="Border.menu-item">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+        <Style Selector="Border.menu-item:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListLowBrush}"/>
+        </Style>
+        <Style Selector="Border.menu-item:pressed">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListMediumBrush}"/>
+        </Style>
+        <Style Selector="Border.menu-item &gt; Grid, Border.menu-item StackPanel, Border.menu-item fluent|SymbolIcon, Border.menu-item TextBlock">
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="TextBlock.menu-text">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="fluent|SymbolIcon.menu-icon">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Width" Value="14"/>
+            <Setter Property="Height" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="8"
+            BoxShadow="0 8 24 0 #50000000">
+        <StackPanel Spacing="4">
+            <!-- 显示主界面 -->
+            <Border Classes="menu-item" PointerPressed="OnShowClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="PanelLeft"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_Show}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 快速锁定 -->
+            <Border Classes="menu-item" PointerPressed="OnLockClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="LockClosed"
+                                       Foreground="{DynamicResource SystemAccentColor}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_QuickLock}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 分隔线 -->
+            <Border Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                    Margin="12,8"/>
+
+            <!-- 应用管理 -->
+            <Border Classes="menu-item" PointerPressed="OnAppManagementClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="Grid"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_AppManagement}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 网络拦截 -->
+            <Border Classes="menu-item" PointerPressed="OnNetworkInterceptionClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="Building"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_NetworkInterception}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 安全日志 -->
+            <Border Classes="menu-item" PointerPressed="OnSecurityLogsClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="ClipboardText"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_SecurityLogs}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 安全中心 -->
+            <Border Classes="menu-item" PointerPressed="OnSecurityCenterClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="ShieldPerson"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_SecurityCenter}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 分隔线 -->
+            <Border Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                    Margin="12,8"/>
+
+            <!-- 锁屏设置 -->
+            <Border Classes="menu-item" PointerPressed="OnLockSettingsClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="Options"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_OpenLockSettings}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 时间计划 -->
+            <Border Classes="menu-item" PointerPressed="OnScheduleClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="Calendar"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_OpenSchedule}" 
+                               Margin="14,0,0,0"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 分隔线 -->
+            <Border Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                    Margin="12,8"/>
+
+            <!-- 退出 -->
+            <Border Classes="menu-item" PointerPressed="OnExitClicked">
+                <Grid ColumnDefinitions="Auto,*">
+                    <fluent:SymbolIcon Classes="menu-icon" Symbol="SignOut"
+                                       Foreground="#E81123"/>
+                    <TextBlock Classes="menu-text" Grid.Column="1" Text="{DynamicResource Tray_Exit}" 
+                               Margin="14,0,0,0"
+                               Foreground="#E81123"/>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>

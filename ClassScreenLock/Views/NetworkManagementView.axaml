@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:models="clr-namespace:ClassScreenLock.Models"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="ClassScreenLock.Views.NetworkManagementView"
+             x:DataType="vm:NetworkManagementViewModel">
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- 顶部标题和操作 -->
+        <Border Grid.Row="0" Classes="chrome" Padding="24,16" Background="Transparent">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock Text="{DynamicResource Network_Title}" FontSize="24" FontWeight="Bold"/>
+                    <TextBlock Text="{DynamicResource Network_DomainRules}" Opacity="0.6"/>
+                </StackPanel>
+                
+                <Button Grid.Column="1" Command="{Binding ApplyChangesCommand}" Classes="accent" VerticalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <fluent:SymbolIcon Symbol="Checkmark" Width="14" Height="14"/>
+                        <TextBlock Text="{DynamicResource Network_ApplyChanges}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" Padding="24,0,24,24">
+            <StackPanel Spacing="24">
+                <!-- 全局设置 -->
+                <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                        CornerRadius="8" Padding="20">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{DynamicResource Network_GlobalLock}" FontWeight="SemiBold" FontSize="16"/>
+                            <TextBlock Text="{DynamicResource Network_GlobalLock_Desc}" Opacity="0.6" FontSize="12" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsNetworkLockEnabled}" OnContent="" OffContent=""/>
+                    </Grid>
+                </Border>
+
+                <!-- 添加规则 -->
+                <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                        CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="{DynamicResource Network_AddRule}" FontWeight="SemiBold" FontSize="16"/>
+                        <Grid ColumnDefinitions="*,*,Auto">
+                            <TextBox Grid.Column="0" Text="{Binding NewDomain}"
+                                     Watermark="{DynamicResource Network_Domain}"
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,12,0"/>
+                            <TextBox Grid.Column="1" Text="{Binding NewDescription}"
+                                     Watermark="{DynamicResource Network_Description}"
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,12,0"/>
+                            <Button Grid.Column="2" Command="{Binding AddRuleCommand}" Classes="accent" MinWidth="96" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <fluent:SymbolIcon Symbol="Add" FontSize="14" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource Network_Add}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        
+                        <!-- 提示信息 -->
+                        <Border Background="{DynamicResource SystemAccentColorLight3}" 
+                                BorderBrush="{DynamicResource SystemAccentColor}"
+                                BorderThickness="1,0,0,0"
+                                Padding="12,8"
+                                Margin="0,8,0,0">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <fluent:SymbolIcon Grid.Column="0" Symbol="Info" Foreground="{DynamicResource SystemAccentColor}" Margin="0,0,8,0" VerticalAlignment="Top"/>
+                                <TextBlock Grid.Column="1" Text="{DynamicResource Network_DoHTip}" 
+                                           FontSize="12" 
+                                           TextWrapping="Wrap"
+                                           VerticalAlignment="Center"
+                                           Opacity="0.8"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- 规则列表 -->
+                <DataGrid ItemsSource="{Binding NetworkRules}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          GridLinesVisibility="Horizontal"
+                          Background="Transparent"
+                          CanUserSortColumns="True"
+                          RowHeight="60">
+                    <DataGrid.Columns>
+                        <!-- 域名 -->
+                        <DataGridTemplateColumn Header="{DynamicResource Network_Domain}" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Domain}" 
+                                               VerticalAlignment="Center"
+                                               Margin="12,0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        
+                        <!-- 描述 -->
+                        <DataGridTemplateColumn Header="{DynamicResource Network_Description}" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Description}" 
+                                               VerticalAlignment="Center"
+                                               Margin="12,0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- 状态 -->
+                        <DataGridTemplateColumn Header="{DynamicResource Network_Status}" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="models:NetworkRule">
+                                    <ToggleSwitch IsChecked="{Binding IsEnabled}" 
+                                                  OnContent="{DynamicResource Network_Enabled}" 
+                                                  OffContent="{DynamicResource Network_Disabled}"
+                                                  VerticalAlignment="Center"
+                                                  HorizontalAlignment="Center"
+                                                  Margin="0,0,0,0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- 操作 -->
+                        <DataGridTemplateColumn Header="{DynamicResource AppManagement_Actions}" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="models:NetworkRule">
+                                    <Button Command="{Binding $parent[UserControl].((vm:NetworkManagementViewModel)DataContext).RemoveRuleCommand}"
+                                            CommandParameter="{Binding}"
+                                            Classes="danger" Width="32" Height="32" Padding="0"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Center">
+                                        <fluent:SymbolIcon Symbol="Delete" Width="14" Height="14"/>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
