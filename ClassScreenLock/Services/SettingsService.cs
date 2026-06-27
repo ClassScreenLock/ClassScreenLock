@@ -20,6 +20,7 @@ public class SettingsService
     private static readonly string ScreenshotSettingsPath = Path.Combine(DataDirectory, "screenshotsettings.json");
     private static readonly string BlockageSettingsPath = Path.Combine(DataDirectory, "softwareblockage.json");
     private static readonly string AutomationSettingsDir = Path.Combine(DataDirectory, "automation");
+    private static readonly string ScreenMonitorSettingsPath = Path.Combine(DataDirectory, "screenmonitor.json");
     private static readonly string OldLockSettingsPath = Path.Combine(DataDirectory, "LockSettings.json");
 
     private static SettingsModel? _general;
@@ -27,6 +28,7 @@ public class SettingsService
     private static ScreenshotSettingsModel? _screenshot;
     private static SoftwareBlockageModel? _blockage;
     private static AutomationSettingsModel? _automation;
+    private static ScreenMonitorSettingsModel? _screenMonitor;
     private static readonly object _lockObj = new();
     public static event Action? GeneralChanged;
 
@@ -95,6 +97,18 @@ public class SettingsService
             lock (_lockObj)
             {
                 return _blockage ??= LoadSettings<SoftwareBlockageModel>(BlockageSettingsPath);
+            }
+        }
+    }
+
+    public static ScreenMonitorSettingsModel ScreenMonitor
+    {
+        get
+        {
+            if (_screenMonitor != null) return _screenMonitor;
+            lock (_lockObj)
+            {
+                return _screenMonitor ??= LoadSettings<ScreenMonitorSettingsModel>(ScreenMonitorSettingsPath);
             }
         }
     }
@@ -235,6 +249,7 @@ public class SettingsService
     public static void SaveLock(LockSettingsModel settings) => SaveSettingsInternal(LockSettingsPath, settings);
     public static void SaveScreenshot(ScreenshotSettingsModel settings) => SaveSettingsInternal(ScreenshotSettingsPath, settings);
     public static void SaveBlockage(SoftwareBlockageModel settings) => SaveSettingsInternal(BlockageSettingsPath, settings);
+    public static void SaveScreenMonitor(ScreenMonitorSettingsModel settings) => SaveSettingsInternal(ScreenMonitorSettingsPath, settings);
     public static void SaveAutomation(AutomationSettingsModel settings)
     {
         lock (_lockObj)
@@ -303,6 +318,7 @@ public class SettingsService
                 else if (path == LockSettingsPath) _lock = settings as LockSettingsModel;
                 else if (path == ScreenshotSettingsPath) _screenshot = settings as ScreenshotSettingsModel;
                 else if (path == BlockageSettingsPath) _blockage = settings as SoftwareBlockageModel;
+                else if (path == ScreenMonitorSettingsPath) _screenMonitor = settings as ScreenMonitorSettingsModel;
                 else if (path.StartsWith(AutomationSettingsDir, StringComparison.OrdinalIgnoreCase)) { _automation = settings as AutomationSettingsModel; _lastAutomationPath = path; }
                 
                 // 保存任何设置文件时都异步更新加密备份，确保数据保护服务不会还原旧数据
@@ -331,11 +347,16 @@ public class SettingsService
         if (File.Exists(path))
         {
             var backupPath = path + ".bak";
-            // File.Replace 在某些环境下可能不稳定，使用简单的 Move 替代
+            // 使用 Move 代替 Copy+Delete，避免 Delete 触发 FileSystemWatcher 捕获文件缺失状态
             if (File.Exists(backupPath)) File.Delete(backupPath);
-            File.Copy(path, backupPath);
-            File.Delete(path);
+            File.Move(path, backupPath);
             File.Move(tempPath, path);
+
+            // 清理备份
+            if (File.Exists(backupPath))
+            {
+                try { File.Delete(backupPath); } catch { }
+            }
         }
         else
         {
@@ -371,6 +392,7 @@ public class SettingsService
     public static void UpdateLock(Action<LockSettingsModel> action) { action(Lock); SaveLock(Lock); }
     public static void UpdateScreenshot(Action<ScreenshotSettingsModel> action) { action(Screenshot); SaveScreenshot(Screenshot); }
     public static void UpdateBlockage(Action<SoftwareBlockageModel> action) { action(Blockage); SaveBlockage(Blockage); }
+    public static void UpdateScreenMonitor(Action<ScreenMonitorSettingsModel> action) { action(ScreenMonitor); SaveScreenMonitor(ScreenMonitor); }
     public static void UpdateAutomation(Action<AutomationSettingsModel> action)
     {
         lock (_lockObj)

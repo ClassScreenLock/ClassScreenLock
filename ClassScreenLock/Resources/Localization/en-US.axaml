@@ -842,4 +842,5 @@
     <x:String x:Key="QA_Desc_Services">Open Windows services</x:String>
     <x:String x:Key="QA_Desc_CheckUpdate">Check for new version</x:String>
     <x:String x:Key="QA_Desc_Help">Open help &amp; repository</x:String>
+
 </ResourceDictionary>

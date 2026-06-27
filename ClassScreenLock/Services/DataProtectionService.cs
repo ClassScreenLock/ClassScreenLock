@@ -26,6 +26,7 @@ public class DataProtectionService
     private readonly object _syncLock = new();
     private readonly object _fileLock = new();
     private bool _isSyncing = false;
+    private bool _isInitializationInProgress = false;
     private DateTime _lastSyncTime = DateTime.MinValue;
     private const int SyncCooldownMs = 500; // 500 毫秒冷却时间
     private const int MaxLogEntries = 100; // 最多保留 100 条日志
@@ -86,6 +87,11 @@ public class DataProtectionService
         {
             LogService.Instance.Log("Error", "DataProtection", "SetSystemHidden", $"设置文件系统隐藏失败：{ex.Message}");
         }
+    }
+
+    public void SetInitializationInProgress(bool inProgress)
+    {
+        _isInitializationInProgress = inProgress;
     }
 
     public void EnsureAllFilesProtected()
@@ -234,26 +240,32 @@ public class DataProtectionService
 
     private void OnDataFileChanged(object sender, FileSystemEventArgs e)
     {
+        // 如果初始化正在进行，跳过同步
+        if (_isInitializationInProgress)
+        {
+            return;
+        }
+
         var ext = Path.GetExtension(e.FullPath);
         var protectedExtensions = new[] { ".dat", ".hash", ".bak" };
-        
+
         if (protectedExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
         {
             SetSystemHiddenFile(e.FullPath);
         }
-        
-        if (Path.GetFileName(e.FullPath) == "logs.json" || 
+
+        if (Path.GetFileName(e.FullPath) == "logs.json" ||
             ext.Equals(".tmp", StringComparison.OrdinalIgnoreCase))
             return;
-        
+
         var now = DateTime.Now;
         if (_isSyncing || (now - _lastSyncTime).TotalMilliseconds < SyncCooldownMs)
             return;
-        
+
         _isSyncing = true;
         _lastSyncTime = now;
-        
-        Task.Run(async () => 
+
+        Task.Run(async () =>
         {
             try
             {
@@ -268,28 +280,34 @@ public class DataProtectionService
 
     private void OnDataFileRenamed(object sender, RenamedEventArgs e)
     {
+        // 如果初始化正在进行，跳过同步
+        if (_isInitializationInProgress)
+        {
+            return;
+        }
+
         var ext = Path.GetExtension(e.FullPath);
         var protectedExtensions = new[] { ".dat", ".hash", ".bak" };
-        
+
         if (protectedExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
         {
             SetSystemHiddenFile(e.FullPath);
         }
-        
-        if (Path.GetFileName(e.FullPath) == "logs.json" || 
+
+        if (Path.GetFileName(e.FullPath) == "logs.json" ||
             Path.GetFileName(e.OldFullPath) == "logs.json" ||
             ext.Equals(".tmp", StringComparison.OrdinalIgnoreCase) ||
             Path.GetExtension(e.OldFullPath).Equals(".tmp", StringComparison.OrdinalIgnoreCase))
             return;
-        
+
         var now = DateTime.Now;
         if (_isSyncing || (now - _lastSyncTime).TotalMilliseconds < SyncCooldownMs)
             return;
-        
+
         _isSyncing = true;
         _lastSyncTime = now;
-        
-        Task.Run(async () => 
+
+        Task.Run(async () =>
         {
             try
             {
@@ -539,17 +557,54 @@ public class DataProtectionService
 
             if (needsRestore)
             {
+                // 在恢复之前，先保存 init_state.json 的完整内容，防止备份覆盖导致初始化状态回退
+                string? savedInitStateJson = null;
+                var initStatePath = Path.Combine(DataDirectory, "init_state.json");
+                try
+                {
+                    if (File.Exists(initStatePath))
+                    {
+                        savedInitStateJson = await File.ReadAllTextAsync(initStatePath);
+                    }
+                }
+                catch { }
+
                 var restored = await RestoreFromBackupAsync(backupData);
                 if (restored)
                 {
-                    // 恢复数据后重新加载初始化状态，避免进入重新初始化流程
+                    // 智能判断是否需要重载初始化状态
+                    // 只有当备份数据比当前状态更"完成"时才重载
                     try
                     {
+                        // 重载状态（此时磁盘上的 init_state.json 可能已被备份覆盖）
                         InitializationService.Instance.ReloadState();
+                        var reloadedRequiresInit = InitializationService.Instance.RequiresInitialization;
+
+                        // 如果恢复后需要初始化但恢复前我们保存了完成的 init_state.json
+                        // 说明备份中的 init_state.json 是未完成状态，需要写回正确的版本
+                        if (reloadedRequiresInit && savedInitStateJson != null)
+                        {
+                            LogService.Instance.Log("Warning", "DataProtection", "ReloadInit",
+                                "恢复的数据是未完成初始化状态，正在修复...");
+                            try
+                            {
+                                // 写回恢复前保存的正确 init_state.json
+                                await File.WriteAllTextAsync(initStatePath, savedInitStateJson);
+                                InitializationService.Instance.ReloadState();
+                                LogService.Instance.Log("Info", "DataProtection", "ReloadInit",
+                                    "初始化状态已修复为完成状态");
+                            }
+                            catch (Exception writeEx)
+                            {
+                                LogService.Instance.Log("Error", "DataProtection", "ReloadInit",
+                                    $"修复 init_state.json 失败：{writeEx.Message}");
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
-                        LogService.Instance.Log("Warning", "DataProtection", "ReloadInit", $"重新加载初始化状态失败：{ex.Message}");
+                        LogService.Instance.Log("Warning", "DataProtection", "ReloadInit",
+                            $"重新加载初始化状态失败：{ex.Message}");
                     }
                 }
                 return restored;

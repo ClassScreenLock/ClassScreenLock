@@ -432,6 +432,9 @@ public class AutomationService
         LogService.Instance.Log("自动化", "执行恢复行动", "系统", $"工作流 [{workflow.Name}] 已触发恢复");
         ExecuteWorkflowActions(workflow.RecoveryActions);
         workflow.PreviouslySatisfied = false;
+
+        // 立即保存，确保状态持久化
+        SaveAutomationSettings();
     }
 
     private void ExecuteWorkflowActions(System.Collections.ObjectModel.ObservableCollection<AutomationAction> actions)
@@ -456,6 +459,24 @@ public class AutomationService
         catch (Exception ex)
         {
             LogService.Instance.Log("自动化", "保存失败", "错误", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// 重置所有工作流的状态（用于数据恢复后重新评估）
+    /// </summary>
+    public void ResetWorkflowStates()
+    {
+        var settings = SettingsService.Automation;
+        if (settings?.Workflows != null)
+        {
+            foreach (var workflow in settings.Workflows)
+            {
+                // 重置 PreviouslySatisfied，让工作流重新评估
+                workflow.PreviouslySatisfied = false;
+            }
+            SettingsService.SaveAutomation(settings);
+            LogService.Instance.Log("自动化", "状态重置", "系统", "工作流状态已重置");
         }
     }
 

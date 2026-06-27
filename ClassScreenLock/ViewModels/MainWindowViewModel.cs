@@ -381,6 +381,11 @@ public partial class MainWindowViewModel : ViewModelBase
         editor.DataContext = vm;
         if (_mainWindow != null)
         {
+            // 同步主窗口的 dark 类，确保新窗口使用相同的主题
+            if (_mainWindow.Classes.Contains("dark") && !editor.Classes.Contains("dark"))
+            {
+                editor.Classes.Add("dark");
+            }
             editor.ShowDialog(_mainWindow);
         }
     }

@@ -3,15 +3,16 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net9.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <NuGetAudit>false</NuGetAudit>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>ClassScreenLock.ico</ApplicationIcon>
         <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
-    <Version>1.15.35.3426</Version>
-    <AssemblyVersion>1.15.35.3426</AssemblyVersion>
-    <FileVersion>1.15.35.3426</FileVersion>
-    <InformationalVersion>1.15.35.3426</InformationalVersion>
+    <Version>1.15.36.3545</Version>
+    <AssemblyVersion>1.15.36.3545</AssemblyVersion>
+    <FileVersion>1.15.36.3545</FileVersion>
+    <InformationalVersion>1.15.36.3545</InformationalVersion>
     <Copyright>© 旧故里小牛（jiugulixiaoniu）</Copyright>
     <Authors>旧故里小牛（jiugulixiaoniu）</Authors>
     <Company>旧故里小牛（jiugulixiaoniu）</Company>
@@ -43,7 +44,6 @@
         <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10" />
         
-        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Include="Avalonia.Diagnostics" Version="11.3.10" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
         <PackageReference Include="FFmpeg.GPL" Version="20260523.1.0" />
@@ -54,6 +54,9 @@
         <PackageReference Include="Projektanker.Icons.Avalonia" Version="9.6.2" />
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.6.2" />
         <PackageReference Include="QRCoder" Version="1.7.0" />
+        <!-- Windows.Graphics.Capture 依赖 D3D 设备 -->
+        <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
+        <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
         <PackageReference Include="SocketIOClient" Version="4.0.4" />
         <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />

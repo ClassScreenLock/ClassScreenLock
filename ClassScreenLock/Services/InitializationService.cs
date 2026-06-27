@@ -45,15 +45,14 @@ public class InitializationService
         {
             lock (_lock)
             {
-                var adminConfigured = IsAdminConfiguredNoLock();
-                if (adminConfigured && File.Exists(StatePath))
-                {
-                    return false;
-                }
-
+                // 先完整验证所有步骤，不再提前返回
                 var include2fa = ShouldIncludeTwoFactorBinding();
                 var twoFactorDone = include2fa ? _state.TwoFactorBindingDone : true;
-                return !(_state.UserAgreementDone &&
+
+                // 检查管理员是否配置完成（包括集控端账号）
+                var adminConfigured = IsAdminConfiguredNoLock();
+
+                var result = !(_state.UserAgreementDone &&
                          _state.SystemConfigDone &&
                          _state.UserPreferencesDone &&
                          _state.MonitoringConfigDone &&
@@ -62,6 +61,21 @@ public class InitializationService
                          twoFactorDone &&
                          _state.AppBlockingDone &&
                          _state.NetworkBlockingDone);
+
+                // 诊断日志：逐个输出每个条件的值，用于排查每次启动进入初始化的问题
+                LogService.Instance.Log("Init", "RequiresInit_Diag", "System",
+                    $"结果={result} | " +
+                    $"UserAgreement={_state.UserAgreementDone} " +
+                    $"SystemConfig={_state.SystemConfigDone} " +
+                    $"UserPrefs={_state.UserPreferencesDone} " +
+                    $"Monitoring={_state.MonitoringConfigDone} " +
+                    $"Permission={_state.PermissionSetupDone} " +
+                    $"AdminConfigured={adminConfigured} " +
+                    $"TwoFactorDone={twoFactorDone}(include2fa={include2fa}) " +
+                    $"AppBlocking={_state.AppBlockingDone} " +
+                    $"NetworkBlocking={_state.NetworkBlockingDone}");
+
+                return result;
             }
         }
     }
@@ -179,12 +193,25 @@ public class InitializationService
 
     private static bool IsAdminConfiguredNoLock()
     {
-        if (!AccountService.Instance.IsInitialized)
+        // 先检查 AccountService 是否有超级管理员（包括集控端账号）
+        var acctInitialized = AccountService.Instance.IsInitialized;
+        if (acctInitialized)
         {
-            return false;
+            // 检查是否有有效的超级管理员（不论是本地还是集控端）
+            var hasValidSuperAdmin = AccountService.Instance.HasValidSuperAdmin();
+            if (hasValidSuperAdmin)
+            {
+                LogService.Instance.Log("Init", "AdminCheck", "System", "管理员已配置（AccountService：有有效超级管理员）");
+                return true;
+            }
         }
+
+        // 再检查 SecurityService 的密码哈希（作为备用验证）
         var passwordHash = SecurityService.Instance.Settings.PasswordHash;
-        return !string.IsNullOrWhiteSpace(passwordHash);
+        var hasHash = !string.IsNullOrWhiteSpace(passwordHash);
+        LogService.Instance.Log("Init", "AdminCheck", "System",
+            $"AccountService.IsInitialized={acctInitialized}, HasValidSuperAdmin={AccountService.Instance.HasValidSuperAdmin()}, PasswordHash非空={hasHash}");
+        return hasHash;
     }
 
     private void LoadStateInternal()
@@ -194,6 +221,7 @@ public class InitializationService
             if (!File.Exists(StatePath))
             {
                 _state = new InitState { StartedAt = DateTime.Now };
+                LogService.Instance.Log("Init", "LoadState", "System", $"init_state.json 不存在（路径：{StatePath}），创建新的空状态");
                 SaveStateInternal();
                 return;
             }
@@ -201,10 +229,15 @@ public class InitializationService
             var json = File.ReadAllText(StatePath);
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             _state = JsonSerializer.Deserialize<InitState>(json, options) ?? new InitState { StartedAt = DateTime.Now };
+            LogService.Instance.Log("Init", "LoadState", "System",
+                $"已加载 init_state.json：UA={_state.UserAgreementDone} SC={_state.SystemConfigDone} UP={_state.UserPreferencesDone} " +
+                $"MC={_state.MonitoringConfigDone} PS={_state.PermissionSetupDone} AA={_state.AdminAccountDone} " +
+                $"2FA={_state.TwoFactorBindingDone} AB={_state.AppBlockingDone} NB={_state.NetworkBlockingDone}");
         }
-        catch
+        catch (Exception ex)
         {
             _state = new InitState { StartedAt = DateTime.Now };
+            LogService.Instance.Log("Error", "Init", "LoadState", $"加载 init_state.json 失败：{ex.Message}");
         }
     }
 
@@ -220,17 +253,30 @@ public class InitializationService
             var json = JsonSerializer.Serialize(_state, options);
             var tmp = StatePath + ".tmp";
             File.WriteAllText(tmp, json);
+
+            // 使用原子替换策略，避免 Delete 触发 FileSystemWatcher 在间隔期捕获到文件缺失
+            // 步骤：写临时文件 → 原文件重命名为备份 → 临时文件重命名为正式文件
             if (File.Exists(StatePath))
             {
                 var bak = StatePath + ".bak";
+                // 删除旧备份文件（.bak 被 FileSystemWatcher 排除，不影响同步）
                 if (File.Exists(bak)) File.Delete(bak);
-                File.Copy(StatePath, bak, true);
-                File.Delete(StatePath);
+                // 重命名原文件为备份（产生 Renamed 事件，目标为 .bak，被 watcher 排除）
+                File.Move(StatePath, bak);
             }
+            // 重命名临时文件为正式文件（产生 Renamed 事件，源为 .tmp，被 watcher 排除）
             File.Move(tmp, StatePath);
+
+            // 清理备份文件
+            var oldBak = StatePath + ".bak";
+            if (File.Exists(oldBak))
+            {
+                try { File.Delete(oldBak); } catch { }
+            }
         }
-        catch
+        catch (Exception ex)
         {
+            LogService.Instance.Log("Error", "Init", "SaveState", $"保存初始化状态失败：{ex.Message}");
         }
     }
 

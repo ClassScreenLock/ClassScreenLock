@@ -12,7 +12,7 @@ public partial class AboutViewModel : ViewModelBase
     private string _appName = "ClassScreenLock";
     
     [ObservableProperty]
-    private string _appVersion = "V1.15.35.3426 - Creeper";
+    private string _appVersion = "V1.15.36.3545 - Creeper";
     
     [ObservableProperty]
     private string _appDescription = "一款专业的课堂屏幕锁定工具，帮助教师管理课堂环境，提高教学效率。";

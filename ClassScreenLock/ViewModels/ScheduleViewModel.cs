@@ -151,6 +151,18 @@ public partial class ScheduleViewModel : ViewModelBase
 
         _breakTimer = new DispatcherTimer(TimeSpan.FromSeconds(10), DispatcherPriority.Background, (_, _) => UpdateBreakState());
         _breakTimer.Start();
+
+        // 监听集控课表同步完成事件，自动刷新UI
+        WeeklyScheduleService.Instance.OnScheduleSynced += () =>
+        {
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                LoadSchedules();
+                RefreshWeekOptions();
+                RefreshWeeklySelection();
+                RefreshTodayScheduleSummary();
+            });
+        };
     }
 
     private void InitializeOptions()

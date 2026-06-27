@@ -320,6 +320,33 @@ public class SecurityService
         try
         {
             var settings = Settings;
+
+            // 检查 AccountService 是否已有管理员（包括集控端）
+            if (AccountService.Instance.HasValidSuperAdmin())
+            {
+                // 如果 SecurityService 没有密码哈希，同步密码
+                if (string.IsNullOrWhiteSpace(settings.PasswordHash))
+                {
+                    // 找到超级管理员账户
+                    var superAdmin = AccountService.Instance.Accounts.FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin && !a.IsDisabled);
+                    if (superAdmin != null)
+                    {
+                        // 使用提供的密码初始化 SecurityService
+                        settings.AdminUsername = username;
+                        settings.PasswordHash = BCryptNet.HashPassword(password, workFactor: WorkFactor);
+                        settings.LastPasswordChange = DateTime.Now;
+                        settings.LastLeakCheck = DateTime.Now;
+                        settings.FailedCount = 0;
+                        settings.LockoutUntil = null;
+
+                        SaveSettings(settings);
+                        LogService.Instance.Log("Security", "AdminInitializedFromAccountService", username, "从 AccountService 同步初始化");
+                    }
+                }
+                LogService.Instance.Log("Security", "AdminInitializeSkipped", username, "密码已设置或有现有管理员");
+                return true;
+            }
+
             // 只有当密码哈希为空时才允许初始化
             if (!string.IsNullOrWhiteSpace(settings.PasswordHash))
             {
@@ -644,6 +671,32 @@ public class SecurityService
         }
     }
 
+    /// <summary>
+    /// 同步 SecurityService 与 AccountService 的状态（用于集控端账号下发后同步）
+    /// </summary>
+    public void SyncWithAccountService()
+    {
+        lock (_lock)
+        {
+            var superAdmin = AccountService.Instance.Accounts
+                .FirstOrDefault(a => a.AccountType == AccountType.SuperAdmin && !a.IsDisabled);
+
+            if (superAdmin != null)
+            {
+                var settings = Settings;
+
+                // 同步用户名
+                if (string.IsNullOrWhiteSpace(settings.AdminUsername) ||
+                    settings.AdminUsername != superAdmin.Username)
+                {
+                    settings.AdminUsername = superAdmin.Username;
+                    SaveSettings(settings);
+                    LogService.Instance.Log("Security", "SyncedWithAccountService", superAdmin.Username, "用户名已同步");
+                }
+            }
+        }
+    }
+
     public async Task<HibpCheckResult> CheckPasswordLeakAsync(string password)
     {
         var result = new HibpCheckResult();
@@ -741,16 +794,24 @@ public class SecurityService
             {
                 // 如果文件不存在，返回一个默认的设置对象
                 // 不要在 LoadSettings 中调用 SaveSettings，以免引起锁嵌套或文件访问冲突
+                LogService.Instance.Log("Security", "LoadSettings", "System", $"security.json 不存在（路径：{SecuritySettingsPath}），使用默认设置");
                 return new SecuritySettingsModel();
             }
 
             var json = File.ReadAllText(SecuritySettingsPath);
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            return JsonSerializer.Deserialize<SecuritySettingsModel>(json, options) ?? new SecuritySettingsModel();
+            var settings = JsonSerializer.Deserialize<SecuritySettingsModel>(json, options) ?? new SecuritySettingsModel();
+            LogService.Instance.Log("Security", "LoadSettings", "System",
+                $"已加载 security.json：AdminUsername={settings.AdminUsername}, " +
+                $"PasswordHash非空={!string.IsNullOrWhiteSpace(settings.PasswordHash)}, " +
+                $"Is2FAEnabled={settings.IsTwoFactorEnabled}, " +
+                $"LoginMode={settings.LoginVerificationMode}, " +
+                $"文件路径={SecuritySettingsPath}");
+            return settings;
         }
         catch (Exception ex)
         {
-            LogService.Instance.Log("Security", "LoadSettingsError", "System", ex.Message);
+            LogService.Instance.Log("Security", "LoadSettingsError", "System", $"加载 security.json 失败：{ex.Message}");
             return new SecuritySettingsModel();
         }
     }
@@ -771,7 +832,7 @@ public class SecurityService
             };
             var json = JsonSerializer.Serialize(settings, options);
 
-            // 使用简单、原子的方式写入文件
+            // 使用原子替换写入文件，避免 Delete 触发 FileSystemWatcher 捕获缺失状态
             var tempPath = SecuritySettingsPath + ".tmp";
             File.WriteAllText(tempPath, json);
 
@@ -779,11 +840,17 @@ public class SecurityService
             {
                 var backupPath = SecuritySettingsPath + ".bak";
                 if (File.Exists(backupPath)) File.Delete(backupPath);
-                File.Copy(SecuritySettingsPath, backupPath, true);
-                File.Delete(SecuritySettingsPath);
+                File.Move(SecuritySettingsPath, backupPath);
             }
 
             File.Move(tempPath, SecuritySettingsPath);
+
+            // 清理备份
+            var oldBak = SecuritySettingsPath + ".bak";
+            if (File.Exists(oldBak))
+            {
+                try { File.Delete(oldBak); } catch { }
+            }
 
             lock (_lock)
             {

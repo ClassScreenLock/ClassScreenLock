@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Linq;
 using System.IO;
 using System.Text.Json;
@@ -75,6 +76,9 @@ public class LockScreenService : INotifyPropertyChanged
     private bool _wasManuallyUnlockedInBreak;
     private (TimePoint? current, TimePoint? next) _lastLockScheduleSnapshot;
     private bool _isRestoringFromStateFile = false;
+#pragma warning disable CS0414 // 字段已被赋值但从未使用过它的值
+    private bool _initializationCompleted = false;
+#pragma warning restore CS0414 // 字段已被赋值但从未使用过它的值
     private DateTime? _lockStartTime;
     private FileStream? _lockStateFileStream;
     private bool? _previousNetworkLockState;
@@ -94,19 +98,50 @@ public class LockScreenService : INotifyPropertyChanged
 
         var interval = Math.Max(1, settings.LockStateFileCheckIntervalSeconds) * 1000;
         _lockStateCheckTimer?.Dispose();
-        _lockStateCheckTimer = new Timer(_ => CheckLockStateFile(), null, 0, interval);
+
+        // 延迟启动定时器，确保 RestoreLockStateOnStartup 先执行
+        var initialDelay = _initializationCompleted ? 0 : 2000;
+        _lockStateCheckTimer = new Timer(_ => CheckLockStateFile(), null, initialDelay, interval);
         LogService.Instance.Log("Info", "LockState", "Check", $"已启动锁屏状态文件检查，间隔: {settings.LockStateFileCheckIntervalSeconds} 秒");
+    }
+
+    /// <summary>
+    /// 注册远程锁屏/解锁的 WebSocket 事件（由 App 启动时调用）。
+    /// </summary>
+    public void InitializeRemoteControl()
+    {
+        WebSocketService.Instance.OnRemoteLock += () =>
+        {
+            LogService.Instance.Log("Info", "LockScreen", "Remote", "集控端触发远程锁屏");
+            ActivateLock(LockMode.Full, false);
+        };
+        WebSocketService.Instance.OnRemoteUnlock += () =>
+        {
+            LogService.Instance.Log("Info", "LockScreen", "Remote", "集控端触发远程解锁");
+            DeactivateLock();
+        };
+
+        // WebSocket 连接后延迟发送当前锁屏状态
+        Task.Run(async () =>
+        {
+            await Task.Delay(3000);
+            _ = WebSocketService.Instance.SendLockStateAsync(IsLocked);
+        });
+
+        LogService.Instance.Log("Info", "LockScreen", "Remote", "远程锁屏控制已注册");
     }
 
     public void RestoreLockStateOnStartup()
     {
-        if (CannotRestoreLockState())
-        {
-            return;
-        }
-
+        _isRestoringFromStateFile = true;
+        
         try
         {
+            if (CannotRestoreLockState())
+            {
+                return;
+            }
+
             var lockStateData = LoadSavedLockState();
             if (!ValidateLockState(lockStateData))
             {
@@ -118,6 +153,10 @@ public class LockScreenService : INotifyPropertyChanged
         catch (Exception ex)
         {
             LogService.Instance.Log("Error", "LockState", "Startup", $"检查锁屏状态文件失败: {ex.Message}");
+        }
+        finally
+        {
+            _initializationCompleted = true;
         }
     }
 
@@ -522,6 +561,9 @@ public class LockScreenService : INotifyPropertyChanged
         _lastLockScheduleSnapshot = ScheduleService.Instance.GetCurrentAndNextTimePoint(DateTime.Now.TimeOfDay);
         
         ShowAutoUnlockNotification();
+
+        // 通知集控端锁屏状态
+        _ = WebSocketService.Instance.SendLockStateAsync(true);
     }
 
     public void DeactivateLock()
@@ -533,6 +575,10 @@ public class LockScreenService : INotifyPropertyChanged
         StopProtectionHooks();
         CloseProtectionInfoWindow();
         DisableProtections();
+        DeleteLockStateFile();
+
+        // 通知集控端解锁状态
+        _ = WebSocketService.Instance.SendLockStateAsync(false);
     }
 
     public void ManualDeactivateLock()
@@ -1264,16 +1310,21 @@ public class LockScreenService : INotifyPropertyChanged
                 try
                 {
                     var process = Process.GetProcessById(stateData.ProcessId);
+                    // 检查进程名是否匹配
                     if (process.ProcessName.Equals("ClassScreenLock", StringComparison.OrdinalIgnoreCase))
                     {
-                        return null;
+                        return null; // 自己的进程，不恢复
                     }
+                    // 如果进程名不匹配，说明进程 ID 可能被其他进程复用
+                    // 继续返回 stateData，允许恢复（因为这不是当前实例）
                 }
                 catch (ArgumentException)
                 {
+                    // 进程不存在，允许恢复
                 }
                 catch (InvalidOperationException)
                 {
+                    // 进程不存在，允许恢复
                 }
             }
 

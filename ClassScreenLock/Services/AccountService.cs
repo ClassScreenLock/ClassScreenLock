@@ -35,6 +35,11 @@ public class AccountService
 
         LoadAccounts();
         _isInitialized = _accounts.Any(a => a.AccountType == AccountType.SuperAdmin);
+        LogService.Instance.Log("Account", "Init", "System",
+            $"AccountService 初始化完成：账户数={_accounts.Count}, IsInitialized={_isInitialized}, " +
+            $"超管数={_accounts.Count(a => a.AccountType == AccountType.SuperAdmin)}, " +
+            $"有效超管数={_accounts.Count(a => a.AccountType == AccountType.SuperAdmin && !a.IsDisabled)}, " +
+            $"文件路径={AccountsPath}");
     }
 
     public bool IsInitialized
@@ -89,6 +94,29 @@ public class AccountService
         lock (_lock)
         {
             return _accounts.ToList();
+        }
+    }
+
+    /// <summary>
+    /// 检查是否有有效的超级管理员（包括集控端账号）
+    /// </summary>
+    public bool HasValidSuperAdmin()
+    {
+        lock (_lock)
+        {
+            // 检查是否有未禁用的超级管理员（包括集控端和本地）
+            return _accounts.Any(a => a.AccountType == AccountType.SuperAdmin && !a.IsDisabled);
+        }
+    }
+
+    /// <summary>
+    /// 检查是否有本地超级管理员（不包括集控端账号）
+    /// </summary>
+    public bool HasLocalSuperAdmin()
+    {
+        lock (_lock)
+        {
+            return _accounts.Any(a => a.AccountType == AccountType.SuperAdmin && !a.IsFromOrganization && !a.IsDisabled);
         }
     }
 
@@ -672,18 +700,26 @@ public class AccountService
             var tempPath = AccountsPath + ".tmp";
             File.WriteAllText(tempPath, json);
 
+            // 使用原子替换策略，避免 Delete 触发 FileSystemWatcher 在间隔期捕获到文件缺失
             if (File.Exists(AccountsPath))
             {
                 var backup = AccountsPath + ".bak";
                 if (File.Exists(backup)) File.Delete(backup);
-                File.Copy(AccountsPath, backup);
-                File.Delete(AccountsPath);
+                File.Move(AccountsPath, backup);
             }
 
             File.Move(tempPath, AccountsPath);
+
+            // 清理备份
+            var oldBak = AccountsPath + ".bak";
+            if (File.Exists(oldBak))
+            {
+                try { File.Delete(oldBak); } catch { }
+            }
         }
-        catch
+        catch (Exception ex)
         {
+            LogService.Instance.Log("Error", "Account", "SaveAccounts", $"保存账户文件失败：{ex.Message}");
         }
     }
 }

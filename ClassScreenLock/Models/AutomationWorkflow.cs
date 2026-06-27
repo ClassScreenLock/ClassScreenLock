@@ -91,7 +91,7 @@ public class AutomationWorkflow : ObservableObject
         set => SetProperty(ref _lastTriggeredAt, value);
     }
 
-    [JsonIgnore]
+    [JsonPropertyName("previouslySatisfied")]
     public bool PreviouslySatisfied
     {
         get => _previouslySatisfied;

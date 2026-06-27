@@ -315,6 +315,9 @@
     <x:String x:Key="Tray_SecurityCenter">安全中心</x:String>
     <x:String x:Key="Tray_OpenLockSettings">锁屏设置</x:String>
     <x:String x:Key="Tray_OpenSchedule">时间计划</x:String>
+    <x:String x:Key="Tray_Header">主控制</x:String>
+    <x:String x:Key="Tray_HeaderTools">管理工具</x:String>
+    <x:String x:Key="Tray_HeaderSettings">设置</x:String>
     <x:String x:Key="Initialization_Title">首次启动引导</x:String>
     <x:String x:Key="Initialization_Subtitle">完成基本配置后即可开始使用</x:String>
     <x:String x:Key="Initialization_Steps">步骤</x:String>
@@ -846,4 +849,5 @@
     <x:String x:Key="QA_Desc_Services">打开 Windows 系统服务</x:String>
     <x:String x:Key="QA_Desc_CheckUpdate">检查是否有新版本</x:String>
     <x:String x:Key="QA_Desc_Help">打开帮助与开源仓库</x:String>
+
 </ResourceDictionary>

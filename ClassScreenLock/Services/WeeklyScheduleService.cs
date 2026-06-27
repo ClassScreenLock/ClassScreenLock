@@ -14,6 +14,11 @@ namespace ClassScreenLock.Services;
 
 public class WeeklyScheduleService
 {
+    /// <summary>
+    /// 课表从集控端同步完成后触发，UI可监听此事件重新加载
+    /// </summary>
+    public event Action? OnScheduleSynced;
+
     private static readonly string WeeklyDirectory = Path.Combine(
         AppDomain.CurrentDomain.BaseDirectory,
         "Data",
@@ -24,7 +29,8 @@ public class WeeklyScheduleService
         WriteIndented = true,
         Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(allowIntegerValues: true) }
     };
 
     private static WeeklyScheduleService? _instance;
@@ -641,5 +647,84 @@ public class WeeklyScheduleService
     {
         var match = weekly.Subjects?.FirstOrDefault(s => s.SimplifiedName == label || s.Name == label);
         return match?.Name ?? label;
+    }
+
+    /// <summary>
+    /// 从集控中心的JSON数据同步课表
+    /// </summary>
+    /// <param name="scheduleJson">集控中心返回的课表JSON</param>
+    /// <returns>同步的周课表数量</returns>
+    public int SyncScheduleFromCentralized(string scheduleJson)
+    {
+        try
+        {
+            using var jsonDoc = JsonDocument.Parse(scheduleJson);
+            var root = jsonDoc.RootElement;
+
+            // 解析 weeklyCycleCount
+            if (root.TryGetProperty("weeklyCycleCount", out var cycleCountProp) && cycleCountProp.ValueKind == JsonValueKind.Number)
+            {
+                var count = cycleCountProp.GetInt32();
+                count = Math.Clamp(count, 1, 6);
+                SettingsService.UpdateGeneral(s => s.WeeklyCycleCount = count);
+            }
+
+            // 解析 termStartDate
+            if (root.TryGetProperty("termStartDate", out var termStartProp))
+            {
+                if (termStartProp.ValueKind == JsonValueKind.Null)
+                {
+                    SettingsService.UpdateGeneral(s => s.TermStartDate = null);
+                }
+                else if (termStartProp.ValueKind == JsonValueKind.String)
+                {
+                    var dateStr = termStartProp.GetString();
+                    if (DateTime.TryParse(dateStr, out var date))
+                    {
+                        SettingsService.UpdateGeneral(s => s.TermStartDate = date.Date);
+                    }
+                }
+            }
+
+            // 解析 weeklies 数组
+            if (!root.TryGetProperty("weeklies", out var weekliesProp) || weekliesProp.ValueKind != JsonValueKind.Array)
+            {
+                return 0;
+            }
+
+            int syncedCount = 0;
+            foreach (var weeklyElement in weekliesProp.EnumerateArray())
+            {
+                try
+                {
+                    var weekly = JsonSerializer.Deserialize<WeeklyScheduleFile>(weeklyElement.GetRawText(), JsonOptions);
+                    if (weekly != null)
+                    {
+                        // 确保 Days 完整
+                        if (weekly.Days == null || weekly.Days.Count == 0)
+                        {
+                            weekly.Days = new System.Collections.ObjectModel.ObservableCollection<WeeklyDaySchedule>();
+                            for (int d = 1; d <= 7; d++)
+                                weekly.Days.Add(new WeeklyDaySchedule { EnableDay = d });
+                        }
+                        SaveWeekly(weekly);
+                        syncedCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"同步单周课表失败: {ex.Message}");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"课表同步完成: {syncedCount} 周");
+            OnScheduleSynced?.Invoke();
+            return syncedCount;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"同步课表失败: {ex.Message}");
+            return 0;
+        }
     }
 }

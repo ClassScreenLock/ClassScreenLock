@@ -1,9 +1,13 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -456,9 +460,9 @@ public class NotificationService : IDisposable
 
         var key = $"{type}\n{title}\n{message}";
 
+        NotificationWindowContext? context = null;
         CancellationTokenSource? ctsToDispose = null;
         Task taskToWait = Task.CompletedTask;
-        CancellationToken token;
 
         lock (_notificationGate)
         {
@@ -479,9 +483,11 @@ public class NotificationService : IDisposable
             }
 
             _activeNotificationCts = new CancellationTokenSource();
-            token = _activeNotificationCts.Token;
+            context = new NotificationWindowContext();
+            context.Cts = _activeNotificationCts;
 
-            _activeNotificationTask = ShowNotificationCoreAsync(title, message, type, duration, token);
+            _activeNotificationTask = ShowNotificationCoreAsync(
+                title, message, type, duration, _activeNotificationCts.Token, context);
         }
 
         if (ctsToDispose != null)
@@ -489,7 +495,14 @@ public class NotificationService : IDisposable
             _ = taskToWait.ContinueWith(_ => ctsToDispose.Dispose(), TaskScheduler.Default);
         }
 
-        await _activeNotificationTask;
+        try
+        {
+            await _activeNotificationTask;
+        }
+        catch
+        {
+            // 忽略通知任务中的异常
+        }
     }
 
     #region ShowNotificationCoreAsync 重构方法
@@ -501,11 +514,13 @@ public class NotificationService : IDisposable
     {
         public Window? Window { get; set; }
         public Button? CloseButton { get; set; }
+        public Border? RootBorder { get; set; }
         public EventHandler<RoutedEventArgs>? CloseHandler { get; set; }
         public EventHandler<PointerEventArgs>? PointerEnteredHandler { get; set; }
         public EventHandler<PointerEventArgs>? PointerExitedHandler { get; set; }
-        public SolidColorBrush? CloseButtonForegroundBrush { get; set; }
         public bool IsDarkMode { get; set; }
+        public NotificationColors? Colors { get; set; }
+        public CancellationTokenSource? Cts { get; set; }
     }
 
     /// <summary>
@@ -513,23 +528,36 @@ public class NotificationService : IDisposable
     /// </summary>
     private class NotificationColors
     {
-        public SolidColorBrush BackgroundBrush { get; set; } = new SolidColorBrush(Colors.White);
-        public SolidColorBrush ForegroundBrush { get; set; } = new SolidColorBrush(Colors.Black);
-        public SolidColorBrush ChromeBrush { get; set; } = new SolidColorBrush(Colors.LightGray);
-        public SolidColorBrush BorderBrush { get; set; } = new SolidColorBrush(Colors.Blue);
-        public SolidColorBrush IconBrush { get; set; } = new SolidColorBrush(Colors.Blue);
-        public SolidColorBrush MessageBrush { get; set; } = new SolidColorBrush(Colors.Gray);
-        public SolidColorBrush CloseButtonForegroundBrush { get; set; } = new SolidColorBrush(Colors.Gray);
-        public SolidColorBrush IconBackgroundBrush { get; set; } = new SolidColorBrush(Colors.WhiteSmoke);
+        // 强调色 - 用于左侧条、图标、标题点缀
+        public Color AccentColor { get; set; } = Color.FromRgb(33, 150, 243);
+        public Color AccentColorLight { get; set; } = Color.FromRgb(100, 180, 255);
+
+        // 背景色 - 渐变
+        public Color BackgroundStart { get; set; } = Color.FromRgb(255, 255, 255);
+        public Color BackgroundEnd { get; set; } = Color.FromRgb(248, 250, 252);
+
+        // 文字色
+        public Color TitleColor { get; set; } = Color.FromRgb(15, 23, 42);
+        public Color MessageColor { get; set; } = Color.FromRgb(71, 85, 105);
+        public Color CloseButtonColor { get; set; } = Color.FromRgb(148, 163, 184);
+        public Color CloseButtonHoverColor { get; set; } = Color.FromRgb(239, 68, 68);
+
+        // 边框/分隔线
+        public Color BorderColor { get; set; } = Color.FromRgb(226, 232, 240);
+
+        // 图标容器背景
+        public Color IconBackgroundStart { get; set; } = Color.FromRgb(240, 245, 255);
+        public Color IconBackgroundEnd { get; set; } = Color.FromRgb(224, 239, 255);
+
+        // 阴影颜色
+        public Color ShadowColor { get; set; } = Color.FromArgb(60, 0, 0, 0);
     }
 
     /// <summary>
     /// 显示通知核心逻辑
     /// </summary>
-    private async Task ShowNotificationCoreAsync(string title, string message, string type, int duration, CancellationToken cancellationToken)
+    private async Task ShowNotificationCoreAsync(string title, string message, string type, int duration, CancellationToken cancellationToken, NotificationWindowContext context)
     {
-        var context = new NotificationWindowContext();
-
         try
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
@@ -538,17 +566,76 @@ public class NotificationService : IDisposable
 
                 context.IsDarkMode = IsDarkMode();
                 var colors = CreateNotificationColors(type, context.IsDarkMode);
-                context.CloseButtonForegroundBrush = colors.CloseButtonForegroundBrush;
+                context.Colors = colors;
 
                 context.Window = CreateNotificationWindow(title, colors);
                 var content = CreateNotificationContent(title, message, type, colors, context);
+                context.RootBorder = content;
                 context.Window.Content = content;
 
                 context.Window.Show();
                 CalculateAndSetNotificationPosition(context.Window);
+
+                // 出现动画 - 透明度淡入 + 缩放（在 UI 线程内同步执行）
+                try
+                {
+                    context.Window.Opacity = 0;
+                    context.Window.RenderTransform = new ScaleTransform(0.92, 0.92);
+
+                    var animation = new Animation
+                    {
+                        Duration = TimeSpan.FromMilliseconds(220),
+                        Easing = new CubicEaseOut(),
+                        FillMode = FillMode.Forward,
+                        Children =
+                        {
+                            new KeyFrame
+                            {
+                                Cue = new Cue(0),
+                                Setters = { new Setter(Window.OpacityProperty, 0d) }
+                            },
+                            new KeyFrame
+                            {
+                                Cue = new Cue(1),
+                                Setters = { new Setter(Window.OpacityProperty, 1d) }
+                            }
+                        }
+                    };
+                    _ = animation.RunAsync(context.Window);
+
+                    var transformAnimation = new Animation
+                    {
+                        Duration = TimeSpan.FromMilliseconds(220),
+                        Easing = new CubicEaseOut(),
+                        FillMode = FillMode.Forward,
+                        Children =
+                        {
+                            new KeyFrame
+                            {
+                                Cue = new Cue(0),
+                                Setters = { new Setter(Visual.RenderTransformProperty, new ScaleTransform(0.92, 0.92)) }
+                            },
+                            new KeyFrame
+                            {
+                                Cue = new Cue(1),
+                                Setters = { new Setter(Visual.RenderTransformProperty, new ScaleTransform(1.0, 1.0)) }
+                            }
+                        }
+                    };
+                    _ = transformAnimation.RunAsync(context.Window);
+                }
+                catch
+                {
+                    // 动画失败时直接显示
+                    if (context.Window != null)
+                    {
+                        context.Window.Opacity = 1;
+                        context.Window.RenderTransform = new ScaleTransform(1.0, 1.0);
+                    }
+                }
             });
 
-            await HandleNotificationAutoClose(duration, cancellationToken);
+            await HandleNotificationAutoClose(duration, cancellationToken, context);
         }
         catch (Exception ex)
         {
@@ -574,28 +661,137 @@ public class NotificationService : IDisposable
     /// </summary>
     private NotificationColors CreateNotificationColors(string type, bool isDarkMode)
     {
-        return new NotificationColors
+        // 每种类型使用鲜明的语义化色板，提升辨析度
+        if (isDarkMode)
         {
-            BackgroundBrush = isDarkMode
-                ? new SolidColorBrush(Color.FromRgb(32, 32, 32))
-                : new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-            ForegroundBrush = isDarkMode
-                ? new SolidColorBrush(Color.FromRgb(255, 255, 255))
-                : new SolidColorBrush(Color.FromRgb(0, 0, 0)),
-            ChromeBrush = isDarkMode
-                ? new SolidColorBrush(Color.FromRgb(58, 58, 58))
-                : new SolidColorBrush(Color.FromRgb(230, 230, 230)),
-            BorderBrush = GetBorderBrush(type),
-            IconBrush = GetIconBrush(type),
-            MessageBrush = isDarkMode
-                ? new SolidColorBrush(Color.FromRgb(180, 180, 180))
-                : new SolidColorBrush(Color.FromRgb(100, 100, 100)),
-            CloseButtonForegroundBrush = isDarkMode
-                ? new SolidColorBrush(Color.FromRgb(150, 150, 150))
-                : new SolidColorBrush(Color.FromRgb(100, 100, 100)),
-            IconBackgroundBrush = isDarkMode
-                ? new SolidColorBrush(Color.FromRgb(45, 45, 45))
-                : new SolidColorBrush(Color.FromRgb(245, 245, 245))
+            return type switch
+            {
+                "Success" => new NotificationColors
+                {
+                    AccentColor = Color.FromRgb(34, 197, 94),
+                    AccentColorLight = Color.FromRgb(74, 222, 128),
+                    BackgroundStart = Color.FromRgb(30, 41, 59),
+                    BackgroundEnd = Color.FromRgb(15, 23, 42),
+                    TitleColor = Color.FromRgb(240, 253, 244),
+                    MessageColor = Color.FromRgb(203, 213, 225),
+                    CloseButtonColor = Color.FromRgb(148, 163, 184),
+                    CloseButtonHoverColor = Color.FromRgb(248, 113, 113),
+                    BorderColor = Color.FromRgb(51, 65, 85),
+                    IconBackgroundStart = Color.FromArgb(80, 34, 197, 94),
+                    IconBackgroundEnd = Color.FromArgb(40, 34, 197, 94),
+                    ShadowColor = Color.FromArgb(120, 0, 0, 0)
+                },
+                "Warning" => new NotificationColors
+                {
+                    AccentColor = Color.FromRgb(245, 158, 11),
+                    AccentColorLight = Color.FromRgb(251, 191, 36),
+                    BackgroundStart = Color.FromRgb(30, 41, 59),
+                    BackgroundEnd = Color.FromRgb(15, 23, 42),
+                    TitleColor = Color.FromRgb(254, 243, 199),
+                    MessageColor = Color.FromRgb(203, 213, 225),
+                    CloseButtonColor = Color.FromRgb(148, 163, 184),
+                    CloseButtonHoverColor = Color.FromRgb(248, 113, 113),
+                    BorderColor = Color.FromRgb(51, 65, 85),
+                    IconBackgroundStart = Color.FromArgb(80, 245, 158, 11),
+                    IconBackgroundEnd = Color.FromArgb(40, 245, 158, 11),
+                    ShadowColor = Color.FromArgb(120, 0, 0, 0)
+                },
+                "Error" => new NotificationColors
+                {
+                    AccentColor = Color.FromRgb(239, 68, 68),
+                    AccentColorLight = Color.FromRgb(248, 113, 113),
+                    BackgroundStart = Color.FromRgb(30, 41, 59),
+                    BackgroundEnd = Color.FromRgb(15, 23, 42),
+                    TitleColor = Color.FromRgb(254, 226, 226),
+                    MessageColor = Color.FromRgb(203, 213, 225),
+                    CloseButtonColor = Color.FromRgb(148, 163, 184),
+                    CloseButtonHoverColor = Color.FromRgb(248, 113, 113),
+                    BorderColor = Color.FromRgb(51, 65, 85),
+                    IconBackgroundStart = Color.FromArgb(80, 239, 68, 68),
+                    IconBackgroundEnd = Color.FromArgb(40, 239, 68, 68),
+                    ShadowColor = Color.FromArgb(120, 0, 0, 0)
+                },
+                _ => new NotificationColors
+                {
+                    AccentColor = Color.FromRgb(59, 130, 246),
+                    AccentColorLight = Color.FromRgb(96, 165, 250),
+                    BackgroundStart = Color.FromRgb(30, 41, 59),
+                    BackgroundEnd = Color.FromRgb(15, 23, 42),
+                    TitleColor = Color.FromRgb(219, 234, 254),
+                    MessageColor = Color.FromRgb(203, 213, 225),
+                    CloseButtonColor = Color.FromRgb(148, 163, 184),
+                    CloseButtonHoverColor = Color.FromRgb(248, 113, 113),
+                    BorderColor = Color.FromRgb(51, 65, 85),
+                    IconBackgroundStart = Color.FromArgb(80, 59, 130, 246),
+                    IconBackgroundEnd = Color.FromArgb(40, 59, 130, 246),
+                    ShadowColor = Color.FromArgb(120, 0, 0, 0)
+                }
+            };
+        }
+
+        // 浅色模式 - 鲜明的语义色 + 柔和的背景
+        return type switch
+        {
+            "Success" => new NotificationColors
+            {
+                AccentColor = Color.FromRgb(22, 163, 74),
+                AccentColorLight = Color.FromRgb(34, 197, 94),
+                BackgroundStart = Color.FromRgb(255, 255, 255),
+                BackgroundEnd = Color.FromRgb(240, 253, 244),
+                TitleColor = Color.FromRgb(20, 83, 45),
+                MessageColor = Color.FromRgb(55, 65, 81),
+                CloseButtonColor = Color.FromRgb(148, 163, 184),
+                CloseButtonHoverColor = Color.FromRgb(220, 38, 38),
+                BorderColor = Color.FromRgb(220, 252, 231),
+                IconBackgroundStart = Color.FromRgb(220, 252, 231),
+                IconBackgroundEnd = Color.FromRgb(187, 247, 208),
+                ShadowColor = Color.FromArgb(45, 22, 163, 74)
+            },
+            "Warning" => new NotificationColors
+            {
+                AccentColor = Color.FromRgb(217, 119, 6),
+                AccentColorLight = Color.FromRgb(245, 158, 11),
+                BackgroundStart = Color.FromRgb(255, 255, 255),
+                BackgroundEnd = Color.FromRgb(255, 251, 235),
+                TitleColor = Color.FromRgb(120, 53, 15),
+                MessageColor = Color.FromRgb(55, 65, 81),
+                CloseButtonColor = Color.FromRgb(148, 163, 184),
+                CloseButtonHoverColor = Color.FromRgb(220, 38, 38),
+                BorderColor = Color.FromRgb(254, 243, 199),
+                IconBackgroundStart = Color.FromRgb(254, 243, 199),
+                IconBackgroundEnd = Color.FromRgb(253, 230, 138),
+                ShadowColor = Color.FromArgb(45, 217, 119, 6)
+            },
+            "Error" => new NotificationColors
+            {
+                AccentColor = Color.FromRgb(220, 38, 38),
+                AccentColorLight = Color.FromRgb(239, 68, 68),
+                BackgroundStart = Color.FromRgb(255, 255, 255),
+                BackgroundEnd = Color.FromRgb(254, 242, 242),
+                TitleColor = Color.FromRgb(127, 29, 29),
+                MessageColor = Color.FromRgb(55, 65, 81),
+                CloseButtonColor = Color.FromRgb(148, 163, 184),
+                CloseButtonHoverColor = Color.FromRgb(220, 38, 38),
+                BorderColor = Color.FromRgb(254, 226, 226),
+                IconBackgroundStart = Color.FromRgb(254, 226, 226),
+                IconBackgroundEnd = Color.FromRgb(252, 165, 165),
+                ShadowColor = Color.FromArgb(45, 220, 38, 38)
+            },
+            _ => new NotificationColors
+            {
+                AccentColor = Color.FromRgb(37, 99, 235),
+                AccentColorLight = Color.FromRgb(59, 130, 246),
+                BackgroundStart = Color.FromRgb(255, 255, 255),
+                BackgroundEnd = Color.FromRgb(239, 246, 255),
+                TitleColor = Color.FromRgb(30, 58, 138),
+                MessageColor = Color.FromRgb(55, 65, 81),
+                CloseButtonColor = Color.FromRgb(148, 163, 184),
+                CloseButtonHoverColor = Color.FromRgb(220, 38, 38),
+                BorderColor = Color.FromRgb(219, 234, 254),
+                IconBackgroundStart = Color.FromRgb(219, 234, 254),
+                IconBackgroundEnd = Color.FromRgb(191, 219, 254),
+                ShadowColor = Color.FromArgb(45, 37, 99, 235)
+            }
         };
     }
 
@@ -635,7 +831,7 @@ public class NotificationService : IDisposable
         return new Window
         {
             Title = title,
-            Width = 420,
+            Width = 440,
             SizeToContent = SizeToContent.Height,
             WindowStartupLocation = (SettingsService.General.NotificationPosition == Models.NotificationPosition.Center)
                 ? WindowStartupLocation.CenterScreen
@@ -645,7 +841,7 @@ public class NotificationService : IDisposable
             Topmost = true,
             SystemDecorations = SystemDecorations.None,
             Background = Brushes.Transparent,
-            Foreground = colors.ForegroundBrush,
+            Foreground = new SolidColorBrush(colors.TitleColor),
             ExtendClientAreaToDecorationsHint = true,
             ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome,
             ShowActivated = false,
@@ -659,21 +855,39 @@ public class NotificationService : IDisposable
     /// </summary>
     private Border CreateNotificationContent(string title, string message, string type, NotificationColors colors, NotificationWindowContext context)
     {
+        // 根容器 - 渐变背景 + 柔和阴影 + 圆角
         var rootBorder = new Border
         {
-            Background = colors.BackgroundBrush,
-            BorderBrush = colors.ChromeBrush,
+            Background = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(colors.BackgroundStart, 0),
+                    new GradientStop(colors.BackgroundEnd, 1)
+                }
+            },
+            BorderBrush = new SolidColorBrush(colors.BorderColor),
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(16),
-            Padding = new Thickness(24, 20, 24, 20),
-            MinHeight = 160
+            CornerRadius = new CornerRadius(14),
+            Padding = new Thickness(0, 16, 0, 16),
+            Margin = new Thickness(12),
+            BoxShadow = new BoxShadows(new BoxShadow
+            {
+                OffsetX = 0,
+                OffsetY = 6,
+                Blur = 24,
+                Spread = 0,
+                Color = colors.ShadowColor
+            })
         };
 
         var mainGrid = CreateMainGrid();
-        AddAccentBorder(mainGrid, colors.BorderBrush);
-        AddIconContainer(mainGrid, type, colors.IconBrush, colors.IconBackgroundBrush);
-        AddTitleTextBlock(mainGrid, title, colors.ForegroundBrush);
-        AddMessageTextBlock(mainGrid, message, colors.MessageBrush);
+        AddAccentBorder(mainGrid, colors);
+        AddIconContainer(mainGrid, type, colors, context);
+        AddTitleTextBlock(mainGrid, title, colors);
+        AddMessageTextBlock(mainGrid, message, colors);
         AddCloseButton(mainGrid, context);
 
         rootBorder.Child = mainGrid;
@@ -687,21 +901,32 @@ public class NotificationService : IDisposable
     {
         return new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("6,auto,*,auto"),
-            RowDefinitions = new RowDefinitions("auto,auto"),
-            MinHeight = 88
+            ColumnDefinitions = new ColumnDefinitions("6,Auto,*,Auto"),
+            RowDefinitions = new RowDefinitions("Auto,Auto"),
+            Margin = new Thickness(0)
         };
     }
 
     /// <summary>
-    /// 添加强调边框
+    /// 添加强调边框（左侧发光条）
     /// </summary>
-    private void AddAccentBorder(Grid mainGrid, SolidColorBrush borderBrush)
+    private void AddAccentBorder(Grid mainGrid, NotificationColors colors)
     {
+        // 左侧强调条 - 圆角 + 渐变
         var accentBorder = new Border
         {
-            Background = borderBrush,
-            CornerRadius = new CornerRadius(8, 0, 0, 8)
+            Background = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(colors.AccentColor, 0),
+                    new GradientStop(colors.AccentColorLight, 1)
+                }
+            },
+            CornerRadius = new CornerRadius(14, 0, 0, 14),
+            Width = 6
         };
         Grid.SetColumn(accentBorder, 0);
         Grid.SetRowSpan(accentBorder, 2);
@@ -709,78 +934,112 @@ public class NotificationService : IDisposable
     }
 
     /// <summary>
-    /// 添加图标容器
+    /// 添加图标容器 - 渐变背景 + 几何图标
     /// </summary>
-    private void AddIconContainer(Grid mainGrid, string type, SolidColorBrush iconBrush, SolidColorBrush iconBackgroundBrush)
+    private void AddIconContainer(Grid mainGrid, string type, NotificationColors colors, NotificationWindowContext context)
     {
+        // 图标背景 - 渐变 + 阴影
         var iconContainer = new Border
         {
-            Background = iconBackgroundBrush,
-            CornerRadius = new CornerRadius(24),
-            Width = 48,
-            Height = 48,
+            Background = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(colors.IconBackgroundStart, 0),
+                    new GradientStop(colors.IconBackgroundEnd, 1)
+                }
+            },
+            BorderBrush = new SolidColorBrush(Color.FromArgb(60, colors.AccentColor.R, colors.AccentColor.G, colors.AccentColor.B)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(26),
+            Width = 52,
+            Height = 52,
             VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(10, 0, 10, 0)
+            Margin = new Thickness(18, 0, 16, 0)
         };
 
-        var iconText = type switch
-        {
-            "Success" => "✓",
-            "Warning" => "⚠",
-            "Error" => "✕",
-            _ => "ℹ"
-        };
+        // 使用 Path 绘制几何图标
+        var iconPath = CreateNotificationIconPath(type, colors);
+        iconContainer.Child = iconPath;
 
-        var iconTextBlock = new TextBlock
-        {
-            Text = iconText,
-            FontSize = 24,
-            FontWeight = FontWeight.Bold,
-            Foreground = iconBrush,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
-        iconContainer.Child = iconTextBlock;
         Grid.SetColumn(iconContainer, 1);
         Grid.SetRowSpan(iconContainer, 2);
         mainGrid.Children.Add(iconContainer);
     }
 
     /// <summary>
-    /// 添加标题文本块
+    /// 创建通知图标路径
     /// </summary>
-    private void AddTitleTextBlock(Grid mainGrid, string title, SolidColorBrush foregroundBrush)
+    private Path CreateNotificationIconPath(string type, NotificationColors colors)
+    {
+        var pathData = type switch
+        {
+            // 对号 - Success
+            "Success" => "M 4 12 L 9 17 L 18 7",
+            // 警告三角 - Warning
+            "Warning" => "M 12 3 L 22 20 L 2 20 Z",
+            // 错号圆圈 - Error
+            "Error" => "M 12 2 A 10 10 0 1 0 12 22 A 10 10 0 1 0 12 2 M 8 8 L 16 16 M 16 8 L 8 16",
+            // 信息 i - Info
+            _ => "M 12 2 A 10 10 0 1 0 12 22 A 10 10 0 1 0 12 2 M 12 8 L 12 8.01 M 12 11 L 12 17"
+        };
+
+        var path = new Path
+        {
+            Data = StreamGeometry.Parse(pathData),
+            Stroke = new SolidColorBrush(colors.AccentColor),
+            StrokeThickness = 2.5,
+            StrokeLineCap = PenLineCap.Round,
+            StrokeJoin = PenLineJoin.Round,
+            Width = 24,
+            Height = 24,
+            Stretch = Stretch.Uniform,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        return path;
+    }
+
+    /// <summary>
+    /// 添加标题文本块 - 大字号 + 强对比度
+    /// </summary>
+    private void AddTitleTextBlock(Grid mainGrid, string title, NotificationColors colors)
     {
         var titleTextBlock = new TextBlock
         {
             Text = title,
-            FontWeight = FontWeight.SemiBold,
-            FontSize = 19,
-            Foreground = foregroundBrush,
+            FontWeight = FontWeight.Bold,
+            FontSize = 17,
+            Foreground = new SolidColorBrush(colors.TitleColor),
             TextWrapping = TextWrapping.Wrap,
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 0, 0)
+            VerticalAlignment = VerticalAlignment.Top,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Margin = new Thickness(0, 6, 12, 0)
         };
         Grid.SetColumn(titleTextBlock, 2);
         Grid.SetRow(titleTextBlock, 0);
-        Grid.SetRowSpan(titleTextBlock, 2);
         mainGrid.Children.Add(titleTextBlock);
     }
 
     /// <summary>
-    /// 添加消息文本块
+    /// 添加消息文本块 - 中等字号 + 中等对比度
     /// </summary>
-    private void AddMessageTextBlock(Grid mainGrid, string message, SolidColorBrush messageBrush)
+    private void AddMessageTextBlock(Grid mainGrid, string message, NotificationColors colors)
     {
         var messageTextBlock = new TextBlock
         {
             Text = message,
-            FontSize = 16,
-            Foreground = messageBrush,
+            FontSize = 14,
+            FontWeight = FontWeight.Normal,
+            LineHeight = 20,
+            Foreground = new SolidColorBrush(colors.MessageColor),
             TextWrapping = TextWrapping.Wrap,
-            Margin = new Thickness(0, 28, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Margin = new Thickness(0, 2, 12, 0),
             IsVisible = !string.IsNullOrWhiteSpace(message)
         };
         Grid.SetColumn(messageTextBlock, 2);
@@ -789,24 +1048,27 @@ public class NotificationService : IDisposable
     }
 
     /// <summary>
-    /// 添加关闭按钮
+    /// 添加关闭按钮 - 圆形 + hover 状态
     /// </summary>
     private void AddCloseButton(Grid mainGrid, NotificationWindowContext context)
     {
+        var colors = context.Colors!;
         var closeButton = new Button
         {
             Content = "×",
-            FontSize = 22,
-            FontWeight = FontWeight.Bold,
+            FontSize = 20,
+            FontWeight = FontWeight.Normal,
             Background = Brushes.Transparent,
-            Foreground = context.CloseButtonForegroundBrush,
+            Foreground = new SolidColorBrush(colors.CloseButtonColor),
             BorderThickness = new Thickness(0),
-            Width = 40,
-            Height = 40,
-            CornerRadius = new CornerRadius(20),
+            Width = 32,
+            Height = 32,
+            CornerRadius = new CornerRadius(16),
             HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(10, 0, 0, 0)
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(4, 6, 8, 0),
+            Padding = new Thickness(0),
+            Cursor = new Cursor(StandardCursorType.Hand)
         };
 
         context.CloseButton = closeButton;
@@ -823,19 +1085,15 @@ public class NotificationService : IDisposable
         context.PointerEnteredHandler = (s, e) =>
         {
             if (context.CloseButton == null) return;
-            context.CloseButton.Background = context.IsDarkMode
-                ? new SolidColorBrush(Color.FromRgb(60, 60, 60))
-                : new SolidColorBrush(Color.FromRgb(230, 230, 230));
-            context.CloseButton.Foreground = context.IsDarkMode
-                ? new SolidColorBrush(Color.FromRgb(255, 255, 255))
-                : new SolidColorBrush(Color.FromRgb(0, 0, 0));
+            context.CloseButton.Background = new SolidColorBrush(Color.FromArgb(40, colors.CloseButtonHoverColor.R, colors.CloseButtonHoverColor.G, colors.CloseButtonHoverColor.B));
+            context.CloseButton.Foreground = new SolidColorBrush(colors.CloseButtonHoverColor);
         };
 
         context.PointerExitedHandler = (s, e) =>
         {
             if (context.CloseButton == null) return;
             context.CloseButton.Background = Brushes.Transparent;
-            context.CloseButton.Foreground = context.CloseButtonForegroundBrush;
+            context.CloseButton.Foreground = new SolidColorBrush(colors.CloseButtonColor);
         };
 
         closeButton.PointerEntered += context.PointerEnteredHandler;
@@ -907,9 +1165,9 @@ public class NotificationService : IDisposable
     }
 
     /// <summary>
-    /// 处理通知自动关闭
+    /// 处理通知自动关闭（带淡出动画）
     /// </summary>
-    private async Task HandleNotificationAutoClose(int duration, CancellationToken cancellationToken)
+    private async Task HandleNotificationAutoClose(int duration, CancellationToken cancellationToken, NotificationWindowContext context)
     {
         if (duration < 250)
         {
@@ -919,8 +1177,50 @@ public class NotificationService : IDisposable
         try
         {
             await Task.Delay(duration, cancellationToken).ConfigureAwait(false);
+
+            // 仅在未被取消的情况下执行淡出动画
+            if (!cancellationToken.IsCancellationRequested && context.Window != null)
+            {
+                var windowRef = context.Window;
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    if (windowRef == null || !windowRef.IsVisible) return;
+
+                    try
+                    {
+                        var fadeOut = new Animation
+                        {
+                            Duration = TimeSpan.FromMilliseconds(180),
+                            Easing = new CubicEaseIn(),
+                            FillMode = FillMode.Forward,
+                            Children =
+                            {
+                                new KeyFrame
+                                {
+                                    Cue = new Cue(0),
+                                    Setters = { new Setter(Window.OpacityProperty, 1d) }
+                                },
+                                new KeyFrame
+                                {
+                                    Cue = new Cue(1),
+                                    Setters = { new Setter(Window.OpacityProperty, 0d) }
+                                }
+                            }
+                        };
+                        await fadeOut.RunAsync(windowRef);
+                    }
+                    catch
+                    {
+                        // 忽略淡出动画异常
+                    }
+                });
+            }
         }
         catch (TaskCanceledException)
+        {
+            // 任务被取消，正常退出
+        }
+        catch (OperationCanceledException)
         {
             // 任务被取消，正常退出
         }

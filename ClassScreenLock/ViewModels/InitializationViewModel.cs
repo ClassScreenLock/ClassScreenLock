@@ -475,6 +475,8 @@ public partial class InitializationViewModel : ViewModelBase
                 StepIndex++;
                 if ((InitStep)StepIndex == InitStep.TwoFactorBinding && !ShouldIncludeTwoFactorBinding())
                 {
+                    // 跳过2FA步骤时也需要标记为完成，防止下次启动时因 TwoFactorBindingDone=false 重新进入初始化
+                    InitializationService.Instance.MarkStepComplete(InitStep.TwoFactorBinding);
                     StepIndex++;
                 }
                 RefreshStepUi(StepIndex);
@@ -485,6 +487,8 @@ public partial class InitializationViewModel : ViewModelBase
                     StepIndex++;
                     if ((InitStep)StepIndex == InitStep.TwoFactorBinding && !ShouldIncludeTwoFactorBinding())
                     {
+                        // 跳过2FA步骤时也需要标记为完成，防止下次启动时因 TwoFactorBindingDone=false 重新进入初始化
+                        InitializationService.Instance.MarkStepComplete(InitStep.TwoFactorBinding);
                         StepIndex++;
                     }
                     RefreshStepUi(StepIndex);
@@ -654,6 +658,8 @@ public partial class InitializationViewModel : ViewModelBase
             StepIndex++;
             if ((InitStep)StepIndex == InitStep.TwoFactorBinding && !ShouldIncludeTwoFactorBinding())
             {
+                // 跳过2FA步骤时也需要标记为完成，防止下次启动时因 TwoFactorBindingDone=false 重新进入初始化
+                InitializationService.Instance.MarkStepComplete(InitStep.TwoFactorBinding);
                 StepIndex++;
             }
             RefreshStepUi(StepIndex);
@@ -694,6 +700,8 @@ public partial class InitializationViewModel : ViewModelBase
             StepIndex++;
             if ((InitStep)StepIndex == InitStep.TwoFactorBinding && !ShouldIncludeTwoFactorBinding())
             {
+                // 跳过2FA步骤时也需要标记为完成，防止下次启动时因 TwoFactorBindingDone=false 重新进入初始化
+                InitializationService.Instance.MarkStepComplete(InitStep.TwoFactorBinding);
                 StepIndex++;
             }
             RefreshStepUi(StepIndex);

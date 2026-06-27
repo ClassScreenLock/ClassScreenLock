@@ -3,13 +3,14 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
+    <Platform>x64</Platform>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <OutputPath>..\ClassScreenLock\bin\$(Configuration)\$(TargetFramework)\BreakButton\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <Version>1.15.35.3426</Version>
-    <AssemblyVersion>1.15.35.3426</AssemblyVersion>
-    <FileVersion>1.15.35.3426</FileVersion>
-    <InformationalVersion>1.15.35.3426</InformationalVersion>
+    <Version>1.15.36.3545</Version>
+    <AssemblyVersion>1.15.36.3545</AssemblyVersion>
+    <FileVersion>1.15.36.3545</FileVersion>
+    <InformationalVersion>1.15.36.3545</InformationalVersion>
     <Copyright>© 旧故里小牛（jiugulixiaoniu）</Copyright>
     <Authors>旧故里小牛（jiugulixiaoniu）</Authors>
     <Company>旧故里小牛（jiugulixiaoniu）</Company>

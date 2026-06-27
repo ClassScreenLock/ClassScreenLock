@@ -9,6 +9,8 @@ namespace ClassScreenLock.Views;
 
 public partial class ScheduleView : UserControl
 {
+    private bool _firstLoad = true;
+
     public ScheduleView()
     {
         InitializeComponent();
@@ -17,6 +19,17 @@ public partial class ScheduleView : UserControl
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        if (_firstLoad && DataContext is ScheduleViewModel vm)
+        {
+            _firstLoad = false;
+            // 第一次显示时重新从磁盘加载课表（解决启动时集控同步时序问题）
+            vm.LoadSchedulesCommand.Execute(null);
+        }
     }
 
 

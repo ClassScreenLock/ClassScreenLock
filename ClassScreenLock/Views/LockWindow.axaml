@@ -92,9 +92,16 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
         <!-- 解锁按钮样式 -->
-        <Style Selector="Button.keypad:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
-            <Setter Property="Opacity" Value="0.8"/>
+        <Style Selector="Button.lock-action-btn">
+            <Setter Property="Background" Value="#3DFFFFFF"/>
+            <Setter Property="BorderBrush" Value="White"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button.lock-action-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#6BFFFFFF"/>
+        </Style>
+        <Style Selector="Button.lock-action-btn:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#9BFFFFFF"/>
         </Style>
         
         <!-- 关机按钮样式 -->
@@ -154,24 +161,20 @@
 
             <StackPanel Orientation="Horizontal" Spacing="24" HorizontalAlignment="Center" Margin="0,40,0,0">
                 <Button Command="{Binding UnlockEarlyCommand}" 
-                        Classes="outline" 
+                        Classes="lock-action-btn" 
                         Height="50" 
                         Padding="32,0" 
-                        CornerRadius="25"
-                        BorderBrush="White"
-                        Foreground="White">
+                        CornerRadius="25">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <fluent:SymbolIcon Symbol="LockOpen" FontSize="18" Foreground="White"/>
                         <TextBlock Text="{DynamicResource LockScreen_UnlockEarly}" VerticalAlignment="Center" Foreground="White"/>
                     </StackPanel>
                 </Button>
                 <Button Command="{Binding RelockCommand}" 
-                        Classes="outline" 
+                        Classes="lock-action-btn" 
                         Height="50" 
                         Padding="32,0" 
                         CornerRadius="25"
-                        BorderBrush="White"
-                        Foreground="White"
                         IsVisible="{Binding CanRelock}">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <fluent:SymbolIcon Symbol="LockClosed" FontSize="18" Foreground="White"/>

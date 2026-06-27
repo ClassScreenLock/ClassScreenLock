@@ -64,7 +64,40 @@ public class WebSocketService
     /// 参数8: 是否在通知时段禁止关闭窗口（默认 false）
     /// </summary>
     public event Action<string, bool, string, BannerSize, BannerFontSize, BannerDurationMode, int, bool>? OnDeviceMessage;
-    
+
+    /// <summary>
+    /// 集控端发起屏幕监控。
+    /// 参数：fps（int），jpegQuality（int），maxWidth（int），monitorIndex（int）
+    /// </summary>
+    public event Action<int, int, int, int>? OnScreenMonitorStart;
+
+    /// <summary>
+    /// 集控端停止屏幕监控。无参数。
+    /// </summary>
+    public event Action? OnScreenMonitorStop;
+
+    /// <summary>
+    /// 集控端动态调整屏幕监控参数（不中断当前流）。
+    /// 参数：fps（int），jpegQuality（int），maxWidth（int）
+    /// </summary>
+    public event Action<int, int, int>? OnScreenMonitorSettings;
+
+    /// <summary>
+    /// 集控端远程锁屏。无参数。
+    /// </summary>
+    public event Action? OnRemoteLock;
+
+    /// <summary>
+    /// 集控端远程解锁。无参数。
+    /// </summary>
+    public event Action? OnRemoteUnlock;
+
+    /// <summary>
+    /// 收到集控端推送的课表更新。
+    /// 参数：scheduleJson (string) - 课表JSON数据
+    /// </summary>
+    public event Action<string>? OnScheduleUpdate;
+
     public WebSocketService()
     {
         _deviceId = GenerateDeviceId();
@@ -415,7 +448,174 @@ public class WebSocketService
 
             await Task.CompletedTask;
         });
-        
+
+        // 集控端发起屏幕监控
+        _socket.On("screen_monitor_start", async (response) =>
+        {
+            try
+            {
+                LogService.Instance.Log("Info", "WebSocket", "WebSocketService", "===== 收到 screen_monitor_start 事件 =====");
+
+                int fps = 10, jpegQuality = 60, maxWidth = 1280, monitorIndex = 0;
+                if (response.RawText != null)
+                {
+                    using var jsonDoc = System.Text.Json.JsonDocument.Parse(response.RawText);
+                    var root = jsonDoc.RootElement;
+                    var payload = root;
+                    if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() >= 2)
+                    {
+                        payload = root[1];
+                    }
+
+                    if (payload.TryGetProperty("fps", out var fpsEl) && fpsEl.ValueKind == JsonValueKind.Number)
+                        fps = fpsEl.GetInt32();
+                    if (payload.TryGetProperty("jpegQuality", out var qEl) && qEl.ValueKind == JsonValueKind.Number)
+                        jpegQuality = qEl.GetInt32();
+                    if (payload.TryGetProperty("maxWidth", out var wEl) && wEl.ValueKind == JsonValueKind.Number)
+                        maxWidth = wEl.GetInt32();
+                    if (payload.TryGetProperty("monitorIndex", out var mEl) && mEl.ValueKind == JsonValueKind.Number)
+                        monitorIndex = mEl.GetInt32();
+                }
+
+                LogService.Instance.Log("Info", "WebSocket", "WebSocketService",
+                    $"屏幕监控启动参数: fps={fps}, jpegQuality={jpegQuality}, maxWidth={maxWidth}, monitorIndex={monitorIndex}");
+
+                _actionQueue.Enqueue(() => OnScreenMonitorStart?.Invoke(fps, jpegQuality, maxWidth, monitorIndex));
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Error", "WebSocket", "WebSocketService", $"处理 screen_monitor_start 失败: {ex.Message}");
+            }
+
+            await Task.CompletedTask;
+        });
+
+        // 集控端停止屏幕监控
+        _socket.On("screen_monitor_stop", async (response) =>
+        {
+            try
+            {
+                LogService.Instance.Log("Info", "WebSocket", "WebSocketService", "===== 收到 screen_monitor_stop 事件 =====");
+                _actionQueue.Enqueue(() => OnScreenMonitorStop?.Invoke());
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Error", "WebSocket", "WebSocketService", $"处理 screen_monitor_stop 失败: {ex.Message}");
+            }
+
+            await Task.CompletedTask;
+        });
+
+        // 集控端动态调整屏幕监控参数
+        _socket.On("screen_monitor_settings", async (response) =>
+        {
+            try
+            {
+                LogService.Instance.Log("Info", "WebSocket", "WebSocketService", "===== 收到 screen_monitor_settings 事件 =====");
+
+                int fps = 10, jpegQuality = 60, maxWidth = 1280;
+                if (response.RawText != null)
+                {
+                    using var jsonDoc = System.Text.Json.JsonDocument.Parse(response.RawText);
+                    var root = jsonDoc.RootElement;
+                    var payload = root;
+                    if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() >= 2)
+                    {
+                        payload = root[1];
+                    }
+
+                    if (payload.TryGetProperty("fps", out var fpsEl) && fpsEl.ValueKind == JsonValueKind.Number)
+                        fps = fpsEl.GetInt32();
+                    if (payload.TryGetProperty("jpegQuality", out var qEl) && qEl.ValueKind == JsonValueKind.Number)
+                        jpegQuality = qEl.GetInt32();
+                    if (payload.TryGetProperty("maxWidth", out var wEl) && wEl.ValueKind == JsonValueKind.Number)
+                        maxWidth = wEl.GetInt32();
+                }
+
+                LogService.Instance.Log("Info", "WebSocket", "WebSocketService",
+                    $"屏幕监控参数更新: fps={fps}, jpegQuality={jpegQuality}, maxWidth={maxWidth}");
+
+                _actionQueue.Enqueue(() => OnScreenMonitorSettings?.Invoke(fps, jpegQuality, maxWidth));
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Error", "WebSocket", "WebSocketService", $"处理 screen_monitor_settings 失败: {ex.Message}");
+            }
+
+            await Task.CompletedTask;
+        });
+
+        // 远程锁屏
+        _socket.On("remote_lock", async (response) =>
+        {
+            try
+            {
+                LogService.Instance.Log("Info", "WebSocket", "WebSocketService", "收到集控端远程锁屏命令");
+                _actionQueue.Enqueue(() => OnRemoteLock?.Invoke());
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Error", "WebSocket", "WebSocketService", $"处理 remote_lock 失败: {ex.Message}");
+            }
+            await Task.CompletedTask;
+        });
+
+        // 远程解锁
+        _socket.On("remote_unlock", async (response) =>
+        {
+            try
+            {
+                LogService.Instance.Log("Info", "WebSocket", "WebSocketService", "收到集控端远程解锁命令");
+                _actionQueue.Enqueue(() => OnRemoteUnlock?.Invoke());
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Error", "WebSocket", "WebSocketService", $"处理 remote_unlock 失败: {ex.Message}");
+            }
+            await Task.CompletedTask;
+        });
+
+        // 课表更新推送
+        _socket.On("schedule_update", async (response) =>
+        {
+            try
+            {
+                LogService.Instance.Log("Info", "WebSocket", "WebSocketService", "===== 收到 schedule_update 事件 =====");
+                
+                // 解析 schedule_update 数据
+                using var jsonDoc = System.Text.Json.JsonDocument.Parse(response.RawText);
+                var root = jsonDoc.RootElement;
+                
+                if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() >= 2)
+                {
+                    var payloadElement = root[1];
+                    var scheduleElement = payloadElement;
+                    
+                    // 提取 schedule 字段
+                    if (payloadElement.TryGetProperty("schedule", out var schedProp))
+                    {
+                        scheduleElement = schedProp;
+                    }
+                    
+                    var scheduleJson = scheduleElement.GetRawText();
+                    LogService.Instance.Log("Info", "WebSocket", "WebSocketService", 
+                        $"收到课表更新，数据长度: {scheduleJson.Length}");
+                    
+                    _actionQueue.Enqueue(() => OnScheduleUpdate?.Invoke(scheduleJson));
+                }
+                else
+                {
+                    LogService.Instance.Log("Warning", "WebSocket", "WebSocketService", 
+                        $"schedule_update 格式异常: {response.RawText}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Error", "WebSocket", "WebSocketService", $"处理 schedule_update 失败: {ex.Message}");
+            }
+            await Task.CompletedTask;
+        });
+
         // 错误消息
         _socket.On("error", async (response) =>
         {
@@ -526,6 +726,79 @@ public class WebSocketService
     }
     
     /// <summary>
+    /// 同步课表配置（HTTP拉取 + WebSocket请求）
+    /// </summary>
+    public async Task SyncScheduleAsync()
+    {
+        if (_organizationService == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var org = _organizationService.CurrentOrganization;
+            if (org == null || string.IsNullOrEmpty(org.ServerUrl))
+            {
+                return;
+            }
+
+            // 通过HTTP获取最新课表配置
+            using var httpClient = new System.Net.Http.HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+            var scheduleResponse = await httpClient.GetAsync($"{org.ServerUrl}/api/organizations/{org.Id}/schedule-config");
+
+            if (scheduleResponse.IsSuccessStatusCode)
+            {
+                var scheduleJson = await scheduleResponse.Content.ReadAsStringAsync();
+                
+                LogService.Instance.Log("Info", "WebSocket", "WebSocketService", 
+                    $"课表配置HTTP同步成功，数据长度: {scheduleJson.Length}");
+
+                _actionQueue.Enqueue(() => OnScheduleUpdate?.Invoke(scheduleJson));
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Warning", "WebSocket", "WebSocketService", $"课表HTTP同步失败: {ex.Message}");
+        }
+
+        // 同时通过WebSocket请求同步（作为备用）
+        await RequestScheduleSyncAsync();
+    }
+
+    /// <summary>
+    /// 通过WebSocket请求课表同步
+    /// </summary>
+    public async Task RequestScheduleSyncAsync()
+    {
+        if (_socket == null || !_isConnected || !_isRegistered)
+        {
+            return;
+        }
+
+        try
+        {
+            var org = _organizationService?.CurrentOrganization;
+            await _socket.EmitAsync("request_schedule_sync", new object[]
+            {
+                new
+                {
+                    deviceId = _deviceId,
+                    organizationId = org?.Id
+                }
+            });
+            
+            LogService.Instance.Log("Info", "WebSocket", "WebSocketService", "已请求课表同步");
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Warning", "WebSocket", "WebSocketService", $"请求课表同步失败: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// 同步配置
     /// </summary>
     private async Task SyncConfigAsync()
@@ -606,12 +879,12 @@ public class WebSocketService
         {
             return;
         }
-        
+
         try
         {
             // 发送参数数组
             await _socket.EmitAsync("device_offline", new object[] { _deviceId, reason });
-            
+
             LogService.Instance.Log("Info", "WebSocket", "WebSocketService", $"已发送离线通知: {reason}");
         }
         catch (Exception ex)
@@ -619,7 +892,110 @@ public class WebSocketService
             LogService.Instance.Log("Warning", "WebSocket", "WebSocketService", $"发送离线通知失败: {ex.Message}");
         }
     }
-    
+
+    /// <summary>
+    /// 发送单帧屏幕监控数据到集控端。
+    /// </summary>
+    /// <param name="timestampMs">帧时间戳（Unix 毫秒）</param>
+    /// <param name="format">图像格式（"jpeg"）</param>
+    /// <param name="width">图像宽度（像素）</param>
+    /// <param name="height">图像高度（像素）</param>
+    /// <param name="frameBytes">原始字节（已是 JPEG 编码后的数据）</param>
+    public async Task SendScreenMonitorFrameAsync(long timestampMs, string format, int width, int height, byte[] frameBytes)
+    {
+        if (_socket == null || !_isConnected || !_isRegistered)
+        {
+            return;
+        }
+
+        try
+        {
+            // 参数顺序：deviceId, timestamp, format, width, height, base64Data
+            // 使用 base64 字符串传输二进制帧，便于跨平台 Socket.IO 兼容
+            var base64 = Convert.ToBase64String(frameBytes);
+            await _socket.EmitAsync("screen_monitor_frame", new object[]
+            {
+                _deviceId,
+                timestampMs,
+                format,
+                width,
+                height,
+                base64
+            });
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Warning", "WebSocket", "WebSocketService", $"发送屏幕监控帧失败: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 发送屏幕监控状态变更到集控端。
+    /// </summary>
+    public async Task SendScreenMonitorStatusAsync(bool isStreaming, string? error = null)
+    {
+        if (_socket == null || !_isConnected || !_isRegistered)
+        {
+            return;
+        }
+
+        try
+        {
+            await _socket.EmitAsync("screen_monitor_status", new object[]
+            {
+                _deviceId,
+                isStreaming,
+                error ?? string.Empty
+            });
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Warning", "WebSocket", "WebSocketService", $"发送屏幕监控状态失败: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 通知集控端：屏幕监控参数已在被控端实际生效。
+    /// </summary>
+    public async Task SendScreenMonitorSettingsAppliedAsync(int fps, int jpegQuality, int maxWidth)
+    {
+        if (_socket == null || !_isConnected || !_isRegistered) return;
+        try
+        {
+            await _socket.EmitAsync("screen_monitor_settings_applied", new object[]
+            {
+                _deviceId,
+                fps,
+                jpegQuality,
+                maxWidth
+            });
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Warning", "WebSocket", "WebSocketService", $"发送 settings_applied 失败: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 通知集控端当前锁屏状态。
+    /// </summary>
+    public async Task SendLockStateAsync(bool isLocked)
+    {
+        if (_socket == null || !_isConnected || !_isRegistered) return;
+        try
+        {
+            await _socket.EmitAsync("lock_state", new object[]
+            {
+                _deviceId,
+                isLocked
+            });
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Warning", "WebSocket", "WebSocketService", $"发送 lock_state 失败: {ex.Message}");
+        }
+    }
+
     /// <summary>
     /// 断开Socket连接
     /// </summary>

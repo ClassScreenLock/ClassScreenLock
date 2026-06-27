@@ -369,6 +369,9 @@ public partial class App : Application
 
     private void InitializeServices(SplashWindow splashWindow)
     {
+        // 先停止锁屏状态文件检查，确保不会在恢复前触发
+        LockScreenService.Instance.StopLockStateFileCheck();
+
         // 执行数据恢复，确保在任何其他服务初始化之前完成
         try
         {
@@ -376,10 +379,14 @@ public partial class App : Application
             {
                 try
                 {
+                    // 标记初始化正在进行，暂停文件监控同步
+                    DataProtectionService.Instance.SetInitializationInProgress(true);
                     await DataProtectionService.Instance.VerifyAndRestoreDataAsync();
+                    DataProtectionService.Instance.SetInitializationInProgress(false);
                 }
                 catch (Exception ex)
                 {
+                    DataProtectionService.Instance.SetInitializationInProgress(false);
                     LogService.Instance.Log("Error", "DataProtection", "App", $"数据恢复失败：{ex.Message}");
                 }
             }).GetAwaiter().GetResult();
@@ -397,7 +404,8 @@ public partial class App : Application
         }
         catch { }
 
-        LockScreenService.Instance.StartLockStateFileCheck();
+        // 注意：锁屏状态文件检查将在 CreateMainWindowAsync 中启动
+        // 确保在 RestoreLockStateOnStartup 之后启动
     }
 
     private void StartBackgroundTasks(SplashWindow splashWindow, IClassicDesktopStyleApplicationLifetime desktop, bool isMinimized)
@@ -459,6 +467,17 @@ public partial class App : Application
         {
             _ = NotificationService.Instance;
         });
+
+        // 初始化屏幕监控服务：订阅 WebSocket 上的集控端命令
+        try
+        {
+            ScreenMonitorService.Instance.Initialize();
+            LockScreenService.Instance.InitializeRemoteControl();
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "ScreenMonitor", "App", $"屏幕监控服务初始化失败: {ex.Message}");
+        }
 
         // 订阅集控端推送的消息：显示通知并按需调用 Windows 语音模块朗读
         WebSocketService.Instance.OnDeviceMessage += HandleDeviceMessage;
@@ -725,7 +744,10 @@ public partial class App : Application
                 splashWindow?.Close();
                 LogService.Instance.Log("Info", "MainWindow", "App", "启动完成，闪屏窗口已关闭");
 
+                // 先恢复锁屏状态，再启动定时检查
                 LockScreenService.Instance.RestoreLockStateOnStartup();
+                // 在锁屏状态恢复完成后，启动定时检查
+                LockScreenService.Instance.StartLockStateFileCheck();
             }
             catch (Exception ex)
             {
@@ -807,18 +829,64 @@ public partial class App : Application
         var mainWindow = desktop.MainWindow;
         if (mainWindow == null) return;
 
-        var screen = mainWindow.Screens.Primary ?? mainWindow.Screens.All.FirstOrDefault();
-        if (screen == null) return;
+        // 使用菜单窗口实际尺寸进行精确位置计算，确保退出键始终可见
+        // 如果 Bounds 还未初始化（首次显示），使用 UserControl 的 Width/Height 兜底
+        var menuWidth = _trayPopup != null && _trayPopup.Bounds.Width > 0
+            ? (int)_trayPopup.Bounds.Width
+            : 260;  // TrayMenuView 中定义的 Width
+        var menuHeight = _trayPopup != null && _trayPopup.Bounds.Height > 0
+            ? (int)_trayPopup.Bounds.Height
+            : 380;  // 设计高度
 
-        // 先设置一个临时的初始位置以触发布局计算，从而获得真实的菜单尺寸
-        if (!_trayPopup!.IsVisible)
+        // 优先使用鼠标所在的屏幕（解决多屏环境下位置错乱问题）
+        Screen? targetScreen = null;
+        POINT cursorPos = default;
+        if (GetCursorPos(out cursorPos))
         {
-            _trayPopup.ShowAtPosition(new PixelPoint(0, 0));
+            // 尝试找到包含鼠标位置的屏幕
+            var pixelCursor = new PixelPoint(cursorPos.X, cursorPos.Y);
+            targetScreen = FindScreenAtPoint(mainWindow, pixelCursor);
+
+            // 兜底：使用主窗口所在屏幕 / 主屏幕
+            targetScreen ??= mainWindow.Screens.Primary ?? mainWindow.Screens.All.FirstOrDefault();
+            if (targetScreen == null) return;
+
+            var position = CalculatePopupPosition(pixelCursor, targetScreen, menuWidth, menuHeight);
+            _trayPopup!.ShowAtPosition(position);
+            return;
         }
 
-        // 使用菜单窗口实际尺寸进行精确位置计算，确保退出键始终可见
-        var position = CalculatePopupPosition(mainWindow, screen);
-        _trayPopup.Position = position;
+        // GetCursorPos 失败时使用默认位置（基于任务栏位置）
+        targetScreen = mainWindow.Screens.Primary ?? mainWindow.Screens.All.FirstOrDefault();
+        if (targetScreen == null) return;
+
+        var defaultPos = GetDefaultPosition(targetScreen, menuWidth, menuHeight, 8);
+        _trayPopup!.ShowAtPosition(defaultPos);
+    }
+
+    /// <summary>
+    /// 在所有屏幕中查找包含指定绝对坐标的屏幕（解决多屏坐标混乱问题）
+    /// </summary>
+    private Screen? FindScreenAtPoint(Window mainWindow, PixelPoint point)
+    {
+        foreach (var screen in mainWindow.Screens.All)
+        {
+            var bounds = screen.Bounds;
+            if (point.X >= bounds.X && point.X < bounds.X + bounds.Width &&
+                point.Y >= bounds.Y && point.Y < bounds.Y + bounds.Height)
+            {
+                return screen;
+            }
+        }
+        return null;
+    }
+
+    private PixelPoint CalculatePopupPosition(PixelPoint cursorPos, Screen screen, int menuWidth, int menuHeight)
+    {
+        const int margin = 8;
+
+        // 1. 优先基于光标位置计算（即使坐标是 (0,0)，只要 GetCursorPos 成功就算有效）
+        return CalculatePositionFromCursor(cursorPos, screen, menuWidth, menuHeight, margin);
     }
 
     private void EnsureTrayPopupInitialized()
@@ -837,22 +905,7 @@ public partial class App : Application
         _trayPopup.ExitClicked += MenuExit_OnClick;
     }
 
-    private PixelPoint CalculatePopupPosition(Window mainWindow, Screen screen)
-    {
-        // 使用真实的窗口尺寸替代原先硬编码的 240x320，避免底部菜单项被屏幕边界裁剪
-        var menuWidth = _trayPopup != null ? Math.Max(240, (int)_trayPopup.Bounds.Width) : 240;
-        var menuHeight = _trayPopup != null ? Math.Max(320, (int)_trayPopup.Bounds.Height) : 320;
-        const int margin = 8;
-
-        if (GetCursorPos(out var cursorPos))
-        {
-            return CalculatePositionFromCursor(cursorPos, screen, menuWidth, menuHeight, margin);
-        }
-
-        return GetDefaultPosition(mainWindow, screen, menuWidth, menuHeight, margin);
-    }
-
-    private PixelPoint CalculatePositionFromCursor(POINT cursorPos, Screen screen, int menuWidth, int menuHeight, int margin)
+    private PixelPoint CalculatePositionFromCursor(PixelPoint cursorPos, Screen screen, int menuWidth, int menuHeight, int margin)
     {
         var workArea = screen.WorkingArea;
         var workLeft = workArea.X;
@@ -895,9 +948,9 @@ public partial class App : Application
         return new PixelPoint((int)x, (int)y);
     }
 
-    private PixelPoint GetDefaultPosition(Window mainWindow, Screen screen, int menuWidth, int menuHeight, int margin)
+    private PixelPoint GetDefaultPosition(Screen screen, int menuWidth, int menuHeight, int margin)
     {
-        var taskbarPosition = GetTaskbarPosition(mainWindow);
+        var taskbarPosition = GetTaskbarPosition(screen);
         var (x, y) = GetPositionByTaskbarPosition(taskbarPosition, screen, menuWidth, menuHeight, margin);
         return new PixelPoint((int)x, (int)y);
     }
@@ -928,9 +981,8 @@ public partial class App : Application
         return (x, y);
     }
 
-    private TaskbarPosition GetTaskbarPosition(Window mainWindow)
+    private TaskbarPosition GetTaskbarPosition(Screen screen)
     {
-        var screen = mainWindow.Screens.Primary ?? mainWindow.Screens.All.FirstOrDefault();
         if (screen == null) return TaskbarPosition.Bottom;
 
         var bounds = screen.Bounds;

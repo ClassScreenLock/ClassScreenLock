@@ -53,6 +53,25 @@ public class OrganizationService
                 LogService.Instance.Log("Info", "Organization", "WebSocket", "配置已通过WebSocket实时更新");
             }
         };
+
+        // 监听课表更新
+        _wsService.OnScheduleUpdate += (scheduleJson) =>
+        {
+            if (_currentOrganization != null)
+            {
+                try
+                {
+                    var count = WeeklyScheduleService.Instance.SyncScheduleFromCentralized(scheduleJson);
+                    LogService.Instance.Log("Info", "Organization", "WebSocket", 
+                        $"课表已通过WebSocket实时更新，同步了 {count} 周");
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.Log("Error", "Organization", "WebSocket", 
+                        $"WebSocket课表同步失败: {ex.Message}");
+                }
+            }
+        };
     }
 
     public OrganizationModel? CurrentOrganization => _currentOrganization;
@@ -139,8 +158,34 @@ public class OrganizationService
                 }
                 else
                 {
-                    Console.WriteLine("组织已是活跃状态，后台注册设备...");
+                    Console.WriteLine("组织已是活跃状态，后台执行同步...");
+                    
+                    // 注册设备
                     await _deviceService.RegisterDeviceAsync();
+                    
+                    // 连接WebSocket
+                    try
+                    {
+                        await _wsService.ConnectAsync(_currentOrganization.ServerUrl);
+                        LogService.Instance.Log("Info", "Organization", "WebSocket", "WebSocket连接已建立");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Instance.Log("Warning", "Organization", "WebSocket", $"WebSocket连接失败: {ex.Message}");
+                    }
+                    
+                    // 同步配置
+                    await SyncConfigurationAsync();
+                    
+                    // 同步课表
+                    try
+                    {
+                        await _wsService.SyncScheduleAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Instance.Log("Warning", "Organization", "OrganizationService", $"课表同步失败: {ex.Message}");
+                    }
                 }
             }
             catch (Exception ex)
@@ -297,6 +342,16 @@ public class OrganizationService
                 
                 // 同步配置（15秒超时）
                 await SyncConfigurationAsync().WaitAsync(TimeSpan.FromSeconds(15));
+
+                // 同步课表（10秒超时）
+                try
+                {
+                    await _wsService.SyncScheduleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.Log("Warning", "Organization", "OrganizationService", $"课表同步失败: {ex.Message}");
+                }
             }
             catch (TaskCanceledException ex)
             {
@@ -623,6 +678,16 @@ public class OrganizationService
                     Console.WriteLine($"[ERROR] 配置同步超时：{ex.Message}");
                 }
             }).WaitAsync(TimeSpan.FromSeconds(20)); // 配置同步20秒超时
+
+            // 同步课表
+            try
+            {
+                await _wsService.SyncScheduleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Warning", "Organization", "OrganizationService", $"课表同步失败: {ex.Message}");
+            }
             
             LogService.Instance.Log("Info", "Organization", "OrganizationService", $"✓ 成功重新激活组织：{_currentOrganization.Name ?? "Unknown"}");
             Console.WriteLine($"✓ 成功重新激活组织：{_currentOrganization.Name ?? "Unknown"}");
