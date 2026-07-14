@@ -133,31 +133,34 @@ public class LockScreenService : INotifyPropertyChanged
 
     public void RestoreLockStateOnStartup()
     {
-        _isRestoringFromStateFile = true;
-        
-        try
+        // 在后台线程执行文件读取和状态检查，避免阻塞UI线程
+        _ = Task.Run(async () =>
         {
-            if (CannotRestoreLockState())
-            {
-                return;
-            }
+            _isRestoringFromStateFile = true;
 
-            var lockStateData = LoadSavedLockState();
-            if (!ValidateLockState(lockStateData))
+            try
             {
-                return;
-            }
+                if (CannotRestoreLockState())
+                {
+                    _initializationCompleted = true;
+                    return;
+                }
 
-            ApplyLockState(lockStateData!);
-        }
-        catch (Exception ex)
-        {
-            LogService.Instance.Log("Error", "LockState", "Startup", $"检查锁屏状态文件失败: {ex.Message}");
-        }
-        finally
-        {
-            _initializationCompleted = true;
-        }
+                var lockStateData = await LoadSavedLockStateAsync();
+                if (!ValidateLockState(lockStateData))
+                {
+                    _initializationCompleted = true;
+                    return;
+                }
+
+                ApplyLockState(lockStateData!);
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Error", "LockState", "Startup", $"检查锁屏状态文件失败: {ex.Message}");
+                _initializationCompleted = true;
+            }
+        });
     }
 
     private bool CannotRestoreLockState()
@@ -168,6 +171,11 @@ public class LockScreenService : INotifyPropertyChanged
     private LockStateData? LoadSavedLockState()
     {
         return GetLockStateData();
+    }
+
+    private async Task<LockStateData?> LoadSavedLockStateAsync()
+    {
+        return await GetLockStateDataAsync();
     }
 
     private bool ValidateLockState(LockStateData? lockStateData)
@@ -1298,6 +1306,55 @@ public class LockScreenService : INotifyPropertyChanged
             }
 
             var json = File.ReadAllText(LockStateFile);
+            var stateData = JsonSerializer.Deserialize<LockStateData>(json);
+
+            if (stateData == null)
+            {
+                return null;
+            }
+
+            if (stateData.ProcessId > 0)
+            {
+                try
+                {
+                    var process = Process.GetProcessById(stateData.ProcessId);
+                    // 检查进程名是否匹配
+                    if (process.ProcessName.Equals("ClassScreenLock", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return null; // 自己的进程，不恢复
+                    }
+                    // 如果进程名不匹配，说明进程 ID 可能被其他进程复用
+                    // 继续返回 stateData，允许恢复（因为这不是当前实例）
+                }
+                catch (ArgumentException)
+                {
+                    // 进程不存在，允许恢复
+                }
+                catch (InvalidOperationException)
+                {
+                    // 进程不存在，允许恢复
+                }
+            }
+
+            return stateData;
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Error", "LockState", "Get", $"读取锁屏状态文件失败: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task<LockStateData?> GetLockStateDataAsync()
+    {
+        try
+        {
+            if (!File.Exists(LockStateFile))
+            {
+                return null;
+            }
+
+            var json = await File.ReadAllTextAsync(LockStateFile);
             var stateData = JsonSerializer.Deserialize<LockStateData>(json);
 
             if (stateData == null)
