@@ -76,8 +76,8 @@ public partial class HomeViewModel : ViewModelBase
         IsProtectionOnlyActive = LockScreenService.Instance.IsProtectionOnlyActive;
         LockScreenService.Instance.PropertyChanged += OnLockScreenPropertyChanged;
 
-        // 初始加载统计数据
-        RefreshStats();
+        // 异步加载统计数据，避免阻塞UI线程
+        _ = Task.Run(() => RefreshStats());
     }
 
     private void OnLockScreenPropertyChanged(object? sender, PropertyChangedEventArgs e)

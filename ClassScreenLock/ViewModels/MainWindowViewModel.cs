@@ -20,46 +20,46 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private ThemeVariant _currentTheme = ThemeVariant.Light;
     
-    [ObservableProperty]
-    private SidebarViewModel _sidebarViewModel;
+    private SidebarViewModel? _sidebarViewModel;
+    public SidebarViewModel SidebarViewModel => _sidebarViewModel ??= new SidebarViewModel();
     
     [ObservableProperty]
     private UserControl? _currentView;
     
-    [ObservableProperty]
-    private HomeViewModel _homeViewModel;
+    private HomeViewModel? _homeViewModel;
+    public HomeViewModel HomeViewModel => _homeViewModel ??= new HomeViewModel(this);
 
-    [ObservableProperty]
-    private SettingsViewModel _settingsViewModel;
+    private SettingsViewModel? _settingsViewModel;
+    public SettingsViewModel SettingsViewModel => _settingsViewModel ??= new SettingsViewModel();
 
-    [ObservableProperty]
-    private AppManagementViewModel _appManagementViewModel;
+    private AppManagementViewModel? _appManagementViewModel;
+    public AppManagementViewModel AppManagementViewModel => _appManagementViewModel ??= new AppManagementViewModel();
 
-    [ObservableProperty]
-    private NetworkManagementViewModel _networkManagementViewModel;
+    private NetworkManagementViewModel? _networkManagementViewModel;
+    public NetworkManagementViewModel NetworkManagementViewModel => _networkManagementViewModel ??= new NetworkManagementViewModel();
 
-    [ObservableProperty]
-    private LogManagementViewModel _logManagementViewModel;
+    private LogManagementViewModel? _logManagementViewModel;
+    public LogManagementViewModel LogManagementViewModel => _logManagementViewModel ??= new LogManagementViewModel();
 
     // 锁屏设置已迁移至安全中心
 
-    [ObservableProperty]
-    private ScheduleViewModel _scheduleViewModel;
+    private ScheduleViewModel? _scheduleViewModel;
+    public ScheduleViewModel ScheduleViewModel => _scheduleViewModel ??= new ScheduleViewModel();
 
-    [ObservableProperty]
-    private SecurityCenterViewModel _securityCenterViewModel;
+    private SecurityCenterViewModel? _securityCenterViewModel;
+    public SecurityCenterViewModel SecurityCenterViewModel => _securityCenterViewModel ??= new SecurityCenterViewModel();
 
-    [ObservableProperty]
-    private ScreenshotHistoryViewModel _screenshotHistoryViewModel;
+    private ScreenshotHistoryViewModel? _screenshotHistoryViewModel;
+    public ScreenshotHistoryViewModel ScreenshotHistoryViewModel => _screenshotHistoryViewModel ??= new ScreenshotHistoryViewModel();
 
-    [ObservableProperty]
-    private WebcamHistoryViewModel _webcamHistoryViewModel;
+    private WebcamHistoryViewModel? _webcamHistoryViewModel;
+    public WebcamHistoryViewModel WebcamHistoryViewModel => _webcamHistoryViewModel ??= new WebcamHistoryViewModel();
 
-    [ObservableProperty]
-    private AutomationViewModel _automationViewModel;
+    private AutomationViewModel? _automationViewModel;
+    public AutomationViewModel AutomationViewModel => _automationViewModel ??= new AutomationViewModel();
 
-    [ObservableProperty]
-    private OrganizationViewModel _organizationViewModel;
+    private OrganizationViewModel? _organizationViewModel;
+    public OrganizationViewModel OrganizationViewModel => _organizationViewModel ??= new OrganizationViewModel();
 
     [ObservableProperty]
     private bool _isInitialized;
@@ -89,43 +89,8 @@ public partial class MainWindowViewModel : ViewModelBase
     
     public MainWindowViewModel()
     {
-        SidebarViewModel = new SidebarViewModel();
-        // 设置关于页面的引用
+        // 设置关于页面的引用（延迟初始化）
         SidebarViewModel.SetMainWindowViewModel(this);
-        
-        // 创建主页视图模型实例
-        HomeViewModel = new HomeViewModel(this);
-
-        // 创建设置视图模型实例
-        SettingsViewModel = new SettingsViewModel();
-        
-        // 创建应用管理视图模型实例
-        AppManagementViewModel = new AppManagementViewModel();
-
-        // 创建网络拦截视图模型实例
-        NetworkManagementViewModel = new NetworkManagementViewModel();
-
-        // 创建日志管理视图模型实例
-        LogManagementViewModel = new LogManagementViewModel();
-
-        // 锁屏设置已迁移至安全中心
-
-        // 创建时间计划视图模型实例
-        ScheduleViewModel = new ScheduleViewModel();
-
-        // 创建密码安全中心视图模型实例
-        SecurityCenterViewModel = new SecurityCenterViewModel();
-
-        // 创建截图历史视图模型实例
-        ScreenshotHistoryViewModel = new ScreenshotHistoryViewModel();
-
-        WebcamHistoryViewModel = new WebcamHistoryViewModel();
-
-// 创建自动化视图模型实例
-        AutomationViewModel = new AutomationViewModel();
-
-        // 创建组织管理视图模型实例
-        OrganizationViewModel = new OrganizationViewModel();
         
         // 监听锁定状态
         IsLocked = LockScreenService.Instance.IsLocked;
@@ -547,18 +512,18 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             if (disposing)
             {
-                SidebarViewModel?.Dispose();
-                HomeViewModel?.Dispose();
-                SettingsViewModel?.Dispose();
-                AppManagementViewModel?.Dispose();
-                NetworkManagementViewModel?.Dispose();
-                LogManagementViewModel?.Dispose();
-                ScheduleViewModel?.Dispose();
-                SecurityCenterViewModel?.Dispose();
-                ScreenshotHistoryViewModel?.Dispose();
-                WebcamHistoryViewModel?.Dispose();
-                AutomationViewModel?.Dispose();
-                OrganizationViewModel?.Dispose();
+                _sidebarViewModel?.Dispose();
+                _homeViewModel?.Dispose();
+                _settingsViewModel?.Dispose();
+                _appManagementViewModel?.Dispose();
+                _networkManagementViewModel?.Dispose();
+                _logManagementViewModel?.Dispose();
+                _scheduleViewModel?.Dispose();
+                _securityCenterViewModel?.Dispose();
+                _screenshotHistoryViewModel?.Dispose();
+                _webcamHistoryViewModel?.Dispose();
+                _automationViewModel?.Dispose();
+                _organizationViewModel?.Dispose();
                 CurrentView = null;
             }
             
