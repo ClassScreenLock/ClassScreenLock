@@ -448,10 +448,12 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
+            // 使用 explorer.exe 打开链接 - 以用户权限运行，解决管理员权限问题
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName = "https://github.com/ClassScreenLock/ClassScreenLock",
-                UseShellExecute = true
+                FileName = "explorer.exe",
+                Arguments = "https://github.com/ClassScreenLock/ClassScreenLock",
+                UseShellExecute = false
             });
             Status = "已打开帮助页面";
         }

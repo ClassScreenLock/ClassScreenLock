@@ -269,32 +269,26 @@ public partial class InitializationViewModel : ViewModelBase
     [RelayCommand]
     private void OpenRepository()
     {
-        try
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = RepositoryUrl,
-                UseShellExecute = true
-            };
-            Process.Start(psi);
-        }
-        catch (Exception ex)
-        {
-            NotificationService.Instance.ShowError($"无法打开链接: {ex.Message}");
-        }
+        OpenUrlWithExplorer(RepositoryUrl);
     }
 
     [RelayCommand]
     private void OpenUserAgreement()
     {
+        OpenUrlWithExplorer(UserAgreementUrl);
+    }
+
+    private void OpenUrlWithExplorer(string url)
+    {
         try
         {
-            var psi = new ProcessStartInfo
+            // 使用 explorer.exe 打开链接 - 以用户权限运行，解决管理员权限问题
+            Process.Start(new ProcessStartInfo
             {
-                FileName = UserAgreementUrl,
-                UseShellExecute = true
-            };
-            Process.Start(psi);
+                FileName = "explorer.exe",
+                Arguments = url,
+                UseShellExecute = false
+            });
         }
         catch (Exception ex)
         {

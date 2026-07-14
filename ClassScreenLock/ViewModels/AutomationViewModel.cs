@@ -1003,7 +1003,13 @@ public partial class AutomationViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(url)) return;
         try
         {
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            // 使用 explorer.exe 打开链接 - 以用户权限运行，解决管理员权限问题
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = url,
+                UseShellExecute = false
+            });
         }
         catch { }
     }

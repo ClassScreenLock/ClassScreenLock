@@ -12,7 +12,7 @@ public partial class AboutViewModel : ViewModelBase
     private string _appName = "ClassScreenLock";
     
     [ObservableProperty]
-    private string _appVersion = "V1.15.36.3545 - Creeper";
+    private string _appVersion = "V1.15.37.3639 - Creeper";
     
     [ObservableProperty]
     private string _appDescription = "一款专业的课堂屏幕锁定工具，帮助教师管理课堂环境，提高教学效率。";
@@ -50,32 +50,26 @@ public partial class AboutViewModel : ViewModelBase
     [RelayCommand]
     private void OpenRepository()
     {
-        try
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = RepositoryUrl,
-                UseShellExecute = true
-            };
-            Process.Start(psi);
-        }
-        catch (Exception ex)
-        {
-            NotificationService.Instance.ShowError($"无法打开链接: {ex.Message}");
-        }
+        OpenUrlWithPowerShell(RepositoryUrl);
     }
 
     [RelayCommand]
     private void OpenUserAgreement()
     {
+        OpenUrlWithPowerShell(UserAgreementUrl);
+    }
+
+    private void OpenUrlWithPowerShell(string url)
+    {
         try
         {
-            var psi = new ProcessStartInfo
+            // 使用 explorer.exe 打开链接 - 以用户权限运行，解决管理员权限问题
+            Process.Start(new ProcessStartInfo
             {
-                FileName = UserAgreementUrl,
-                UseShellExecute = true
-            };
-            Process.Start(psi);
+                FileName = "explorer.exe",
+                Arguments = url,
+                UseShellExecute = false
+            });
         }
         catch (Exception ex)
         {
