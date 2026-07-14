@@ -117,6 +117,6 @@
         </Grid>
         
         <!-- 底部信息 -->
-        <TextBlock Grid.Row="2" Text="ClassScreenLock v1.15.36.3545 - Creeper" HorizontalAlignment="Center" Classes="status" Margin="0,20,0,0"/>
+        <TextBlock Grid.Row="2" Text="ClassScreenLock v1.15.37.3639 - Creeper" HorizontalAlignment="Center" Classes="status" Margin="0,20,0,0"/>
     </Grid>
 </UserControl>
