@@ -7,10 +7,10 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <NuGetAudit>false</NuGetAudit>
         <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
-        <Version>1.15.36.3545</Version>
-        <AssemblyVersion>1.15.36.3545</AssemblyVersion>
-        <FileVersion>1.15.36.3545</FileVersion>
-        <InformationalVersion>1.15.36.3545</InformationalVersion>
+        <Version>1.15.37.3639</Version>
+        <AssemblyVersion>1.15.37.3639</AssemblyVersion>
+        <FileVersion>1.15.37.3639</FileVersion>
+        <InformationalVersion>1.15.37.3639</InformationalVersion>
         <Copyright>© 旧故里小牛（jiugulixiaoniu）</Copyright>
         <Authors>旧故里小牛（jiugulixiaoniu）</Authors>
         <Company>旧故里小牛（jiugulixiaoniu）</Company>
