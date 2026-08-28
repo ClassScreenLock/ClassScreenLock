@@ -325,19 +325,21 @@
                 Padding="24"
                 Background="{DynamicResource SystemControlBackgroundListLowBrush}"
                 CornerRadius="12">
-                <StackPanel Spacing="12">
+                 <StackPanel Spacing="12">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <fluent:SymbolIcon
                             Width="20"
                             Height="20"
                             VerticalAlignment="Center"
                             Foreground="{DynamicResource SystemControlBackgroundAccentBrush}"
-                            Symbol="Info" />
+                            Symbol="Info"
+                            Grid.Column="0"/>
                         <TextBlock
                             VerticalAlignment="Center"
                             FontSize="16"
                             FontWeight="SemiBold"
-                            Text="{DynamicResource Organization_Usage_Title}" />
+                            Text="{DynamicResource Organization_Usage_Title}"
+                            Grid.Column="1"/>
                     </Grid>
                     <StackPanel Margin="8,0,0,0" Spacing="8">
                         <TextBlock Text="{DynamicResource Organization_Usage_1}" TextWrapping="Wrap" />
