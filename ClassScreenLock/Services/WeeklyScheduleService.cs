@@ -20,7 +20,7 @@ public class WeeklyScheduleService
     public event Action? OnScheduleSynced;
 
     private static readonly string WeeklyDirectory = Path.Combine(
-        AppDomain.CurrentDomain.BaseDirectory,
+        Helpers.AppPathHelper.AppDirectory,
         "Data",
         "WeeklySchedules");
 

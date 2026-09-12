@@ -136,8 +136,6 @@ public class LockScreenService : INotifyPropertyChanged
         // 在后台线程执行文件读取和状态检查，避免阻塞UI线程
         _ = Task.Run(async () =>
         {
-            _isRestoringFromStateFile = true;
-
             try
             {
                 if (CannotRestoreLockState())
@@ -146,19 +144,24 @@ public class LockScreenService : INotifyPropertyChanged
                     return;
                 }
 
+                _isRestoringFromStateFile = true;
+
                 var lockStateData = await LoadSavedLockStateAsync();
                 if (!ValidateLockState(lockStateData))
                 {
                     _initializationCompleted = true;
+                    _isRestoringFromStateFile = false;
                     return;
                 }
 
+                // 成功读取到锁屏状态，在UI线程执行恢复
                 ApplyLockState(lockStateData!);
             }
             catch (Exception ex)
             {
                 LogService.Instance.Log("Error", "LockState", "Startup", $"检查锁屏状态文件失败: {ex.Message}");
                 _initializationCompleted = true;
+                _isRestoringFromStateFile = false;
             }
         });
     }
@@ -185,9 +188,9 @@ public class LockScreenService : INotifyPropertyChanged
 
     private void ApplyLockState(LockStateData lockStateData)
     {
-        LogService.Instance.Log("Info", "LockState", "Startup", "检测到锁屏状态文件，正在恢复锁定状态...");
+        LogService.Instance.Log("Info", "LockState", "Startup", $"检测到锁屏状态文件: {LockStateFile}，正在恢复锁定状态...");
         _isRestoringFromStateFile = true;
-        
+
         Dispatcher.UIThread.Post(() =>
         {
             try
@@ -202,6 +205,7 @@ public class LockScreenService : INotifyPropertyChanged
             finally
             {
                 _isRestoringFromStateFile = false;
+                _initializationCompleted = true;
             }
         });
     }
@@ -308,54 +312,6 @@ public class LockScreenService : INotifyPropertyChanged
         }
     }
 
-    private IntPtr _mouseHookId = IntPtr.Zero;
-    private IntPtr _keyboardHookId = IntPtr.Zero;
-    private LowLevelHookProc? _mouseProc;
-    private LowLevelHookProc? _keyboardProc;
-
-    private const int WH_KEYBOARD_LL = 13;
-    private const int WH_MOUSE_LL = 14;
-
-    private const int WM_KEYDOWN = 0x0100;
-    private const int WM_SYSKEYDOWN = 0x0104;
-    private const int WM_KEYUP = 0x0101;
-    private const int WM_SYSKEYUP = 0x0105;
-
-    private const int VK_TAB = 0x09;
-    private const int VK_ESCAPE = 0x1B;
-    private const int VK_F4 = 0x73;
-    private const int VK_LWIN = 0x5B;
-    private const int VK_RWIN = 0x5C;
-    private const int VK_LMENU = 0xA4;
-    private const int VK_RMENU = 0xA5;
-    private const int VK_LCONTROL = 0xA2;
-    private const int VK_RCONTROL = 0xA3;
-    private const int VK_LSHIFT = 0xA0;
-    private const int VK_RSHIFT = 0xA1;
-    private const int VK_DELETE = 0x2E;
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct KBDLLHOOKSTRUCT
-    {
-        public int vkCode;
-        public int scanCode;
-        public int flags;
-        public int time;
-        public IntPtr dwExtraInfo;
-    }
-
-    private delegate IntPtr LowLevelHookProc(int nCode, IntPtr wParam, IntPtr lParam);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelHookProc lpfn, IntPtr hMod, uint dwThreadId);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
-
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
 
@@ -370,9 +326,6 @@ public class LockScreenService : INotifyPropertyChanged
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
     private const int SW_RESTORE = 9;
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern IntPtr GetModuleHandle(string? lpModuleName);
 
     private void CheckSchedule()
     {
@@ -540,6 +493,10 @@ public class LockScreenService : INotifyPropertyChanged
 
     public void ActivateLock(LockMode mode, bool isManual)
     {
+        // 诊断日志：写入临时文件
+        var diagLog = Path.Combine(Path.GetTempPath(), "ClassScreenLock_startup.log");
+        File.AppendAllText(diagLog, $"[{DateTime.Now:HH:mm:ss}] ActivateLock: mode={mode}, isManual={isManual}\n{Environment.StackTrace}\n");
+
         _currentMode = mode;
         _isManualLock = isManual;
         FloatingWidgetService.Instance.HideWidget();
@@ -549,7 +506,6 @@ public class LockScreenService : INotifyPropertyChanged
         {
             IsProtectionOnlyActive = true;
             EnableProtections();
-            StartProtectionHooks();
             CreateLockStateFile();
             ShowProtectionOnlyInfo();
             ShowProtectionInfoWindow();
@@ -558,7 +514,6 @@ public class LockScreenService : INotifyPropertyChanged
 
         IsProtectionOnlyActive = false;
         CloseProtectionInfoWindow();
-        StopProtectionHooks();
 
         if (mode == LockMode.Full)
         {
@@ -580,7 +535,6 @@ public class LockScreenService : INotifyPropertyChanged
         IsProtectionOnlyActive = false;
         _isManualLock = false;
         StopScreenLock();
-        StopProtectionHooks();
         CloseProtectionInfoWindow();
         DisableProtections();
         DeleteLockStateFile();
@@ -766,10 +720,8 @@ public class LockScreenService : INotifyPropertyChanged
             return;
         }
 
-        StartHooks();
         CreateOrShowLockWindow();
         CreateLockStateFile();
-
         _topmostTimer?.Dispose();
         _topmostTimer = new Timer(_ => EnsureLockWindowState(), null, 0, 1000);
     }
@@ -778,9 +730,7 @@ public class LockScreenService : INotifyPropertyChanged
     {
         StopMaxLockDurationTimer();
         _lockStartTime = null;
-        StopHooks();
         DeleteLockStateFile();
-
         _topmostTimer?.Dispose();
         _topmostTimer = null;
 
@@ -906,8 +856,6 @@ public class LockScreenService : INotifyPropertyChanged
             return;
         }
 
-        HandleForcedTopmostApps();
-
         Dispatcher.UIThread.Post(() =>
         {
             if (!CheckLockWindowExists())
@@ -1003,217 +951,14 @@ public class LockScreenService : INotifyPropertyChanged
         _lockWindow.Activate();
     }
 
-    private void HandleForcedTopmostApps()
-    {
-        var settings = SettingsService.Lock;
-        if (settings.ForcedTopmostApps.Count == 0) return;
-
-        foreach (var appName in settings.ForcedTopmostApps)
-        {
-            try
-            {
-                var processes = Process.GetProcessesByName(appName);
-                foreach (var process in processes)
-                {
-                    IntPtr hwnd = process.MainWindowHandle;
-                    if (hwnd != IntPtr.Zero)
-                    {
-                        // 如果不是当前前台窗口，则尝试置顶
-                        if (GetForegroundWindow() != hwnd)
-                        {
-                            ShowWindow(hwnd, SW_RESTORE);
-                            SetForegroundWindow(hwnd);
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // 忽略错误
-            }
-        }
-    }
-
-    private void StartHooks()
-    {
-        if (_mouseHookId != IntPtr.Zero || _keyboardHookId != IntPtr.Zero)
-        {
-            return;
-        }
-
-        _mouseProc = MouseHookCallback;
-        _keyboardProc = KeyboardHookCallback;
-
-        using var currentProcess = Process.GetCurrentProcess();
-        using var currentModule = currentProcess.MainModule;
-
-        IntPtr moduleHandle = currentModule != null ? GetModuleHandle(currentModule.ModuleName) : IntPtr.Zero;
-
-        _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, _mouseProc, moduleHandle, 0);
-        _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardProc, moduleHandle, 0);
-    }
-
-    private void StopHooks()
-    {
-        if (_mouseHookId != IntPtr.Zero)
-        {
-            UnhookWindowsHookEx(_mouseHookId);
-            _mouseHookId = IntPtr.Zero;
-        }
-
-        if (_keyboardHookId != IntPtr.Zero)
-        {
-            UnhookWindowsHookEx(_keyboardHookId);
-            _keyboardHookId = IntPtr.Zero;
-        }
-    }
-
-    private void StartProtectionHooks()
-    {
-        if (_keyboardHookId != IntPtr.Zero)
-        {
-            return;
-        }
-
-        _keyboardProc = KeyboardHookCallback;
-
-        using var currentProcess = Process.GetCurrentProcess();
-        using var currentModule = currentProcess.MainModule;
-
-        IntPtr moduleHandle = currentModule != null ? GetModuleHandle(currentModule.ModuleName) : IntPtr.Zero;
-
-        _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardProc, moduleHandle, 0);
-    }
-
-    private void StopProtectionHooks()
-    {
-        if (_keyboardHookId != IntPtr.Zero)
-        {
-            UnhookWindowsHookEx(_keyboardHookId);
-            _keyboardHookId = IntPtr.Zero;
-        }
-    }
-
-    private IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
-    {
-        if (nCode >= 0 && IsLocked && !IsAllowedForegroundProcess())
-        {
-            return new IntPtr(1);
-        }
-
-        return CallNextHookEx(_mouseHookId, nCode, wParam, lParam);
-    }
-
-    private IntPtr KeyboardHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
-    {
-        if (nCode < 0)
-        {
-            return CallNextHookEx(_keyboardHookId, nCode, wParam, lParam);
-        }
-
-        if (!IsLocked && !IsProtectionOnlyActive)
-        {
-            return CallNextHookEx(_keyboardHookId, nCode, wParam, lParam);
-        }
-
-        bool isKeyDown = IsKeyDownEvent(wParam);
-        if (isKeyDown)
-        {
-            var hookStruct = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
-            bool shouldBlock = ShouldBlockKey(hookStruct.vkCode, IsLocked);
-            
-            if (shouldBlock)
-            {
-                return new IntPtr(1);
-            }
-        }
-
-        if (IsLocked && !IsAllowedForegroundProcess())
-        {
-            return new IntPtr(1);
-        }
-
-        return CallNextHookEx(_keyboardHookId, nCode, wParam, lParam);
-    }
-
-    private bool IsKeyDownEvent(IntPtr wParam)
-    {
-        return wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN;
-    }
-
-    private bool ShouldBlockKey(int vkCode, bool isFullLockMode)
-    {
-        return EvaluateKeyBlocking(vkCode, isFullLockMode);
-    }
-
-    private bool EvaluateKeyBlocking(int vkCode, bool isFullLockMode)
-    {
-        // 使用 switch 表达式判断按键类型
-        var keyType = GetKeyType(vkCode);
-        
-        return keyType switch
-        {
-            KeyType.AlwaysBlock => true,
-            KeyType.FullLockOnly => isFullLockMode,
-            KeyType.Allow => false,
-            _ => false
-        };
-    }
-
-    private KeyType GetKeyType(int vkCode)
-    {
-        return vkCode switch
-        {
-            VK_LWIN or VK_RWIN => KeyType.AlwaysBlock,
-            VK_LMENU or VK_RMENU => KeyType.AlwaysBlock,
-            VK_TAB => KeyType.AlwaysBlock,
-            VK_ESCAPE => KeyType.AlwaysBlock,
-            VK_F4 => KeyType.AlwaysBlock,
-            VK_DELETE => KeyType.AlwaysBlock,
-            VK_LCONTROL or VK_RCONTROL => KeyType.FullLockOnly,
-            _ => KeyType.Allow
-        };
-    }
-
-    private enum KeyType
-    {
-        AlwaysBlock,
-        FullLockOnly,
-        Allow
-    }
-
-    private bool IsAllowedForegroundProcess()
-    {
-        try
-        {
-            IntPtr hwnd = GetForegroundWindow();
-            if (hwnd == IntPtr.Zero) return false;
-
-            GetWindowThreadProcessId(hwnd, out uint pid);
-            using var process = Process.GetProcessById((int)pid);
-            return IsProcessAllowed(process.ProcessName);
-        }
-        catch { return false; }
-    }
-
     private bool IsProcessAllowed(string processName)
-    {        if (string.IsNullOrWhiteSpace(processName)) return false;
+    {
+        if (string.IsNullOrWhiteSpace(processName)) return false;
         
         // 总是允许自身
         if (string.Equals(processName, "ClassScreenLock", StringComparison.OrdinalIgnoreCase))
-        {            return true;
-        }
-
-        var settings = SettingsService.Lock;
-        
-        // 检查允许置顶的程序
-        if (settings.AllowedTopmostApps.Any(allowed => string.Equals(processName, allowed, StringComparison.OrdinalIgnoreCase)))
-        {            return true;
-        }
-
-        // 检查强制置顶的程序
-        if (settings.ForcedTopmostApps.Any(forced => string.Equals(processName, forced, StringComparison.OrdinalIgnoreCase)))
-        {            return true;
+        {
+            return true;
         }
 
         return false;
@@ -1354,6 +1099,8 @@ public class LockScreenService : INotifyPropertyChanged
                 return null;
             }
 
+            LogService.Instance.Log("Debug", "LockState", "File", $"读取到锁屏状态文件: {LockStateFile}");
+
             var json = await File.ReadAllTextAsync(LockStateFile);
             var stateData = JsonSerializer.Deserialize<LockStateData>(json);
 
@@ -1370,6 +1117,7 @@ public class LockScreenService : INotifyPropertyChanged
                     // 检查进程名是否匹配
                     if (process.ProcessName.Equals("ClassScreenLock", StringComparison.OrdinalIgnoreCase))
                     {
+                        LogService.Instance.Log("Debug", "LockState", "File", $"锁屏状态文件属于当前进程实例(PID={stateData.ProcessId})，跳过恢复");
                         return null; // 自己的进程，不恢复
                     }
                     // 如果进程名不匹配，说明进程 ID 可能被其他进程复用
@@ -1378,10 +1126,12 @@ public class LockScreenService : INotifyPropertyChanged
                 catch (ArgumentException)
                 {
                     // 进程不存在，允许恢复
+                    LogService.Instance.Log("Debug", "LockState", "File", $"锁屏状态文件中进程(PID={stateData.ProcessId})已不存在，允许恢复");
                 }
                 catch (InvalidOperationException)
                 {
                     // 进程不存在，允许恢复
+                    LogService.Instance.Log("Debug", "LockState", "File", $"锁屏状态文件中进程(PID={stateData.ProcessId})已不存在，允许恢复");
                 }
             }
 

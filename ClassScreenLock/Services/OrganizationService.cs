@@ -26,13 +26,13 @@ public class OrganizationService
 
     public OrganizationService()
     {
-        var dataDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+        var dataDir = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data");
         if (!Directory.Exists(dataDir))
         {
             Directory.CreateDirectory(dataDir);
         }
         _organizationConfigPath = Path.Combine(dataDir, "organization.json");
-        _httpClient = new HttpClient();
+        _httpClient = CreateHttpClient();
         _httpClient.Timeout = TimeSpan.FromSeconds(15); // 设置默认超时时间为30秒
         _deviceService = new DeviceService();
         _deviceService.Initialize(this);
@@ -198,11 +198,26 @@ public class OrganizationService
 
     public async Task<(bool Success, string ErrorMessage)> JoinOrganizationAsync(string serverUrl, string organizationId, string contactPhone, string className, string personInCharge)
     {
+        // 规范化服务器地址：自动补全协议头、去除尾部斜杠
+        serverUrl = NormalizeServerUrl(serverUrl);
+        if (string.IsNullOrEmpty(serverUrl))
+        {
+            return (false, "服务器地址不能为空");
+        }
+
+        // 提取集控服务器主机名，用于 MITM 代理排除
+        string? orgHost = null;
+        try { orgHost = new Uri(serverUrl).Host.ToLowerInvariant(); } catch { }
+
+        // 如果 MITM 代理正在运行，先暂停它（避免代理拦截集控连接请求），
+        // 加入成功后再将集控地址加入排除列表并恢复代理
+        var mitmToken = MitmInterceptionService.Instance.PauseIfRunning();
+
         try
         {
             LogService.Instance.Log("Info", "Organization", "OrganizationService", $"尝试加入组织：{organizationId}，服务器：{serverUrl}");
             Console.WriteLine($"[DEBUG] 尝试加入组织：{organizationId}，服务器：{serverUrl}");
-            
+
             // 从服务器获取组织信息
             var (org, errorMessage) = await FetchOrganizationInfoAsync(serverUrl, organizationId);
             if (org == null)
@@ -214,17 +229,23 @@ public class OrganizationService
             UpdateOrganizationInfo(org, serverUrl, contactPhone, className, personInCharge);
             _currentOrganization = org;
             await SaveOrganizationAsync();
-            
+
             LogService.Instance.Log("Info", "Organization", "OrganizationService", $"成功加入组织：{org.Name}");
             Console.WriteLine($"[DEBUG] 成功加入组织：{org.Name}");
             Console.WriteLine($"[DEBUG] 组织信息：ID={org.Id}, Name={org.Name}, ServerUrl={org.ServerUrl}, IsActive={org.IsActive}, Phone={org.ContactPhone}, Class={org.ClassName}, Person={org.PersonInCharge}");
-            
+
+            // 加入成功后，将集控服务器地址永久加入 MITM 排除列表
+            if (!string.IsNullOrEmpty(orgHost))
+            {
+                MitmInterceptionService.Instance.AddBypassHost(orgHost);
+            }
+
             // 禁用本地超级管理员账户（立即执行）
             DisableLocalSuperAdmin();
-            
+
             // 后台异步执行非关键操作，不阻塞用户
             RegisterDeviceBackground();
-            
+
             // 连接WebSocket（实时通信）
             _ = Task.Run(async () =>
             {
@@ -238,13 +259,20 @@ public class OrganizationService
                     LogService.Instance.Log("Warning", "Organization", "WebSocket", $"WebSocket连接失败: {ex.Message}");
                 }
             });
-            
+
             return (true, string.Empty);
         }
         catch (TaskCanceledException ex)
         {
-            var errorMessage = "加入组织超时，请检查网络连接";
+            var errorMessage = $"连接服务器超时，请确认集控端已启动，且地址端口正确（默认 5000）";
             LogService.Instance.Log("Error", "Organization", "OrganizationService", $"{errorMessage}: {ex.Message}");
+            Console.WriteLine($"[ERROR] {errorMessage}");
+            return (false, errorMessage);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or System.Net.Sockets.SocketException)
+        {
+            var errorMessage = $"无法连接到服务器（{serverUrl}）：{ex.Message}。请确认集控端已启动、端口正确（默认 5000），并检查防火墙设置";
+            LogService.Instance.Log("Error", "Organization", "OrganizationService", $"{errorMessage}\n{ex.StackTrace}");
             Console.WriteLine($"[ERROR] {errorMessage}");
             return (false, errorMessage);
         }
@@ -256,6 +284,45 @@ public class OrganizationService
             Console.WriteLine($"[ERROR] 异常详情：{ex.StackTrace}");
             return (false, errorMessage);
         }
+        finally
+        {
+            // 无论成功或失败，恢复 MITM 代理到之前的运行状态
+            // 成功时：集控地址已在排除列表中，代理恢复后不会拦截集控通信
+            // 失败时：代理恢复到原状态，不影响用户其他网络活动
+            MitmInterceptionService.Instance.RestoreFromToken(mitmToken);
+        }
+    }
+
+    /// <summary>
+    /// 规范化服务器地址：自动补全 http:// 协议头、去除尾部斜杠
+    /// </summary>
+    private static string NormalizeServerUrl(string? serverUrl)
+    {
+        var url = serverUrl?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(url)) return url;
+
+        if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+            !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            url = "http://" + url;
+        }
+
+        return url.TrimEnd('/');
+    }
+
+    /// <summary>
+    /// 创建绕过系统代理的 HttpClient。
+    /// 集控通信属于可信流量，不应经过 MITM 代理检查，
+    /// 否则 MITM 代理未启动或异常时会导致"目标计算机积极拒绝"错误。
+    /// 无论集控在局域网还是公网，都直连。
+    /// </summary>
+    private static HttpClient CreateHttpClient()
+    {
+        var handler = new SocketsHttpHandler
+        {
+            UseProxy = false
+        };
+        return new HttpClient(handler);
     }
 
     /// <summary>
@@ -263,7 +330,7 @@ public class OrganizationService
     /// </summary>
     private async Task<(OrganizationModel? Org, string? ErrorMessage)> FetchOrganizationInfoAsync(string serverUrl, string organizationId)
     {
-        using var httpClient = new HttpClient();
+        using var httpClient = CreateHttpClient();
         httpClient.Timeout = TimeSpan.FromSeconds(10);
         
         var response = await httpClient.GetAsync($"{serverUrl}/api/organizations/{organizationId}");
@@ -436,7 +503,7 @@ public class OrganizationService
             Console.WriteLine($"[INFO] 发送退出请求到：{requestUrl}");
             Console.WriteLine($"[INFO] 请求内容：{json}");
             
-            using var httpClient = new HttpClient();
+            using var httpClient = CreateHttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
             
             var response = await httpClient.PostAsync(requestUrl, content);
@@ -608,7 +675,7 @@ public class OrganizationService
             Console.WriteLine($"正在连接到服务器：{_currentOrganization.ServerUrl}");
             
             // 创建临时 HttpClient 实例，设置超时时间
-            using var httpClient = new HttpClient();
+            using var httpClient = CreateHttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10); // 启动时连接操作设置10秒超时
             
             // 验证服务器连接
@@ -751,7 +818,7 @@ public class OrganizationService
         try
         {
             // 从服务器获取最新的安全配置和网络配置
-            using var httpClient = new HttpClient();
+            using var httpClient = CreateHttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
             
             var securityConfigTask = httpClient.GetAsync($"{_currentOrganization.ServerUrl}/api/organizations/{_currentOrganization.Id}/security-config");
@@ -881,19 +948,28 @@ public class OrganizationService
             return;
         }
 
+        // Step 1: 删除旧的组织账户（腾出超管名额）
         var existingAccounts = AccountService.Instance.GetAllAccountsForRestore();
-        
-        // 删除所有现有的组织账户
         DeleteOrganizationAccounts(existingAccounts);
-        
-        // 禁用所有本地账户
-        DisableLocalAccounts(existingAccounts);
 
-        // 创建新的账户
+        // Step 2: 创建新的组织账户
         int accountCount = CreateOrganizationAccounts(securityConfig.Accounts);
-        
-        LogService.Instance.Log("Security", "AccountsSynced", "Organization", $"已同步 {accountCount} 个账户");
-        Console.WriteLine($"[INFO] 已同步 {accountCount} 个账户");
+
+        // Step 3: 只有在新账户创建成功后才禁用本地账户
+        // 如果创建失败，保留本地账户不变，防止所有账户都被清空
+        if (accountCount > 0)
+        {
+            var currentAccounts = AccountService.Instance.GetAllAccountsForRestore();
+            DisableLocalAccounts(currentAccounts);
+
+            LogService.Instance.Log("Security", "AccountsSynced", "Organization", $"已同步 {accountCount} 个账户");
+            Console.WriteLine($"[INFO] 已同步 {accountCount} 个账户");
+        }
+        else
+        {
+            LogService.Instance.Log("Error", "AccountsSync", "Organization", "集控端下发的所有账户创建失败，本地账户未被禁用。请检查密码是否符合安全策略（长度≥12位、包含大小写字母和数字）");
+            Console.WriteLine($"[ERROR] 集控端下发的所有账户创建失败，本地账户未被禁用。请检查密码策略");
+        }
     }
 
     /// <summary>
@@ -1184,7 +1260,7 @@ public class OrganizationService
     {
         try
         {
-            var networkBlockagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Networkblockage.json");
+            var networkBlockagePath = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data", "Networkblockage.json");
             
             // 将 DomainRule 转换为 NetworkRule
             var networkRules = domainRules.Select(r => new NetworkRule
@@ -1223,7 +1299,7 @@ public class OrganizationService
     {
         try
         {
-            var networkBlockagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Networkblockage.json");
+            var networkBlockagePath = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data", "Networkblockage.json");
             
             // 清空所有从集控端同步的域名拦截规则
             var emptyRules = new List<NetworkRule>();

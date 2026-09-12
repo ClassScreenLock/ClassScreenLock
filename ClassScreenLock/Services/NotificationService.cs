@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -15,6 +16,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.Styling;
 using Avalonia.Platform;
+using FluentAvalonia.UI.Controls;
 using ClassScreenLock.Models;
 
 namespace ClassScreenLock.Services;
@@ -87,16 +89,9 @@ public class NotificationService : IDisposable
     {
         try
         {
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                var mainWindow = desktop.MainWindow;
-                var clipboard = mainWindow?.Clipboard;
-                if (clipboard != null)
-                {
-                    await clipboard.SetTextAsync(text);
-                    return true;
-                }
-            }
+            // 直接用 Win32 原始 API 写入剪贴板，绕过 Avalonia 默认的 OLE 封送：
+            // SYSTEM 账户下 OLE 跨安全上下文封送可能失败，GetClipboardData/SetClipboardData 无此限制。
+            return await Task.Run(() => SystemClipboard.SetUnicodeText(text));
         }
         catch
         {
@@ -159,7 +154,7 @@ public class NotificationService : IDisposable
     /// <param name="title">通知标题或资源键</param>
     /// <param name="message">通知消息或资源键</param>
     /// <param name="duration">显示持续时间（毫秒），默认为3000ms</param>
-    public async Task ShowInfoAsync(string title, string message, int duration = 3000)
+    public async Task ShowInfoAsync(string title, string message, int? duration = null)
     {
         if (!_notificationsEnabled)
         {
@@ -170,15 +165,15 @@ public class NotificationService : IDisposable
         var localizedTitle = GetLocalizedString(title);
         var localizedMessage = GetLocalizedString(message);
 
-        await ShowNotificationAsync(localizedTitle, localizedMessage, "Info", duration, force: true);
+        await ShowNotificationAsync(localizedTitle, localizedMessage, "Info", duration ?? SettingsService.General.NotificationDurationMs, force: true);
     }
     
     /// <summary>
     /// 显示信息通知（仅标题）
     /// </summary>
     /// <param name="title">通知标题或资源键</param>
-    /// <param name="duration">显示持续时间（毫秒），默认为3000ms</param>
-    public async Task ShowInfoAsync(string title, int duration = 3000)
+    /// <param name="duration">显示持续时间（毫秒），为空时使用全局配置</param>
+    public async Task ShowInfoAsync(string title, int? duration = null)
     {
         await ShowInfoAsync(title, string.Empty, duration);
     }
@@ -189,22 +184,22 @@ public class NotificationService : IDisposable
     /// <param name="title">通知标题或资源键</param>
     /// <param name="message">通知消息或资源键</param>
     /// <param name="duration">显示持续时间（毫秒），默认为3000ms</param>
-    public async Task ShowSuccessAsync(string title, string message, int duration = 3000)
+    public async Task ShowSuccessAsync(string title, string message, int? duration = null)
     {
         if (!_notificationsEnabled) return;
         
         var localizedTitle = GetLocalizedString(title);
         var localizedMessage = GetLocalizedString(message);
         
-        await ShowNotificationAsync(localizedTitle, localizedMessage, "Success", duration);
+        await ShowNotificationAsync(localizedTitle, localizedMessage, "Success", duration ?? SettingsService.General.NotificationDurationMs);
     }
     
     /// <summary>
     /// 显示成功通知（仅标题）
     /// </summary>
     /// <param name="title">通知标题或资源键</param>
-    /// <param name="duration">显示持续时间（毫秒），默认为3000ms</param>
-    public async Task ShowSuccessAsync(string title, int duration = 3000)
+    /// <param name="duration">显示持续时间（毫秒），为空时使用全局配置</param>
+    public async Task ShowSuccessAsync(string title, int? duration = null)
     {
         await ShowSuccessAsync(title, string.Empty, duration);
     }
@@ -215,22 +210,22 @@ public class NotificationService : IDisposable
     /// <param name="title">通知标题或资源键</param>
     /// <param name="message">通知消息或资源键</param>
     /// <param name="duration">显示持续时间（毫秒），默认为5000ms</param>
-    public async Task ShowWarningAsync(string title, string message, int duration = 5000)
+    public async Task ShowWarningAsync(string title, string message, int? duration = null)
     {
         if (!_notificationsEnabled) return;
         
         var localizedTitle = GetLocalizedString(title);
         var localizedMessage = GetLocalizedString(message);
         
-        await ShowNotificationAsync(localizedTitle, localizedMessage, "Warning", duration);
+        await ShowNotificationAsync(localizedTitle, localizedMessage, "Warning", duration ?? SettingsService.General.NotificationDurationMs);
     }
     
     /// <summary>
     /// 显示警告通知（仅标题）
     /// </summary>
     /// <param name="title">通知标题或资源键</param>
-    /// <param name="duration">显示持续时间（毫秒），默认为5000ms</param>
-    public async Task ShowWarningAsync(string title, int duration = 5000)
+    /// <param name="duration">显示持续时间（毫秒），为空时使用全局配置</param>
+    public async Task ShowWarningAsync(string title, int? duration = null)
     {
         await ShowWarningAsync(title, string.Empty, duration);
     }
@@ -240,23 +235,23 @@ public class NotificationService : IDisposable
     /// </summary>
     /// <param name="title">通知标题或资源键</param>
     /// <param name="message">通知消息或资源键</param>
-    /// <param name="duration">显示持续时间（毫秒），默认为5000ms</param>
-    public async Task ShowErrorAsync(string title, string message, int duration = 5000)
+    /// <param name="duration">显示持续时间（毫秒），为空时使用全局配置</param>
+    public async Task ShowErrorAsync(string title, string message, int? duration = null)
     {
         if (!_notificationsEnabled) return;
         
         var localizedTitle = GetLocalizedString(title);
         var localizedMessage = GetLocalizedString(message);
         
-        await ShowNotificationAsync(localizedTitle, localizedMessage, "Error", duration);
+        await ShowNotificationAsync(localizedTitle, localizedMessage, "Error", duration ?? SettingsService.General.NotificationDurationMs);
     }
     
     /// <summary>
     /// 显示错误通知（仅标题）
     /// </summary>
     /// <param name="title">通知标题或资源键</param>
-    /// <param name="duration">显示持续时间（毫秒），默认为5000ms</param>
-    public async Task ShowErrorAsync(string title, int duration = 5000)
+    /// <param name="duration">显示持续时间（毫秒），为空时使用全局配置</param>
+    public async Task ShowErrorAsync(string title, int? duration = null)
     {
         await ShowErrorAsync(title, string.Empty, duration);
     }
@@ -264,7 +259,7 @@ public class NotificationService : IDisposable
     #region ShowConfirmAsync 重构方法
 
     /// <summary>
-    /// 显示确认对话框
+    /// 显示确认对话框（Fluent 2 标准 ContentDialog，自动跟随系统主题）
     /// </summary>
     /// <param name="message">确认消息</param>
     /// <param name="title">对话框标题</param>
@@ -276,151 +271,127 @@ public class NotificationService : IDisposable
             return true;
         }
 
-        var tcs = new TaskCompletionSource<bool>();
         var owner = desktop.MainWindow;
-        var isDarkMode = SettingsService.General.DarkMode;
-
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            var window = CreateConfirmWindow(title, owner, isDarkMode);
-            var grid = CreateConfirmGrid();
-            var textBlock = CreateConfirmTextBlock(message, isDarkMode);
-            var buttonPanel = CreateConfirmButtonPanel();
-            SetupConfirmButtons(buttonPanel, tcs, window, isDarkMode);
-
-            Grid.SetRow(textBlock, 0);
-            Grid.SetRow(buttonPanel, 1);
-            grid.Children.Add(textBlock);
-            grid.Children.Add(buttonPanel);
-            window.Content = grid;
-
-            window.Closed += (_, _) =>
-            {
-                if (!tcs.Task.IsCompleted)
-                {
-                    tcs.TrySetResult(false);
-                }
-            };
-
-            if (owner != null)
-                window.Show(owner);
-            else
-                window.Show();
-        });
-
-        return await tcs.Task.ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// 创建确认窗口
-    /// </summary>
-    private Window CreateConfirmWindow(string title, Window? owner, bool isDarkMode)
-    {
-        var window = new Window
+        var dialog = new ContentDialog
         {
             Title = title,
-            WindowStartupLocation = owner != null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen,
-            CanResize = false,
-            ShowInTaskbar = false,
-            Topmost = true,
-            SizeToContent = SizeToContent.WidthAndHeight,
-            SystemDecorations = SystemDecorations.BorderOnly,
-            Background = isDarkMode ? new SolidColorBrush(Color.Parse("#252525")) : new SolidColorBrush(Colors.White)
+            Content = message,
+            PrimaryButtonText = GetLocalizedString("Btn_Ok"),
+            CloseButtonText = GetLocalizedString("Btn_Cancel"),
+            DefaultButton = ContentDialogButton.Primary
         };
 
-        if (isDarkMode)
-        {
-            window.Classes.Add("dark");
-        }
+        var result = owner != null
+            ? await dialog.ShowAsync(owner)
+            : await dialog.ShowAsync();
 
-        if (owner != null)
-        {
-            window.Icon = owner.Icon;
-        }
-
-        return window;
+        return result == ContentDialogResult.Primary;
     }
 
     /// <summary>
-    /// 创建确认对话框的网格布局
+    /// 显示带有额外"操作按钮"的确认对话框（Fluent 2 标准 ContentDialog，与截图删除确认同款 UI）。
+    /// 中间的次要按钮点击时执行 <paramref name="secondaryAction"/> 但【不关闭】对话框，
+    /// 供"导出注册表备份"这类可选辅助操作使用；用户仍需点主按钮确认或取消。
     /// </summary>
-    private Grid CreateConfirmGrid()
+    /// <param name="message">确认消息</param>
+    /// <param name="title">对话框标题</param>
+    /// <param name="secondaryButtonText">次要操作按钮文本</param>
+    /// <param name="secondaryAction">次要按钮点击时执行的操作（不关闭对话框）</param>
+    /// <returns>用户是否点击主按钮确认</returns>
+    public async Task<bool> ShowConfirmWithActionAsync(string message, string title, string secondaryButtonText, Func<Task> secondaryAction)
     {
-        return new Grid
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
         {
-            Margin = new Thickness(20),
-            RowDefinitions = new RowDefinitions("Auto,Auto")
+            return true;
+        }
+
+        var owner = desktop.MainWindow;
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = message,
+            PrimaryButtonText = GetLocalizedString("Btn_Ok"),
+            SecondaryButtonText = secondaryButtonText,
+            CloseButtonText = GetLocalizedString("Btn_Cancel"),
+            DefaultButton = ContentDialogButton.Primary
         };
+
+        // 次要按钮点击：执行辅助操作但阻止对话框关闭，让用户继续在同一确认框中决策。
+        dialog.SecondaryButtonClick += async (s, args) =>
+        {
+            args.Cancel = true;
+            var deferral = args.GetDeferral();
+            try
+            {
+                await secondaryAction();
+            }
+            catch (Exception ex)
+            {
+                ShowError($"操作失败: {ex.Message}");
+            }
+            finally
+            {
+                deferral.Complete();
+            }
+        };
+
+        var result = owner != null
+            ? await dialog.ShowAsync(owner)
+            : await dialog.ShowAsync();
+
+        return result == ContentDialogResult.Primary;
     }
 
     /// <summary>
-    /// 创建确认对话框的文本块
+    /// 显示一个带【不确定态进度条】的模态对话框，并在其显示期间执行 <paramref name="work"/>。
+    /// 适用于 reg.exe 导出等无法获知具体百分比、但可能耗时的操作：期间对话框无按钮、不可关闭，
+    /// 待 <paramref name="work"/> 结束后自动关闭。与截图删除确认同款 ContentDialog 遮罩/动画/阴影。
     /// </summary>
-    private TextBlock CreateConfirmTextBlock(string message, bool isDarkMode)
+    /// <param name="title">对话框标题</param>
+    /// <param name="message">进度条上方的说明文本</param>
+    /// <param name="work">在进度框显示期间要执行的异步操作</param>
+    public async Task RunWithProgressAsync(string title, string message, Func<Task> work)
     {
-        return new TextBlock
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            // 无桌面生命周期（理论上不会发生）时，直接执行工作，不弹框。
+            await work();
+            return;
+        }
+
+        var owner = desktop.MainWindow;
+        var panel = new StackPanel { Spacing = 14, MinWidth = 300 };
+        panel.Children.Add(new TextBlock
         {
             Text = message,
-            Margin = new Thickness(0, 0, 0, 16),
-            TextWrapping = TextWrapping.Wrap,
-            Foreground = isDarkMode ? Brushes.White : Brushes.Black
-        };
-    }
-
-    /// <summary>
-    /// 创建确认对话框的按钮面板
-    /// </summary>
-    private StackPanel CreateConfirmButtonPanel()
-    {
-        return new StackPanel
+            TextWrapping = TextWrapping.Wrap
+        });
+        panel.Children.Add(new ProgressBar
         {
-            Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            Spacing = 12
-        };
-    }
+            IsIndeterminate = true,
+            MinWidth = 280,
+            Height = 6
+        });
 
-    /// <summary>
-    /// 设置确认对话框的按钮
-    /// </summary>
-    private void SetupConfirmButtons(StackPanel buttonPanel, TaskCompletionSource<bool> tcs, Window window, bool isDarkMode)
-    {
-        var cancelButton = new Button
+        var dialog = new ContentDialog
         {
-            Content = GetLocalizedString("Btn_Cancel"),
-            MinWidth = 80,
-            Background = isDarkMode ? new SolidColorBrush(Color.Parse("#3A3A3A")) : new SolidColorBrush(Color.Parse("#E0E0E0")),
-            Foreground = isDarkMode ? Brushes.White : Brushes.Black,
-            BorderThickness = new Thickness(0),
-            CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(12, 8)
+            Title = title,
+            Content = panel
+            // 不设置任何按钮：操作进行中不允许用户手动关闭，完成后由代码 Hide()。
         };
 
-        var okButton = new Button
+        // 先启动对话框显示（不 await，使其模态弹出并播放动画），
+        // 随后在 UI 线程上 await 工作任务，完成后关闭对话框。
+        var showTask = owner != null ? dialog.ShowAsync(owner) : dialog.ShowAsync();
+        try
         {
-            Content = GetLocalizedString("Btn_Save"),
-            MinWidth = 80,
-            Background = new SolidColorBrush(Color.Parse("#0078D4")),
-            Foreground = Brushes.White,
-            BorderThickness = new Thickness(0),
-            CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(12, 8)
-        };
-
-        cancelButton.Click += (_, _) =>
+            await work();
+        }
+        finally
         {
-            tcs.TrySetResult(false);
-            window.Close();
-        };
-
-        okButton.Click += (_, _) =>
-        {
-            tcs.TrySetResult(true);
-            window.Close();
-        };
-
-        buttonPanel.Children.Add(cancelButton);
-        buttonPanel.Children.Add(okButton);
+            dialog.Hide();
+            await showTask;
+        }
     }
 
     #endregion
@@ -438,8 +409,8 @@ public class NotificationService : IDisposable
         if (!force && !SettingsService.General.ShowNotifications)
             return;
 
-        // 使用默认持续时间（3000ms）
-        var duration = 3000;
+        // 使用配置的通知停留时长
+        var duration = SettingsService.General.NotificationDurationMs;
 
         // 显示通知
         _ = ShowNotificationAsync(title, message, type, duration, force);
@@ -575,6 +546,9 @@ public class NotificationService : IDisposable
 
                 context.Window.Show();
                 CalculateAndSetNotificationPosition(context.Window);
+
+                // 播放系统提示音
+                PlayNotificationSound(type);
 
                 // 出现动画 - 透明度淡入 + 缩放（在 UI 线程内同步执行）
                 try
@@ -1275,6 +1249,45 @@ public class NotificationService : IDisposable
     {
         _notificationsEnabled = enabled;
     }
+
+    #region 通知声音
+
+    private const uint MB_ICONHAND = 0x00000010;
+    private const uint MB_ICONQUESTION = 0x00000020;
+    private const uint MB_ICONEXCLAMATION = 0x00000030;
+    private const uint MB_ICONASTERISK = 0x00000040;
+
+    /// <summary>
+    /// 播放系统提示音（Windows）。
+    /// </summary>
+    [DllImport("user32.dll")]
+    private static extern bool MessageBeep(uint uType);
+
+    /// <summary>
+    /// 根据通知类型播放对应的系统提示音。
+    /// </summary>
+    private void PlayNotificationSound(string type)
+    {
+        try
+        {
+            // 用户关闭了通知声音则不播放
+            if (!SettingsService.General.NotificationSound) return;
+
+            var soundType = type switch
+            {
+                "Warning" => MB_ICONEXCLAMATION,
+                "Error" => MB_ICONHAND,
+                _ => MB_ICONASTERISK
+            };
+            MessageBeep(soundType);
+        }
+        catch
+        {
+            // 播放失败不影响通知显示
+        }
+    }
+
+    #endregion
     
     /// <summary>
     /// 释放资源

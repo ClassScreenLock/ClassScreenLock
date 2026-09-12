@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -266,17 +265,12 @@ public class ScreenMonitorService : IDisposable
 
                         bitmap.UnlockBits(bmpData);
 
-                        // PNG 无损保存（避免 JPEG→JPEG 双重压缩损失画质）
-                        using var pngStream = new MemoryStream();
-                        bitmap.Save(pngStream, ImageFormat.Png);
-                        var pngBytes = pngStream.ToArray();
-
-                        // 一次编码：缩放 + JPEG 压缩
-                        var compressed = CompressFrame(pngBytes, _activeMaxWidth, _activeJpegQuality, out int w, out int h);
+                        // 直接编码为 PNG（含可选缩放），一步到位
+                        var compressed = EncodeToPng(bitmap, _activeMaxWidth, out int w, out int h);
                         if (compressed == null || compressed.Length == 0) return;
 
                         long ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                        _ = WebSocketService.Instance.SendScreenMonitorFrameAsync(ts, "jpeg", w, h, compressed);
+                        _ = WebSocketService.Instance.SendScreenMonitorFrameAsync(ts, "png", w, h, compressed);
                         FramesSent++;
                         _frameSeq++;
                     }
@@ -309,66 +303,54 @@ public class ScreenMonitorService : IDisposable
         }
     }
 
-    private static byte[]? CompressFrame(byte[] sourceImage, int maxWidth, int quality, out int width, out int height)
+    private static byte[]? EncodeToPng(Bitmap src, int maxWidth, out int width, out int height)
     {
-        width = 0;
-        height = 0;
+        width = src.Width;
+        height = src.Height;
+
         try
         {
-            using var srcStream = new MemoryStream(sourceImage);
-            using var src = Image.FromStream(srcStream, false, true);
-            width = src.Width;
-            height = src.Height;
+            Bitmap? resized = null;
+            Image target;
 
-            Image? resized = src;
+            if (maxWidth > 0 && src.Width > maxWidth)
+            {
+                double ratio = (double)maxWidth / src.Width;
+                int newW = maxWidth;
+                int newH = Math.Max(1, (int)Math.Round(src.Height * ratio));
+                resized = new Bitmap(newW, newH, PixelFormat.Format32bppArgb);
+                using (var g = Graphics.FromImage(resized))
+                {
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                    g.CompositingQuality = CompositingQuality.HighQuality;
+                    g.DrawImage(src, 0, 0, newW, newH);
+                }
+                target = resized;
+                width = newW;
+                height = newH;
+            }
+            else
+            {
+                target = src;
+            }
+
             try
             {
-                if (maxWidth > 0 && src.Width > maxWidth)
-                {
-                    double ratio = (double)maxWidth / src.Width;
-                    int newW = maxWidth;
-                    int newH = Math.Max(1, (int)Math.Round(src.Height * ratio));
-                    var newImg = new Bitmap(newW, newH, PixelFormat.Format24bppRgb);
-                    using (var g = Graphics.FromImage(newImg))
-                    {
-                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                        g.SmoothingMode = SmoothingMode.HighQuality;
-                        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                        g.CompositingQuality = CompositingQuality.HighQuality;
-                        g.DrawImage(src, 0, 0, newW, newH);
-                    }
-                    resized = newImg;
-                    width = newW;
-                    height = newH;
-                }
-
-                var jpegCodec = ImageCodecInfo.GetImageEncoders()
-                    .FirstOrDefault(c => c.FormatID == ImageFormat.Jpeg.Guid);
-                if (jpegCodec == null)
-                {
-                    using var outStream = new MemoryStream();
-                    resized.Save(outStream, ImageFormat.Jpeg);
-                    return outStream.ToArray();
-                }
-
-                var encoderParams = new EncoderParameters(1);
-                encoderParams.Param[0] = new EncoderParameter(
-                    System.Drawing.Imaging.Encoder.Quality,
-                    (long)Math.Clamp(quality, 1, 100));
-
-                using var outStream2 = new MemoryStream();
-                resized.Save(outStream2, jpegCodec, encoderParams);
-                return outStream2.ToArray();
+                using var outStream = new MemoryStream();
+                target.Save(outStream, ImageFormat.Png);
+                return outStream.ToArray();
             }
             finally
             {
-                if (!ReferenceEquals(resized, src)) resized.Dispose();
+                resized?.Dispose();
             }
         }
         catch (Exception ex)
         {
-            LogService.Instance.Log("Warning", "ScreenMonitor", "ScreenMonitorService", $"压缩失败，返回原图: {ex.Message}");
-            return sourceImage;
+            LogService.Instance.Log("Warning", "ScreenMonitor", "ScreenMonitorService", $"PNG编码失败: {ex.Message}");
+            return null;
         }
     }
 

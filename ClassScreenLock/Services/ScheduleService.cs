@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Globalization;
@@ -15,7 +15,7 @@ namespace ClassScreenLock.Services;
 public class ScheduleService
 {
     private static readonly string SchedulesDirectory = Path.Combine(
-        AppDomain.CurrentDomain.BaseDirectory,
+        Helpers.AppPathHelper.AppDirectory,
         "Data",
         "Schedules");
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -24,7 +24,7 @@ public class WebcamService
 
     private WebcamService()
     {
-        _webcamDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "WebcamPhotos");
+        _webcamDirectory = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data", "WebcamPhotos");
         if (!Directory.Exists(_webcamDirectory))
         {
             Directory.CreateDirectory(_webcamDirectory);

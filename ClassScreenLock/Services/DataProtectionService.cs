@@ -17,7 +17,7 @@ public class DataProtectionService
     private static readonly Lazy<DataProtectionService> _instance = new(() => new DataProtectionService());
     public static DataProtectionService Instance => _instance.Value;
 
-    private static readonly string DataDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+    private static readonly string DataDirectory = Helpers.AppPathHelper.DataDirectory;
     private static readonly string AppDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ClassScreenLock");
     private static readonly string EncryptedBackupFile = Path.Combine(AppDataDirectory, "ClassScreenLock_backup.dat");
     private static readonly string SyncLogFile = Path.Combine(AppDataDirectory, "ClassScreenLock_sync_log.json");
@@ -31,6 +31,14 @@ public class DataProtectionService
     private const int SyncCooldownMs = 500; // 500 毫秒冷却时间
     private const int MaxLogEntries = 100; // 最多保留 100 条日志
     private const int MaxLogFileSizeKB = 500; // 日志文件最大 500KB
+
+    /// <summary>最近一次备份的文件指纹（相对路径 → "长度:最后修改时间"），用于增量备份跳过未变化文件</summary>
+    private readonly Dictionary<string, string> _lastBackupFingerprints = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object _fingerprintLock = new();
+
+    /// <summary>内存缓存最近一次备份包内容（相对路径 → 文件数据），增量备份无需重复解密旧包</summary>
+    private Dictionary<string, BackupFile>? _cachedBackupFiles = null;
+    private readonly object _cacheLock = new();
 
     private DataProtectionService()
     {
@@ -322,93 +330,20 @@ public class DataProtectionService
 
     public async Task<bool> CreateEncryptedBackupAsync()
     {
-        try
-        {
-            var dataFiles = GetAllDataFiles();
-            var backupData = new BackupData
-            {
-                Files = new List<BackupFile>(),
-                Timestamp = DateTime.Now
-            };
-
-            foreach (var file in dataFiles)
-            {
-                var fileData = await File.ReadAllBytesAsync(file);
-                var relativePath = GetRelativePath(file, DataDirectory);
-                var checksum = CalculateChecksum(fileData);
-
-                backupData.Files.Add(new BackupFile
-                {
-                    RelativePath = relativePath,
-                    Content = fileData,
-                    Checksum = checksum,
-                    LastModified = File.GetLastWriteTime(file)
-                });
-            }
-
-            var backupJson = JsonSerializer.Serialize(backupData);
-            var encryptedData = EncryptData(Encoding.UTF8.GetBytes(backupJson));
-            await WriteFileWithRetryAsync(EncryptedBackupFile, encryptedData);
-            
-            // 设置备份文件为系统隐藏
-            SetSystemHiddenFile(EncryptedBackupFile);
-            SetSystemHiddenFile(SyncLogFile);
-
-            await LogSyncOperation("CreateBackup", dataFiles.Length);
-            LogService.Instance.Log("DataProtection", "BackupCreated", "System", "已创建加密备份");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            await LogErrorAsync("CreateBackup", ex.Message);
-            return false;
-        }
+        return await BuildAndWriteBackupAsync(forceFull: true);
     }
 
     public async Task<bool> SyncToAppDataAsync()
     {
-        const int maxRetries = 5;
-        const int retryDelayMs = 200;
-        
+        const int maxRetries = 3;
+        const int retryDelayMs = 150;
+
         for (int retry = 0; retry < maxRetries; retry++)
         {
             try
             {
-                var dataFiles = GetAllDataFiles();
-                var backupData = new BackupData
-                {
-                    Files = new List<BackupFile>(),
-                    Timestamp = DateTime.Now
-                };
-
-                foreach (var file in dataFiles)
-                {
-                    var fileData = await File.ReadAllBytesAsync(file);
-                    var relativePath = GetRelativePath(file, DataDirectory);
-                    var checksum = CalculateChecksum(fileData);
-
-                    backupData.Files.Add(new BackupFile
-                    {
-                        RelativePath = relativePath,
-                        Content = fileData,
-                        Checksum = checksum,
-                        LastModified = File.GetLastWriteTime(file)
-                    });
-                }
-
-                var backupJson = JsonSerializer.Serialize(backupData);
-                var encryptedData = EncryptData(Encoding.UTF8.GetBytes(backupJson));
-                
-                // 使用安全的文件写入方式
-                await WriteFileWithRetryAsync(EncryptedBackupFile, encryptedData);
-                
-                // 设置备份文件为系统隐藏
-                SetSystemHiddenFile(EncryptedBackupFile);
-                SetSystemHiddenFile(SyncLogFile);
-
-                await LogSyncOperation("Sync", dataFiles.Length);
-                LogService.Instance.Log("DataProtection", "Synced", "System", "数据已同步到 AppData");
-                return true;
+                // 增量备份：文件未变化时跳过读取/校验/序列化，只重写加密包
+                return await BuildAndWriteBackupAsync(forceFull: false);
             }
             catch (UnauthorizedAccessException ex) when (retry < maxRetries - 1)
             {
@@ -426,9 +361,190 @@ public class DataProtectionService
                 return false;
             }
         }
-        
+
         await LogErrorAsync("Sync", "达到最大重试次数");
         return false;
+    }
+
+    /// <summary>
+    /// 构建并写入加密备份包。
+    /// - 并行读取 + 并行校验和（多核加速）
+    /// - 增量模式：未变化文件（长度+最后修改时间指纹一致）直接复用上次内容，跳过 IO/哈希
+    /// </summary>
+    private async Task<bool> BuildAndWriteBackupAsync(bool forceFull)
+    {
+        var dataFiles = GetAllDataFiles();
+
+        // 阶段 1：收集指纹，识别需要重新读取的文件（增量模式）
+        var filesToRead = new List<(string Path, string Relative, string Fingerprint)>();
+        var fingerprintSnapshot = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in dataFiles)
+        {
+            string fingerprint;
+            try
+            {
+                var fi = new FileInfo(file);
+                fingerprint = $"{fi.Length}:{fi.LastWriteTimeUtc.Ticks}";
+            }
+            catch
+            {
+                continue;
+            }
+
+            var rel = GetRelativePath(file, DataDirectory);
+            fingerprintSnapshot[rel] = fingerprint;
+
+            if (!forceFull)
+            {
+                lock (_fingerprintLock)
+                {
+                    // 与上次备份指纹一致 → 跳过
+                    if (_lastBackupFingerprints.TryGetValue(rel, out var last) && last == fingerprint)
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            filesToRead.Add((file, rel, fingerprint));
+        }
+
+        var backupData = new BackupData
+        {
+            Files = new List<BackupFile>(dataFiles.Length),
+            Timestamp = DateTime.Now
+        };
+
+        // 阶段 2：并行读取已变化的文件（预分配序号，避免 IndexOf 的 O(n²)）
+        var readResults = new BackupFile[filesToRead.Count];
+        var indexedFiles = filesToRead.Select((item, idx) => (item, idx)).ToArray();
+        await Parallel.ForEachAsync(indexedFiles, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, async (entry, ct) =>
+        {
+            try
+            {
+                var fileData = await File.ReadAllBytesAsync(entry.item.Path, ct);
+                var checksum = CalculateChecksum(fileData);
+                readResults[entry.idx] = new BackupFile
+                {
+                    RelativePath = entry.item.Relative,
+                    Content = fileData,
+                    Checksum = checksum,
+                    LastModified = File.GetLastWriteTime(entry.item.Path)
+                };
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Warning", "DataProtection", "Backup", $"读取文件失败 {entry.item.Relative}: {ex.Message}");
+            }
+        });
+
+        // 阶段 3：合并——变化文件用新数据，未变化文件复用上次备份内容（增量）
+        if (forceFull || filesToRead.Count > 0)
+        {
+            foreach (var read in readResults)
+            {
+                if (read != null)
+                {
+                    backupData.Files.Add(read);
+                }
+            }
+
+            if (!forceFull)
+            {
+                // 增量：补充未变化文件（优先内存缓存，无缓存才解密备份包）
+                var remaining = new HashSet<string>(fingerprintSnapshot.Keys, StringComparer.OrdinalIgnoreCase);
+                foreach (var r in readResults)
+                {
+                    if (r != null) remaining.Remove(r.RelativePath);
+                }
+
+                if (remaining.Count > 0)
+                {
+                    var previous = LoadBackupFilesFromDisk();
+                    foreach (var rel in remaining)
+                    {
+                        if (previous.TryGetValue(rel, out var prevFile))
+                        {
+                            backupData.Files.Add(prevFile);
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            // 增量且没有任何文件变化：完全复用上次备份包，无需重新序列化加密
+            LogService.Instance.Log("DataProtection", "Synced", "System", "数据无变化，跳过备份重写");
+            return true;
+        }
+
+        // 阶段 4：序列化 + 加密 + 写盘
+        var backupJson = JsonSerializer.Serialize(backupData);
+        var encryptedData = EncryptData(Encoding.UTF8.GetBytes(backupJson));
+        await WriteFileWithRetryAsync(EncryptedBackupFile, encryptedData);
+
+        // 更新指纹快照与内存缓存
+        lock (_fingerprintLock)
+        {
+            _lastBackupFingerprints.Clear();
+            foreach (var kvp in fingerprintSnapshot)
+            {
+                _lastBackupFingerprints[kvp.Key] = kvp.Value;
+            }
+        }
+        lock (_cacheLock)
+        {
+            _cachedBackupFiles = backupData.Files.ToDictionary(f => f.RelativePath, StringComparer.OrdinalIgnoreCase);
+        }
+
+        SetSystemHiddenFile(EncryptedBackupFile);
+        SetSystemHiddenFile(SyncLogFile);
+
+        await LogSyncOperation("Sync", dataFiles.Length);
+        LogService.Instance.Log("DataProtection", "Synced", "System", "数据已同步到 AppData");
+        return true;
+    }
+
+    /// <summary>
+    /// 加载最近一次备份包的文件映射。优先用内存缓存（避免每次同步都解密整个备份包），
+    /// 缓存缺失时才从磁盘解密读取。
+    /// </summary>
+    private Dictionary<string, BackupFile> LoadBackupFilesFromDisk()
+    {
+        lock (_cacheLock)
+        {
+            if (_cachedBackupFiles != null)
+            {
+                return _cachedBackupFiles;
+            }
+        }
+
+        try
+        {
+            if (!File.Exists(EncryptedBackupFile))
+            {
+                return new Dictionary<string, BackupFile>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            var encryptedData = File.ReadAllBytes(EncryptedBackupFile);
+            var decryptedData = DecryptData(encryptedData);
+            var backupData = JsonSerializer.Deserialize<BackupData>(Encoding.UTF8.GetString(decryptedData));
+
+            var map = backupData?.Files?.ToDictionary(f => f.RelativePath, StringComparer.OrdinalIgnoreCase)
+                      ?? new Dictionary<string, BackupFile>(StringComparer.OrdinalIgnoreCase);
+
+            lock (_cacheLock)
+            {
+                _cachedBackupFiles = map;
+            }
+            return map;
+        }
+        catch (Exception ex)
+        {
+            LogService.Instance.Log("Warning", "DataProtection", "Backup", $"读取旧备份包失败（将退化为全量备份）: {ex.Message}");
+            return new Dictionary<string, BackupFile>(StringComparer.OrdinalIgnoreCase);
+        }
     }
 
     private async Task WriteFileWithRetryAsync(string filePath, byte[] data)

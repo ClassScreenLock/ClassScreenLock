@@ -1,0 +1,297 @@
+<!-- ============================================================
+     Fluent 2 Design Tokens (Windows UI Kit)
+     依据：Figma Community "Windows UI kit (Community)"
+     fileKey: z7FHLRCinxvChbW5VtFcF2
+     全部语义 token 随系统主题自动切换（ThemeDictionaries）
+     ============================================================ -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ========== 全局字阶（Kit: Segoe UI Variable） ========== -->
+    <x:Double x:Key="F2FontSizeDisplay">68</x:Double>
+    <x:Double x:Key="F2FontSizeTitleLarge">40</x:Double>
+    <x:Double x:Key="F2FontSizeTitle">28</x:Double>
+    <x:Double x:Key="F2FontSizeSubtitle">20</x:Double>
+    <x:Double x:Key="F2FontSizeBodyLarge">18</x:Double>
+    <x:Double x:Key="F2FontSizeBodyStrong">14</x:Double>
+    <x:Double x:Key="F2FontSizeBody">14</x:Double>
+    <x:Double x:Key="F2FontSizeCaption">12</x:Double>
+    <!-- H4 档（Fluent UI 字阶 24px/600）：卡片主数据展示 -->
+    <x:Double x:Key="F2FontSizeH4">24</x:Double>
+
+    <!-- ========== 圆角（Fluent UI 规范：仅 4px 基础圆角 + pill 胶囊） ========== -->
+    <CornerRadius x:Key="F2RadiusControl">4</CornerRadius>
+    <CornerRadius x:Key="F2RadiusButton">4</CornerRadius>
+    <CornerRadius x:Key="F2RadiusCard">4</CornerRadius>
+    <CornerRadius x:Key="F2RadiusFlyout">4</CornerRadius>
+    <CornerRadius x:Key="F2RadiusIconSmall">4</CornerRadius>
+    <CornerRadius x:Key="F2RadiusIconMedium">4</CornerRadius>
+    <CornerRadius x:Key="F2RadiusPill">20</CornerRadius>
+
+    <!-- ========== 间距体系（Kit: 4px 基准） ========== -->
+    <x:Double x:Key="F2Space1">4</x:Double>
+    <x:Double x:Key="F2Space2">8</x:Double>
+    <x:Double x:Key="F2Space3">12</x:Double>
+    <x:Double x:Key="F2Space4">16</x:Double>
+    <x:Double x:Key="F2Space5">20</x:Double>
+    <x:Double x:Key="F2Space6">24</x:Double>
+    <x:Double x:Key="F2Space8">32</x:Double>
+
+    <ResourceDictionary.ThemeDictionaries>
+        <!-- ============================================================
+             LIGHT 主题
+             ============================================================ -->
+        <ResourceDictionary x:Key="Light">
+            <!-- 背景层 -->
+            <SolidColorBrush x:Key="F2SolidBackgroundBaseBrush" Color="#F3F3F3"/>
+            <SolidColorBrush x:Key="F2SolidBackgroundSecondaryBrush" Color="#EEEEEE"/>
+            <SolidColorBrush x:Key="F2SolidBackgroundTertiaryBrush" Color="#F9F9F9"/>
+            <SolidColorBrush x:Key="F2SolidBackgroundQuarternaryBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="F2CardBackgroundDefaultBrush" Color="#B3FFFFFF"/>
+            <SolidColorBrush x:Key="F2CardBackgroundSecondaryBrush" Color="#80F6F6F6"/>
+            <SolidColorBrush x:Key="F2CardBackgroundTertiaryBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="F2LayerDefaultBrush" Color="#FFFFFFFF"/>
+            <SolidColorBrush x:Key="F2LayerAltBrush" Color="#FFFFFF"/>
+
+            <!-- 文本 -->
+            <Color x:Key="F2TextPrimaryColor">#E6000000</Color>
+            <Color x:Key="F2TextSecondaryColor">#9C000000</Color>
+            <SolidColorBrush x:Key="F2TextPrimaryBrush" Color="{DynamicResource F2TextPrimaryColor}"/>
+            <SolidColorBrush x:Key="F2TextSecondaryBrush" Color="{DynamicResource F2TextSecondaryColor}"/>
+            <SolidColorBrush x:Key="F2TextTertiaryBrush" Color="#73000000"/>
+            <SolidColorBrush x:Key="F2TextDisabledBrush" Color="#5C000000"/>
+
+            <!-- 强调色（Kit Accent: #0067C0） -->
+            <Color x:Key="F2AccentDefaultColor">#0067C0</Color>
+            <SolidColorBrush x:Key="F2AccentDefaultBrush" Color="{DynamicResource F2AccentDefaultColor}"/>
+            <SolidColorBrush x:Key="F2AccentSecondaryBrush" Color="#E60067C0"/>
+            <SolidColorBrush x:Key="F2AccentTertiaryBrush" Color="#CC0067C0"/>
+            <SolidColorBrush x:Key="F2AccentDisabledBrush" Color="#38000000"/>
+            <SolidColorBrush x:Key="F2AccentTextPrimaryBrush" Color="#003E92"/>
+            <SolidColorBrush x:Key="F2AccentTextSecondaryBrush" Color="#001A68"/>
+            <SolidColorBrush x:Key="F2AccentTextTertiaryBrush" Color="#0067C0"/>
+            <SolidColorBrush x:Key="F2AccentSelectedTextBackgroundBrush" Color="#0067C0"/>
+
+            <!-- 强调色上的文本 -->
+            <SolidColorBrush x:Key="F2TextOnAccentPrimaryBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="F2TextOnAccentSecondaryBrush" Color="#B3FFFFFF"/>
+            <SolidColorBrush x:Key="F2TextOnAccentSelectedTextBrush" Color="#FFFFFF"/>
+
+            <!-- 控件填充 -->
+            <SolidColorBrush x:Key="F2ControlDefaultBrush" Color="#B3FFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlSecondaryBrush" Color="#80F9F9F9"/>
+            <SolidColorBrush x:Key="F2ControlTertiaryBrush" Color="#4DF9F9F9"/>
+            <SolidColorBrush x:Key="F2ControlQuarternaryBrush" Color="#C2F3F3F3"/>
+            <SolidColorBrush x:Key="F2ControlDisabledBrush" Color="#4DF9F9F9"/>
+            <SolidColorBrush x:Key="F2ControlInputActiveBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlOnImageDefaultBrush" Color="#C9FFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlOnImageSecondaryBrush" Color="#F3F3F3"/>
+
+            <!-- 控件 Alt 填充（悬停/按压基底） -->
+            <SolidColorBrush x:Key="F2ControlAltSecondaryBrush" Color="#05000000"/>
+            <SolidColorBrush x:Key="F2ControlAltTertiaryBrush" Color="#0F000000"/>
+            <SolidColorBrush x:Key="F2ControlAltQuarternaryBrush" Color="#17000000"/>
+            <SolidColorBrush x:Key="F2ControlAltDisabledBrush" Color="#00FFFFFF"/>
+
+            <!-- 强控件填充 -->
+            <SolidColorBrush x:Key="F2ControlStrongDefaultBrush" Color="#73000000"/>
+            <SolidColorBrush x:Key="F2ControlStrongDisabledBrush" Color="#52000000"/>
+
+            <!-- 微妙填充（subtle） -->
+            <SolidColorBrush x:Key="F2SubtleSecondaryBrush" Color="#0A000000"/>
+            <SolidColorBrush x:Key="F2SubtleTertiaryBrush" Color="#05000000"/>
+            <Color x:Key="F2SubtleSecondaryColor">#0A000000</Color>
+            <Color x:Key="F2SubtleTertiaryColor">#05000000</Color>
+            <SolidColorBrush x:Key="F2SubtleDisabledBrush" Color="#00000000"/>
+
+            <!-- 导航选中态（Kit: NavigationViewItem Selected = accent tint + accent 文字） -->
+            <SolidColorBrush x:Key="F2NavSelectedBackgroundBrush" Color="#120067C0"/>
+            <SolidColorBrush x:Key="F2NavSelectedHoverBackgroundBrush" Color="#1E0067C0"/>
+            <SolidColorBrush x:Key="F2NavSelectedPressedBackgroundBrush" Color="#2A0067C0"/>
+
+            <!-- 系统状态色 -->
+            <SolidColorBrush x:Key="F2SystemSuccessBrush" Color="#0F7B0F"/>
+            <SolidColorBrush x:Key="F2SystemCautionBrush" Color="#9D5D00"/>
+            <Color x:Key="F2SystemCriticalColor">#C42B1C</Color>
+            <SolidColorBrush x:Key="F2SystemCriticalBrush" Color="{DynamicResource F2SystemCriticalColor}"/>
+            <SolidColorBrush x:Key="F2SystemCriticalBackgroundBrush" Color="#FDE7E9"/>
+            <SolidColorBrush x:Key="F2SystemSuccessBackgroundBrush" Color="#DFF6DD"/>
+            <SolidColorBrush x:Key="F2SystemCautionBackgroundBrush" Color="#FFF4CE"/>
+            <SolidColorBrush x:Key="F2SystemAttentionBrush" Color="#0067C0"/>
+
+            <!-- 描边 -->
+            <Color x:Key="F2DividerStrokeColor">#14000000</Color>
+            <Color x:Key="F2CardStrokeColor">#0F000000</Color>
+            <SolidColorBrush x:Key="F2DividerStrokeBrush" Color="{DynamicResource F2DividerStrokeColor}"/>
+            <SolidColorBrush x:Key="F2CardStrokeBrush" Color="{DynamicResource F2CardStrokeColor}"/>
+            <SolidColorBrush x:Key="F2CardStrokeSolidBrush" Color="#EBEBEB"/>
+            <SolidColorBrush x:Key="F2ControlStrokeBrush" Color="#0F000000"/>
+            <SolidColorBrush x:Key="F2ControlStrokeSecondaryBrush" Color="#29000000"/>
+            <SolidColorBrush x:Key="F2ControlStrokeOnAccentBrush" Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlStrongStrokeBrush" Color="#9C000000"/>
+            <SolidColorBrush x:Key="F2ControlStrongStrokeDisabledBrush" Color="#38000000"/>
+            <SolidColorBrush x:Key="F2SurfaceStrokeBrush" Color="#66757575"/>
+            <SolidColorBrush x:Key="F2SurfaceFlyoutStrokeBrush" Color="#0F000000"/>
+
+            <!-- 焦点环 -->
+            <SolidColorBrush x:Key="F2FocusOuterBrush" Color="#E6000000"/>
+            <SolidColorBrush x:Key="F2FocusInnerBrush" Color="#FFFFFF"/>
+
+            <!-- 冒烟/遮罩 -->
+            <SolidColorBrush x:Key="F2SmokeBrush" Color="#4D000000"/>
+
+            <!-- 快速操作编辑器（QAE）语义映射 -->
+            <SolidColorBrush x:Key="QAE_TitleForegroundBrush" Color="{DynamicResource F2TextPrimaryColor}"/>
+            <SolidColorBrush x:Key="QAE_SubtitleForegroundBrush" Color="{DynamicResource F2TextSecondaryColor}"/>
+            <SolidColorBrush x:Key="QAE_ShellBorderBrush" Color="{DynamicResource F2CardStrokeColor}"/>
+            <SolidColorBrush x:Key="QAE_DividerBrush" Color="{DynamicResource F2DividerStrokeColor}"/>
+            <SolidColorBrush x:Key="QAE_AccentBrush" Color="{DynamicResource F2AccentDefaultColor}"/>
+            <SolidColorBrush x:Key="QAE_DangerBrush" Color="{DynamicResource F2SystemCriticalColor}"/>
+
+            <!-- 系统托盘菜单 -->
+            <SolidColorBrush x:Key="QAE_MenuShellBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="QAE_MenuShellBorderBrush" Color="#35000000"/>
+            <SolidColorBrush x:Key="QAE_MenuTextBrush" Color="{DynamicResource F2TextPrimaryColor}"/>
+            <SolidColorBrush x:Key="QAE_MenuHoverBrush" Color="{DynamicResource F2SubtleSecondaryColor}"/>
+            <SolidColorBrush x:Key="QAE_MenuPressedBrush" Color="{DynamicResource F2SubtleTertiaryColor}"/>
+            <SolidColorBrush x:Key="QAE_MenuDividerBrush" Color="{DynamicResource F2DividerStrokeColor}"/>
+
+            <!-- 阴影（Kit 实测值） -->
+            <BoxShadows x:Key="F2ShadowCardRest">0 2 4 0 #0A000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowCardHover">0 2 4 0 #1A000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowFlyout">0 8 16 0 #24000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowDialog">0 2 21 0 #26000000, 0 32 64 0 #30000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowActiveWindow">0 2 21 0 #38000000, 0 32 64 0 #47000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowInactiveWindow">0 2 11 0 #26000000, 0 16 32 0 #30000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowShellSurface">0 2 6 0 #26000000, 0 9 18 0 #30000000</BoxShadows>
+        </ResourceDictionary>
+
+        <!-- ============================================================
+             DARK 主题
+             ============================================================ -->
+        <ResourceDictionary x:Key="Dark">
+            <!-- 背景层 -->
+            <SolidColorBrush x:Key="F2SolidBackgroundBaseBrush" Color="#202020"/>
+            <SolidColorBrush x:Key="F2SolidBackgroundSecondaryBrush" Color="#2C2C2C"/>
+            <SolidColorBrush x:Key="F2SolidBackgroundTertiaryBrush" Color="#282828"/>
+            <SolidColorBrush x:Key="F2SolidBackgroundQuarternaryBrush" Color="#2C2C2C"/>
+            <SolidColorBrush x:Key="F2CardBackgroundDefaultBrush" Color="#0DFFFFFF"/>
+            <SolidColorBrush x:Key="F2CardBackgroundSecondaryBrush" Color="#0AFFFFFF"/>
+            <SolidColorBrush x:Key="F2CardBackgroundTertiaryBrush" Color="#12FFFFFF"/>
+            <SolidColorBrush x:Key="F2LayerDefaultBrush" Color="#FF3A3A3A"/>
+            <SolidColorBrush x:Key="F2LayerAltBrush" Color="#0DFFFFFF"/>
+
+            <!-- 文本 -->
+            <Color x:Key="F2TextPrimaryColor">#FFFFFF</Color>
+            <Color x:Key="F2TextSecondaryColor">#C9FFFFFF</Color>
+            <SolidColorBrush x:Key="F2TextPrimaryBrush" Color="{DynamicResource F2TextPrimaryColor}"/>
+            <SolidColorBrush x:Key="F2TextSecondaryBrush" Color="{DynamicResource F2TextSecondaryColor}"/>
+            <SolidColorBrush x:Key="F2TextTertiaryBrush" Color="#8AFFFFFF"/>
+            <SolidColorBrush x:Key="F2TextDisabledBrush" Color="#5CFFFFFF"/>
+
+            <!-- 强调色（Kit Dark Accent: #60CDFF） -->
+            <Color x:Key="F2AccentDefaultColor">#60CDFF</Color>
+            <SolidColorBrush x:Key="F2AccentDefaultBrush" Color="{DynamicResource F2AccentDefaultColor}"/>
+            <SolidColorBrush x:Key="F2AccentSecondaryBrush" Color="#E660CDFF"/>
+            <SolidColorBrush x:Key="F2AccentTertiaryBrush" Color="#CC60CDFF"/>
+            <SolidColorBrush x:Key="F2AccentDisabledBrush" Color="#29FFFFFF"/>
+            <SolidColorBrush x:Key="F2AccentTextPrimaryBrush" Color="#99EBFF"/>
+            <SolidColorBrush x:Key="F2AccentTextSecondaryBrush" Color="#99EBFF"/>
+            <SolidColorBrush x:Key="F2AccentTextTertiaryBrush" Color="#60CDFF"/>
+            <SolidColorBrush x:Key="F2AccentSelectedTextBackgroundBrush" Color="#60CDFF"/>
+
+            <!-- 强调色上的文本 -->
+            <SolidColorBrush x:Key="F2TextOnAccentPrimaryBrush" Color="#000000"/>
+            <SolidColorBrush x:Key="F2TextOnAccentSecondaryBrush" Color="#80000000"/>
+            <SolidColorBrush x:Key="F2TextOnAccentSelectedTextBrush" Color="#000000"/>
+
+            <!-- 控件填充 -->
+            <SolidColorBrush x:Key="F2ControlDefaultBrush" Color="#0FFFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlSecondaryBrush" Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlTertiaryBrush" Color="#0AFFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlQuarternaryBrush" Color="#0FFFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlDisabledBrush" Color="#0AFFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlInputActiveBrush" Color="#262626"/>
+            <SolidColorBrush x:Key="F2ControlOnImageDefaultBrush" Color="#C9FFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlOnImageSecondaryBrush" Color="#F3F3F3"/>
+
+            <!-- 控件 Alt 填充 -->
+            <SolidColorBrush x:Key="F2ControlAltSecondaryBrush" Color="#1A000000"/>
+            <SolidColorBrush x:Key="F2ControlAltTertiaryBrush" Color="#0AFFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlAltQuarternaryBrush" Color="#12FFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlAltDisabledBrush" Color="#00FFFFFF"/>
+
+            <!-- 强控件填充 -->
+            <SolidColorBrush x:Key="F2ControlStrongDefaultBrush" Color="#8AFFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlStrongDisabledBrush" Color="#29FFFFFF"/>
+
+            <!-- 微妙填充 -->
+            <SolidColorBrush x:Key="F2SubtleSecondaryBrush" Color="#0FFFFFFF"/>
+            <SolidColorBrush x:Key="F2SubtleTertiaryBrush" Color="#0AFFFFFF"/>
+            <Color x:Key="F2SubtleSecondaryColor">#0FFFFFFF</Color>
+            <Color x:Key="F2SubtleTertiaryColor">#0AFFFFFF</Color>
+            <SolidColorBrush x:Key="F2SubtleDisabledBrush" Color="#00FFFFFF"/>
+
+            <!-- 导航选中态（Kit: NavigationViewItem Selected = accent tint + accent 文字） -->
+            <SolidColorBrush x:Key="F2NavSelectedBackgroundBrush" Color="#1F60CDFF"/>
+            <SolidColorBrush x:Key="F2NavSelectedHoverBackgroundBrush" Color="#2960CDFF"/>
+            <SolidColorBrush x:Key="F2NavSelectedPressedBackgroundBrush" Color="#3360CDFF"/>
+
+            <!-- 系统状态色 -->
+            <SolidColorBrush x:Key="F2SystemSuccessBrush" Color="#6CCB5F"/>
+            <SolidColorBrush x:Key="F2SystemCautionBrush" Color="#FCE100"/>
+            <Color x:Key="F2SystemCriticalColor">#FF99A4</Color>
+            <SolidColorBrush x:Key="F2SystemCriticalBrush" Color="{DynamicResource F2SystemCriticalColor}"/>
+            <SolidColorBrush x:Key="F2SystemCriticalBackgroundBrush" Color="#442726"/>
+            <SolidColorBrush x:Key="F2SystemSuccessBackgroundBrush" Color="#393D1B"/>
+            <SolidColorBrush x:Key="F2SystemCautionBackgroundBrush" Color="#433519"/>
+            <SolidColorBrush x:Key="F2SystemAttentionBrush" Color="#60CDFF"/>
+
+            <!-- 描边 -->
+            <Color x:Key="F2DividerStrokeColor">#14FFFFFF</Color>
+            <Color x:Key="F2CardStrokeColor">#1A000000</Color>
+            <SolidColorBrush x:Key="F2DividerStrokeBrush" Color="{DynamicResource F2DividerStrokeColor}"/>
+            <SolidColorBrush x:Key="F2CardStrokeBrush" Color="{DynamicResource F2CardStrokeColor}"/>
+            <SolidColorBrush x:Key="F2CardStrokeSolidBrush" Color="#333333"/>
+            <SolidColorBrush x:Key="F2ControlStrokeBrush" Color="#12FFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlStrokeSecondaryBrush" Color="#17FFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlStrokeOnAccentBrush" Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlStrongStrokeBrush" Color="#8AFFFFFF"/>
+            <SolidColorBrush x:Key="F2ControlStrongStrokeDisabledBrush" Color="#29FFFFFF"/>
+            <SolidColorBrush x:Key="F2SurfaceStrokeBrush" Color="#66757575"/>
+            <SolidColorBrush x:Key="F2SurfaceFlyoutStrokeBrush" Color="#33000000"/>
+
+            <!-- 焦点环 -->
+            <SolidColorBrush x:Key="F2FocusOuterBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="F2FocusInnerBrush" Color="#B3000000"/>
+
+            <!-- 冒烟/遮罩 -->
+            <SolidColorBrush x:Key="F2SmokeBrush" Color="#4D000000"/>
+
+            <!-- 快速操作编辑器（QAE）语义映射 -->
+            <SolidColorBrush x:Key="QAE_TitleForegroundBrush" Color="{DynamicResource F2TextPrimaryColor}"/>
+            <SolidColorBrush x:Key="QAE_SubtitleForegroundBrush" Color="{DynamicResource F2TextSecondaryColor}"/>
+            <SolidColorBrush x:Key="QAE_ShellBorderBrush" Color="{DynamicResource F2CardStrokeColor}"/>
+            <SolidColorBrush x:Key="QAE_DividerBrush" Color="{DynamicResource F2DividerStrokeColor}"/>
+            <SolidColorBrush x:Key="QAE_AccentBrush" Color="{DynamicResource F2AccentDefaultColor}"/>
+            <SolidColorBrush x:Key="QAE_DangerBrush" Color="{DynamicResource F2SystemCriticalColor}"/>
+
+            <!-- 系统托盘菜单（深色：Kit Solid Base 衍生） -->
+            <SolidColorBrush x:Key="QAE_MenuShellBrush" Color="#2D2D30"/>
+            <SolidColorBrush x:Key="QAE_MenuShellBorderBrush" Color="#50FFFFFF"/>
+            <SolidColorBrush x:Key="QAE_MenuTextBrush" Color="{DynamicResource F2TextPrimaryColor}"/>
+            <SolidColorBrush x:Key="QAE_MenuHoverBrush" Color="{DynamicResource F2SubtleSecondaryColor}"/>
+            <SolidColorBrush x:Key="QAE_MenuPressedBrush" Color="{DynamicResource F2SubtleTertiaryColor}"/>
+            <SolidColorBrush x:Key="QAE_MenuDividerBrush" Color="{DynamicResource F2DividerStrokeColor}"/>
+
+            <!-- 阴影（Kit 实测值） -->
+            <BoxShadows x:Key="F2ShadowCardRest">0 2 4 0 #21000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowCardHover">0 2 4 0 #42000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowFlyout">0 8 16 0 #42000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowDialog">0 2 21 0 #5E000000, 0 32 64 0 #5E000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowActiveWindow">0 2 21 0 #8C000000, 0 32 64 0 #8F000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowInactiveWindow">0 2 11 0 #5E000000, 0 16 32 0 #5E000000</BoxShadows>
+            <BoxShadows x:Key="F2ShadowShellSurface">0 2 6 0 #5E000000, 0 9 18 0 #5E000000</BoxShadows>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

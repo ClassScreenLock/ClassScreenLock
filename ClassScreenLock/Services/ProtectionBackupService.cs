@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,7 +16,7 @@ public class ProtectionBackupService
     private static readonly Lazy<ProtectionBackupService> _instance = new(() => new ProtectionBackupService());
     public static ProtectionBackupService Instance => _instance.Value;
 
-    private static readonly string DataDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+    private static readonly string DataDirectory = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data");
     private static readonly string BackupDirectory = Path.Combine(DataDirectory, "Backup");
     private static readonly string LogFile = Path.Combine(BackupDirectory, "backup_log.json");
     private static readonly string ReportPath = Path.Combine(BackupDirectory, "protection_report.json");

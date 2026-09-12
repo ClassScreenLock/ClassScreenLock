@@ -216,15 +216,15 @@ public class NetworkBlockingService
     {
         if (isLocked)
         {
-            return 400;
+            return 1500;
         }
         
         if (isProtectionOnly || isNetworkLockEnabled || isBasicProtectionEnabled)
         {
-            return 500;
+            return 2000;
         }
         
-        return 2000;
+        return 4000;
     }
 
     private void TryScheduleIntegrityCheck(bool lockState)
@@ -239,9 +239,8 @@ public class NetworkBlockingService
             var interval = lockState ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(60);
             
             if ((now - _lastRulesIntegrityCheckUtc) < interval) return;
-            
+
             _lastRulesIntegrityCheckUtc = now;
-            LogService.Instance.Log("Debug", "IntegrityCheck", "Monitor", $"Scheduling integrity check. LockState: {lockState}, Interval: {interval.TotalSeconds}s");
 
             LogService.Observe(Task.Run(async () =>
             {
@@ -510,7 +509,10 @@ public class NetworkBlockingService
     private readonly Dictionary<uint, string> _cachedBrowserUrls = new();
     private readonly Dictionary<uint, DateTime> _cachedBrowserUrlTimestamps = new();
     private DateTime _lastUrlCacheCleanup = DateTime.MinValue;
-    private static readonly TimeSpan UrlCacheValidityDuration = TimeSpan.FromSeconds(0.5);
+    private static readonly TimeSpan UrlCacheValidityDuration = TimeSpan.FromSeconds(2);
+
+    // SNI 伪造检测缓存：进程命令行启动后不会改变，每个进程只需检测一次
+    private readonly HashSet<uint> _sniCheckedPids = new();
 
     private void ExecuteDetectionCycle()
     {
@@ -526,7 +528,7 @@ public class NetworkBlockingService
         if (foregroundHwnd == IntPtr.Zero) return;
 
         _cycleCount++;
-        bool isDeepScanCycle = _cycleCount % 10 == 0;
+        bool isDeepScanCycle = _cycleCount % 30 == 0;
 
         var activeRules = GetActiveRules();
         if (activeRules == null || !activeRules.Any()) return;
@@ -566,8 +568,6 @@ public class NetworkBlockingService
             var browserUrl = GetCachedBrowserUrl(foregroundHwnd, processName, isDeepScanCycle);
             var combinedText = CombineText(windowTitle, browserUrl);
 
-            LogBrowserUrlIfNeeded(browserUrl, processName);
-
             if (TryAnalyzeAndIntercept(combinedText, activeRules, (uint)fgProcess.Id, foregroundHwnd)) return true;
 
             if (isDeepScanCycle && TryDetectAndBlockSniForgery(fgPid, processName, settings)) return true;
@@ -594,14 +594,6 @@ public class NetworkBlockingService
         return string.Join(" ", new[] { title, url }.Where(s => !string.IsNullOrWhiteSpace(s)));
     }
 
-    private void LogBrowserUrlIfNeeded(string browserUrl, string processName)
-    {
-        if (!string.IsNullOrWhiteSpace(browserUrl))
-        {
-            LogService.Instance.Log("Debug", "BrowserScan", processName, $"URL: {browserUrl}");
-        }
-    }
-
     private bool TryAnalyzeAndIntercept(string combinedText, List<NetworkRule> activeRules, uint processId, IntPtr hWnd)
     {
         if (string.IsNullOrWhiteSpace(combinedText)) return false;
@@ -618,6 +610,10 @@ public class NetworkBlockingService
     private bool TryDetectAndBlockSniForgery(uint pid, string processName, SoftwareBlockageModel settings)
     {
         if (!settings.IsNetworkLockEnabled) return false;
+
+        // 进程命令行启动后不会改变，已检测过的直接跳过
+        if (_sniCheckedPids.Contains(pid)) return false;
+        _sniCheckedPids.Add(pid);
 
         var cmd = GetProcessCommandLine(pid);
         var frontHosts = ExtractFrontingHosts(cmd);
@@ -694,6 +690,10 @@ public class NetworkBlockingService
     {
         if (!settings.IsNetworkLockEnabled) return false;
 
+        // 进程命令行启动后不会改变，已检测过的直接跳过
+        if (_sniCheckedPids.Contains(processId)) return false;
+        _sniCheckedPids.Add(processId);
+
         var cmd = GetProcessCommandLine(processId);
         var frontHosts = ExtractFrontingHosts(cmd);
         if (frontHosts.Count == 0) return false;
@@ -760,6 +760,9 @@ public class NetworkBlockingService
 
         _cachedBrowserPids = browserPids;
         _lastPidUpdate = DateTime.Now;
+
+        // 清理已退出进程的 SNI 检测缓存
+        _sniCheckedPids.RemoveWhere(pid => !browserPids.Contains(pid));
     }
 
     private void AddProcessesByName(HashSet<uint> browserPids, IEnumerable<string> processNames)
@@ -1214,6 +1217,10 @@ public class NetworkBlockingService
     public async Task ApplyRulesAsync(string reason = "Unknown")
     {
         LogService.Instance.Log("Debug", "ApplyRulesAsync", "Network", $"ApplyRulesAsync called. Reason: {reason}");
+
+        // 优先启用/停止 MITM 深度流量检查代理（新机制），旧的 hosts/防火墙作为兜底继续执行
+        MitmInterceptionService.Instance.SyncState();
+
         var settings = SettingsService.Blockage;
         var lockService = LockScreenService.Instance;
         bool lockState = lockService.IsLocked || lockService.IsProtectionOnlyActive;
@@ -1341,6 +1348,9 @@ public class NetworkBlockingService
     {
         try
         {
+            // 停止 MITM 深度流量检查代理、还原系统代理并移除根证书
+            MitmInterceptionService.Instance.Cleanup();
+
             _isMonitoring = false;
             _cts?.Cancel();
 
@@ -1417,6 +1427,7 @@ public class NetworkBlockingService
 
             // 清理 hosts 文件 - 通过 PowerShell 提权
             var hostsCleanupScript = $@"
+#__CSL_ALLOW__
 $hostsPath = '{HostsPath}'
 $markerStart = '{MarkerStart}'
 $markerEnd = '{MarkerEnd}'
@@ -1490,7 +1501,7 @@ ipconfig /flushdns
     private void EnsureFirewallGroupVisibility()
     {
         const string markerName = "ClassScreenLock_Visibility_Marker";
-        string placeholderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "firewall_marker.dat");
+        string placeholderPath = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data", "firewall_marker.dat");
         
         try
         {
@@ -2240,12 +2251,33 @@ ipconfig /flushdns
             var element = AutomationElement.FromHandle(hWnd);
             if (element == null) return string.Empty;
 
-            var condition = new AndCondition(
+            // 1. 优先按 AutomationId 精确查找地址栏（最快，无需遍历整个控件树）
+            var nameCondition = new PropertyCondition(AutomationElement.AutomationIdProperty, "addressEditBox", PropertyConditionFlags.IgnoreCase);
+            var addressBox = element.FindFirst(TreeScope.Descendants, nameCondition);
+            if (addressBox != null)
+            {
+                try
+                {
+                    var valuePattern = addressBox.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
+                    if (valuePattern != null)
+                    {
+                        var value = valuePattern.Current.Value;
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            return value;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // 2. 再尝试查找 Edit 控件（带 ValuePattern 的编辑框）
+            var editCondition = new AndCondition(
                 new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit),
                 new PropertyCondition(AutomationElement.IsValuePatternAvailableProperty, true)
             );
 
-            var edits = element.FindAll(TreeScope.Descendants, condition);
+            var edits = element.FindAll(TreeScope.Descendants, editCondition);
             foreach (AutomationElement edit in edits)
             {
                 try
@@ -2263,6 +2295,7 @@ ipconfig /flushdns
                 catch { }
             }
 
+            // 3. 最后尝试 Document 控件（兼容性兜底）
             var documentCondition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Document);
             var documents = element.FindAll(TreeScope.Descendants, documentCondition);
             foreach (AutomationElement doc in documents)
@@ -2274,25 +2307,6 @@ ipconfig /flushdns
                     {
                         var value = valuePattern.Current.Value;
                         if (!string.IsNullOrEmpty(value) && IsUrl(value))
-                        {
-                            return value;
-                        }
-                    }
-                }
-                catch { }
-            }
-
-            var nameCondition = new PropertyCondition(AutomationElement.AutomationIdProperty, "addressEditBox", PropertyConditionFlags.IgnoreCase);
-            var addressBox = element.FindFirst(TreeScope.Descendants, nameCondition);
-            if (addressBox != null)
-            {
-                try
-                {
-                    var valuePattern = addressBox.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
-                    if (valuePattern != null)
-                    {
-                        var value = valuePattern.Current.Value;
-                        if (!string.IsNullOrEmpty(value))
                         {
                             return value;
                         }

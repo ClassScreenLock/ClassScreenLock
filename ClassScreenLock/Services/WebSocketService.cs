@@ -228,7 +228,7 @@ public class WebSocketService
                 Reconnection = true,
                 ReconnectionAttempts = 10,
                 ConnectionTimeout = TimeSpan.FromSeconds(30),  // 增加到30秒
-                AutoUpgrade = false  // 禁止自动升级到 WebSocket，强制使用长轮询
+                AutoUpgrade = false  // 使用 HTTP 长轮询，避免 WebSocket 连接被 MITM 代理中断后无法回退
             });
 
             // 注册事件处理器
@@ -744,18 +744,54 @@ public class WebSocketService
             }
 
             // 通过HTTP获取最新课表配置
-            using var httpClient = new System.Net.Http.HttpClient();
+            // 同步源优先级与 WebSocket 的 request_schedule_sync 服务端逻辑保持一致：
+            // 设备专属课表优先，无设备专属课表时回退到组织课表。
+            using var httpClient = new System.Net.Http.HttpClient(new System.Net.Http.SocketsHttpHandler { UseProxy = false });
             httpClient.Timeout = TimeSpan.FromSeconds(10);
 
-            var scheduleResponse = await httpClient.GetAsync($"{org.ServerUrl}/api/organizations/{org.Id}/schedule-config");
+            string? scheduleJson = null;
 
-            if (scheduleResponse.IsSuccessStatusCode)
+            // 1. 优先拉取设备专属课表（该接口无需鉴权）
+            try
             {
-                var scheduleJson = await scheduleResponse.Content.ReadAsStringAsync();
-                
-                LogService.Instance.Log("Info", "WebSocket", "WebSocketService", 
-                    $"课表配置HTTP同步成功，数据长度: {scheduleJson.Length}");
+                var deviceScheduleResponse = await httpClient.GetAsync($"{org.ServerUrl}/api/devices/{_deviceId}/schedule-config");
+                if (deviceScheduleResponse.IsSuccessStatusCode)
+                {
+                    var deviceScheduleJson = await deviceScheduleResponse.Content.ReadAsStringAsync();
+                    if (HasUsableSchedule(deviceScheduleJson))
+                    {
+                        scheduleJson = deviceScheduleJson;
+                        LogService.Instance.Log("Info", "WebSocket", "WebSocketService",
+                            $"课表配置HTTP同步成功（设备专属），数据长度: {scheduleJson.Length}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Warning", "WebSocket", "WebSocketService", $"设备课表HTTP同步失败，回退组织课表: {ex.Message}");
+            }
 
+            // 2. 无设备专属课表时回退到组织课表
+            if (scheduleJson == null)
+            {
+                try
+                {
+                    var scheduleResponse = await httpClient.GetAsync($"{org.ServerUrl}/api/organizations/{org.Id}/schedule-config");
+                    if (scheduleResponse.IsSuccessStatusCode)
+                    {
+                        scheduleJson = await scheduleResponse.Content.ReadAsStringAsync();
+                        LogService.Instance.Log("Info", "WebSocket", "WebSocketService",
+                            $"课表配置HTTP同步成功（组织），数据长度: {scheduleJson.Length}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.Log("Warning", "WebSocket", "WebSocketService", $"组织课表HTTP同步失败: {ex.Message}");
+                }
+            }
+
+            if (scheduleJson != null)
+            {
                 _actionQueue.Enqueue(() => OnScheduleUpdate?.Invoke(scheduleJson));
             }
         }
@@ -766,6 +802,28 @@ public class WebSocketService
 
         // 同时通过WebSocket请求同步（作为备用）
         await RequestScheduleSyncAsync();
+    }
+
+    /// <summary>
+    /// 判断课表JSON中是否包含实际可用的周数据（weeklies 非空）。
+    /// 设备接口在无设备专属课表时会返回 _source=default 且 weeklies 为空，此时应回退到组织课表。
+    /// </summary>
+    private static bool HasUsableSchedule(string scheduleJson)
+    {
+        try
+        {
+            using var jsonDoc = System.Text.Json.JsonDocument.Parse(scheduleJson);
+            var root = jsonDoc.RootElement;
+            if (root.TryGetProperty("weeklies", out var weekliesProp) && weekliesProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                return weekliesProp.GetArrayLength() > 0;
+            }
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -817,7 +875,7 @@ public class WebSocketService
             }
             
             // 获取最新配置
-            using var httpClient = new System.Net.Http.HttpClient();
+            using var httpClient = new System.Net.Http.HttpClient(new System.Net.Http.SocketsHttpHandler { UseProxy = false });
             httpClient.Timeout = TimeSpan.FromSeconds(10);
             
             var securityResponse = await httpClient.GetAsync($"{_serverUrl}/api/organizations/{org.Id}/security-config");

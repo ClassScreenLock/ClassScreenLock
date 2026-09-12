@@ -14,7 +14,7 @@ namespace ClassScreenLock.Services;
 
 public class SettingsService
 {
-    private static readonly string DataDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+    private static readonly string DataDirectory = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data");
     private static readonly string GeneralSettingsPath = Path.Combine(DataDirectory, "settings.json");
     private static readonly string LockSettingsPath = Path.Combine(DataDirectory, "locksettings.json");
     private static readonly string ScreenshotSettingsPath = Path.Combine(DataDirectory, "screenshotsettings.json");
@@ -161,8 +161,6 @@ public class SettingsService
 
                 // 迁移到 General
                 var general = new SettingsModel();
-                if (oldSettings.TryGetProperty("fontSize", out var fontSize)) general.FontSize = fontSize.GetDouble();
-                if (oldSettings.TryGetProperty("fontFamily", out var fontFamily)) general.FontFamily = fontFamily.GetString() ?? general.FontFamily;
                 if (oldSettings.TryGetProperty("darkMode", out var darkMode)) general.DarkMode = darkMode.GetBoolean();
                 if (oldSettings.TryGetProperty("accentColor", out var accentColor)) general.AccentColor = accentColor.GetString() ?? general.AccentColor;
                 if (oldSettings.TryGetProperty("showNotifications", out var showNotifications)) general.ShowNotifications = showNotifications.GetBoolean();
@@ -180,8 +178,6 @@ public class SettingsService
                     lockSet.BreakTimeLockMode = modeValue == 1 ? LockMode.Full : (LockMode)modeValue;
                 }
                 if (oldSettings.TryGetProperty("autoUnlockBeforeClassMinutes", out var autoUnlock)) lockSet.AutoUnlockBeforeClassMinutes = autoUnlock.GetInt32();
-                if (oldSettings.TryGetProperty("allowedTopmostApps", out var allowedTopmost)) lockSet.AllowedTopmostApps = JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(allowedTopmost.GetRawText()) ?? lockSet.AllowedTopmostApps;
-                if (oldSettings.TryGetProperty("forcedTopmostApps", out var forcedTopmost)) lockSet.ForcedTopmostApps = JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(forcedTopmost.GetRawText()) ?? lockSet.ForcedTopmostApps;
                 if (oldSettings.TryGetProperty("showFloatingLockWidget", out var showFloating)) lockSet.ShowFloatingLockWidget = showFloating.GetBoolean();
                 SaveLock(lockSet);
 

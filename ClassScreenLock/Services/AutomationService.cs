@@ -24,7 +24,7 @@ public class AutomationService
     public void Start()
     {
         _startupProcessed = false;
-        _timer = new Timer(OnTimerTick, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        _timer = new Timer(OnTimerTick, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
     }
 
     public void Stop()
@@ -84,7 +84,6 @@ public class AutomationService
         var settings = SettingsService.Automation;
         if (settings == null)
         {
-            LogService.Instance.Log("自动化", "警告", "配置", "自动化设置为空");
             _startupProcessed = true;
             return;
         }
@@ -570,8 +569,13 @@ public class AutomationService
             }
             try
             {
-                exists = System.Diagnostics.Process.GetProcesses()
-                    .Any(p => string.Equals(p.ProcessName, name, StringComparison.OrdinalIgnoreCase));
+                // GetProcessesByName 只查询同名进程，远快于 GetProcesses().Any(...)
+                var procs = System.Diagnostics.Process.GetProcessesByName(name);
+                foreach (var p in procs)
+                {
+                    p.Dispose();
+                }
+                exists = procs.Length > 0;
             }
             catch { }
         }
@@ -581,18 +585,35 @@ public class AutomationService
             var target = filePath.Trim();
             try
             {
-                exists = System.Diagnostics.Process.GetProcesses()
-                    .Any(p =>
+                System.Diagnostics.Process[] all;
+                try
+                {
+                    all = System.Diagnostics.Process.GetProcesses();
+                }
+                catch
+                {
+                    return false;
+                }
+
+                foreach (var p in all)
+                {
+                    try
                     {
-                        try
+                        if (string.Equals(p.MainModule?.FileName, target, StringComparison.OrdinalIgnoreCase))
                         {
-                            return string.Equals(p.MainModule?.FileName, target, StringComparison.OrdinalIgnoreCase);
+                            exists = true;
+                            break;
                         }
-                        catch
-                        {
-                            return false;
-                        }
-                    });
+                    }
+                    catch
+                    {
+                        // 访问系统进程等会抛异常，跳过
+                    }
+                    finally
+                    {
+                        p.Dispose();
+                    }
+                }
             }
             catch { }
         }

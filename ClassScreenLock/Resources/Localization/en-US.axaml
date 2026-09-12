@@ -23,45 +23,41 @@
     <x:String x:Key="Settings_Title">System Settings</x:String>
     <x:String x:Key="Settings_Appearance_Title">Appearance Settings</x:String>
     <x:String x:Key="Settings_Theme">Theme</x:String>
+    <x:String x:Key="Settings_ThemeMode">Theme Mode</x:String>
     <x:String x:Key="Settings_Language">Language</x:String>
     <x:String x:Key="Settings_AccentColor">Accent Color</x:String>
-    <x:String x:Key="Settings_FontSize">Font Size</x:String>
-    <x:String x:Key="Settings_FontFamily">Font Family</x:String>
-    <x:String x:Key="Settings_FontPreview">Font Preview</x:String>
     <x:String x:Key="Settings_DarkMode">Dark Mode</x:String>
-    <x:String x:Key="Settings_Behavior_Title">Behavior Settings</x:String>
     <x:String x:Key="Settings_Startup">Start with Windows</x:String>
     <x:String x:Key="Settings_LockTimeout">Lock Timeout</x:String>
     <x:String x:Key="Settings_ShowNotifications">Show Notifications</x:String>
+    <x:String x:Key="Settings_Notification_Title">Notifications</x:String>
     <x:String x:Key="Settings_Language_Title">Language Settings</x:String>
     <x:String x:Key="Settings_InterfaceLanguage">Interface Language</x:String>
     <x:String x:Key="Settings_InterfaceLanguage_Description">Select the display language for the application</x:String>
     <x:String x:Key="Settings_ResetToDefaults">Reset to Default</x:String>
     <x:String x:Key="Settings_ThemeMode_Description">Select the theme mode for the application</x:String>
-    <x:String x:Key="Settings_FontSize_Description">Adjust the font size of the application</x:String>
-    <x:String x:Key="Settings_FontFamily_Description">Select the font for the application</x:String>
     <x:String x:Key="Settings_AccentColor_Description">Select the accent color for the application</x:String>
-    <x:String x:Key="Settings_AccentColorSource">Accent Color Source</x:String>
-    <x:String x:Key="Settings_AccentColorSource_Description">Choose to use system color or custom color</x:String>
-    <x:String x:Key="Settings_SelectColor">Select Color</x:String>
     <x:String x:Key="Settings_CurrentColor">Current Color:</x:String>
     <x:String x:Key="Settings_SystemAccentColor">System Accent Color</x:String>
+    <x:String x:Key="Settings_SystemAccentColor_Desc">Follows the system theme automatically</x:String>
     <x:String x:Key="Settings_ShowNotifications_Description">Show application notifications</x:String>
-    <x:String x:Key="Settings_FontPreview_Title">Font Preview</x:String>
-    <x:String x:Key="Settings_FontPreview_Chinese">Chinese Preview: 你好，世界！</x:String>
-    <x:String x:Key="Settings_FontPreview_English">The quick brown fox jumps over the lazy dog.</x:String>
-    <x:String x:Key="Settings_FontRestartTip">Restart the application to apply font changes</x:String>
     <x:String x:Key="Settings_RestartApp">Restart Application</x:String>
     <x:String x:Key="Settings_CustomColor">Custom Color</x:String>
-    <x:String x:Key="Settings_NotificationPosition">Notification Position</x:String>
-    <x:String x:Key="Settings_NotificationPosition_Description">Select where to display notifications</x:String>
+    <x:String x:Key="Settings_PresetColors">Preset Colors</x:String>
+    <x:String x:Key="Settings_MoreColors">More Colors</x:String>
+    <x:String x:Key="Settings_Notification_CenterHint">Notifications always appear at the center of the screen</x:String>
+    <x:String x:Key="Settings_NotificationDuration">Notification Duration</x:String>
+    <x:String x:Key="Settings_NotificationDuration_Description">How long notifications stay before auto-dismissing</x:String>
+    <x:String x:Key="Settings_NotificationSound">Notification Sound</x:String>
+    <x:String x:Key="Settings_NotificationSound_Description">Play a system sound when a notification appears</x:String>
+    <x:String x:Key="Settings_Seconds">s</x:String>
     <x:String x:Key="About_Developer">Developer</x:String>
     <x:String x:Key="About_License">License</x:String>
     
     <!-- Theme Options -->
     <x:String x:Key="Theme_Default">Default</x:String>
-    <x:String x:Key="Theme_Light">Dark</x:String>
-    <x:String x:Key="Theme_Dark">Light</x:String>
+    <x:String x:Key="Theme_Light">Light</x:String>
+    <x:String x:Key="Theme_Dark">Dark</x:String>
     
     <!-- Color Options -->
     <x:String x:Key="Color_Blue">Blue</x:String>
@@ -81,6 +77,7 @@
     
     <!-- Button Text -->
     <x:String x:Key="Btn_Save">Save</x:String>
+    <x:String x:Key="Btn_Ok">OK</x:String>
     <x:String x:Key="Btn_Cancel">Cancel</x:String>
     <x:String x:Key="Btn_Apply">Apply</x:String>
     <x:String x:Key="Btn_Reset">Reset</x:String>
@@ -165,6 +162,18 @@
     <x:String x:Key="AppManagement_RunningApps">Running Apps</x:String>
     <x:String x:Key="AppManagement_BlockedApps">Blocked Apps</x:String>
     <x:String x:Key="AppManagement_BasicProtection">Basic Protection</x:String>
+    <x:String x:Key="AppManagement_GlobalProtection">Global Protection</x:String>
+    <x:String x:Key="AppManagement_GlobalProtectionDesc">When enabled, automatically blocks violating software and scripts based on the rules below</x:String>
+    <x:String x:Key="SecurityCenter_MinimumAllowedRole">Minimum Allowance Role</x:String>
+    <x:String x:Key="SecurityCenter_MinimumAllowedRoleDesc">When a Security Center account of this role or higher is signed in, blocked processes (CMD, PowerShell, ISE, Task Manager, etc.) are allowed directly and app controls are suspended</x:String>
+    <x:String x:Key="SecurityCenter_MinimumAllowedRole_SuperAdmin">Super Admin only</x:String>
+    <x:String x:Key="SecurityCenter_MinimumAllowedRole_Admin">Admin and above</x:String>
+    <x:String x:Key="SecurityCenter_MinimumAllowedRole_User">Any signed-in account</x:String>
+    <x:String x:Key="AppManagement_BackupRestore">Backup &amp; Restore</x:String>
+    <x:String x:Key="AppManagement_ProtectionItemsTitle">Protection Items (toggle individually)</x:String>
+    <x:String x:Key="AppManagement_ProtectionItemsDesc">Each item is controlled independently; when enabled it blocks the corresponding program or script. Enable or disable them as needed.</x:String>
+    <x:String x:Key="AppManagement_BackupRestoreDesc">Automatically backs up configuration before enabling protection, and restores with integrity check when disabled</x:String>
+    <x:String x:Key="AppManagement_ManualRestore">Restore Manually</x:String>
     <x:String x:Key="AppManagement_AddApp">Add App</x:String>
     <x:String x:Key="AppManagement_RemoveApp">Remove App</x:String>
     <x:String x:Key="AppManagement_Refresh">Refresh List</x:String>
@@ -201,11 +210,6 @@
     <x:String x:Key="LockSettings_ShowFloatingLockWidget_Desc">Show a semi-transparent draggable button on the desktop to quickly enter break lock state</x:String>
     <x:String x:Key="LockSettings_EarlyUnlockMinAccountType">Minimum account level for early unlock</x:String>
     <x:String x:Key="LockSettings_EarlyUnlockMinAccountType_Desc">Accounts below this level cannot perform early unlock from lock screen</x:String>
-    <x:String x:Key="LockSettings_TopmostExempt">Topmost Exemption</x:String>
-    <x:String x:Key="LockSettings_TopmostExempt_Desc">These apps will be allowed to display above the lock screen.</x:String>
-    <x:String x:Key="LockSettings_AddApp_Watermark">Enter process name (e.g. Classisland)</x:String>
-    <x:String x:Key="LockSettings_ForcedTopmost">Forced Topmost Apps</x:String>
-    <x:String x:Key="LockSettings_ForcedTopmost_Desc">These apps will be forced to stay at the front during lock.</x:String>
     
     <!-- Schedule -->
     <x:String x:Key="Schedule_Title">Schedule</x:String>
@@ -299,6 +303,8 @@
     <x:String x:Key="Network_RuleExists">Rule already exists</x:String>
     <x:String x:Key="Network_InvalidDomain">Invalid domain format</x:String>
     <x:String x:Key="Network_DoHTip">Tip: If interception fails, please try:&#x0a;1. Click "Apply Changes" and allow admin rights.&#x0a;2. Disable "Secure DNS" (DNS-over-HTTPS) in browser settings.&#x0a;3. Restart browser or clear browser cache.</x:String>
+    <x:String x:Key="Network_MitmTitle">Deep Traffic Inspection (DTI)</x:String>
+    <x:String x:Key="Network_MitmExperimental">Experimental Feature</x:String>
     
     <!-- System Tray -->
     <x:String x:Key="Tray_Show">Show Main Window</x:String>
@@ -317,7 +323,6 @@
     <x:String x:Key="Init_AvailableInSettings">You can continue in Settings</x:String>
     <x:String x:Key="Settings_UseSystemAccentColor">Use system accent color</x:String>
     <x:String x:Key="Init_UserPreferences_Title">User Preferences</x:String>
-    <x:String x:Key="Init_FontFamily_Watermark">Example: Microsoft YaHei UI</x:String>
     <x:String x:Key="Init_PermissionSetup_Title">Permission Setup</x:String>
     <x:String x:Key="Init_AvailableInSecurityCenter">You can continue in Security Center</x:String>
     <x:String x:Key="Init_AdminLoginVerificationMode">Admin login verification mode</x:String>
@@ -364,11 +369,6 @@
     <x:String x:Key="About_Repository">Repository</x:String>
     <x:String x:Key="About_UserAgreement">User Agreement</x:String>
     <x:String x:Key="About_PrivacyPolicy">Privacy Policy</x:String>
-    <x:String x:Key="NotificationPosition_Center">Center</x:String>
-    <x:String x:Key="NotificationPosition_TopLeft">Top Left</x:String>
-    <x:String x:Key="NotificationPosition_TopRight">Top Right</x:String>
-    <x:String x:Key="NotificationPosition_BottomLeft">Bottom Left</x:String>
-    <x:String x:Key="NotificationPosition_BottomRight">Bottom Right</x:String>
     
     <!-- Lock Screen -->
     <x:String x:Key="LockScreen_Locked">Screen Locked</x:String>
@@ -395,6 +395,15 @@
     <x:String x:Key="LockScreen_Tagline">Class Screen Lock - Maintain classroom order, improve learning efficiency</x:String>
     <x:String x:Key="LockScreen_Clear">Clear</x:String>
     <x:String x:Key="LockScreen_Space">Space</x:String>
+    
+    <!-- Protection Mode Floating Widget -->
+    <x:String x:Key="ProtectionWidget_Title">This computer is under control</x:String>
+    <x:String x:Key="ProtectionWidget_Subtitle">Protection mode is active</x:String>
+    <x:String x:Key="ProtectionWidget_AdminAccount">Admin account</x:String>
+    <x:String x:Key="ProtectionWidget_Password">Password</x:String>
+    <x:String x:Key="ProtectionWidget_Unlock">Release</x:String>
+    <x:String x:Key="ProtectionWidget_DragHint">Drag to move</x:String>
+    <x:String x:Key="ProtectionWidget_NoCredentials">Please enter username and password</x:String>
     
     <!-- Security Center Extended -->
     <x:String x:Key="SecurityCenter_Authentication">Authentication</x:String>
@@ -566,11 +575,36 @@
     <x:String x:Key="SecurityCenter_LockTextPreview">Lock Screen Text Effect Preview</x:String>
     <x:String x:Key="SecurityCenter_ScreenLocked">Screen Locked</x:String>
     <x:String x:Key="SecurityCenter_DistanceToNextClass">Distance to next class: 10:00</x:String>
-    <x:String x:Key="SecurityCenter_TopmostExemptionSettings">Topmost Exemption Settings</x:String>
-    <x:String x:Key="SecurityCenter_TopmostExemptionSettingsDesc">When screen is locked, programs in this list are allowed to stay on top for operation (e.g. video conference windows)</x:String>
-    <x:String x:Key="SecurityCenter_EnterProcessNameOrKeyword">Enter process name or window title keyword</x:String>
-    <x:String x:Key="SecurityCenter_ForcedTopmostSettings">Forced Topmost Settings</x:String>
-    <x:String x:Key="SecurityCenter_ForcedTopmostSettingsDesc">Force programs in this list to stay on top during screen lock</x:String>
+    <x:String x:Key="SecurityCenter_WatchdogMonitorDuration">Process Guardian</x:String>
+    <x:String x:Key="SecurityCenter_WatchdogMonitorDurationDesc">Guardian mechanism between the watchdog and the three mutual-monitoring processes. Shorter intervals recover faster from process anomalies but slightly increase CPU usage; longer intervals save power. The system automatically switches to a faster abnormal interval when issues are detected.</x:String>
+    <x:String x:Key="SecurityCenter_WatchdogMonitorInterval">Monitor Interval</x:String>
+    <x:String x:Key="SecurityCenter_WatchdogMonitorIntervalDesc">Check interval in normal state; switches to a faster abnormal interval automatically when issues are detected</x:String>
+    <x:String x:Key="SecurityCenter_UsbKeyLogin">USB Key Login</x:String>
+    <x:String x:Key="SecurityCenter_UsbKeyAuth">USB Key Authentication</x:String>
+    <x:String x:Key="SecurityCenter_Refresh">Refresh</x:String>
+    <x:String x:Key="SecurityCenter_RegisterNewUsbKey">Register New USB Key</x:String>
+    <x:String x:Key="SecurityCenter_RegisterUsbKeyDesc">Select a USB drive and enter a label. The key will be bound to the current logged-in account.</x:String>
+    <x:String x:Key="SecurityCenter_SelectUsbDrive">Select USB Drive</x:String>
+    <x:String x:Key="SecurityCenter_UsbKeyLabel">Key Label</x:String>
+    <x:String x:Key="SecurityCenter_UsbKeyLabelWatermark">e.g. My classroom USB drive</x:String>
+    <x:String x:Key="SecurityCenter_RegisterUsbKey">Register USB Key</x:String>
+    <x:String x:Key="SecurityCenter_MyUsbKeys">My USB Keys</x:String>
+    <x:String x:Key="SecurityCenter_Revoke">Revoke</x:String>
+    <x:String x:Key="UsbKeyLogin_Title">USB Key Login</x:String>
+    <x:String x:Key="UsbKeyLogin_ConfirmTitle">Do you want to sign in with this USB key?</x:String>
+    <x:String x:Key="UsbKeyLogin_SelectDrive">Select USB Device</x:String>
+    <x:String x:Key="UsbKeyLogin_SelectDriveDesc">Select the USB device to use for login</x:String>
+    <x:String x:Key="UsbKeyLogin_Cancel">Cancel</x:String>
+    <x:String x:Key="UsbKeyLogin_NoDriveFound">No available USB drives detected</x:String>
+    <x:String x:Key="UsbKeyLogin_ScanError">Failed to scan USB devices</x:String>
+    <x:String x:Key="UsbKeyLogin_RemovableDisk">Removable Disk</x:String>
+    <x:String x:Key="Verify_Title">Authentication</x:String>
+    <x:String x:Key="Verify_RequireAdminDesc">This operation requires administrator privileges</x:String>
+    <x:String x:Key="Verify_VerifyAndExit">Verify and Exit</x:String>
+    <x:String x:Key="SecurityCenter_TopmostProtection">Topmost Protection</x:String>
+    <x:String x:Key="SecurityCenter_TopmostProtectionDesc">Periodically refreshes the window topmost state to prevent other programs from covering the lock screen. Smaller values provide stronger protection but slightly increase CPU usage.</x:String>
+    <x:String x:Key="SecurityCenter_TopmostRefreshInterval">Topmost Refresh Interval</x:String>
+    <x:String x:Key="SecurityCenter_TopmostRefreshIntervalDesc">Controls the frequency of topmost state checks. Smaller values provide stronger protection but slightly increase CPU usage.</x:String>
     <x:String x:Key="SecurityCenter_NeedAdminLoginForSecurityReport">Please complete admin login on the "Authentication" page first, then view password security report.</x:String>
     <x:String x:Key="SecurityCenter_SystemSecurityOverview">System Security Overview</x:String>
     <x:String x:Key="SecurityCenter_Last30DaysSecurityEvents">Security events in the last 30 days</x:String>
@@ -604,12 +638,33 @@
     <x:String x:Key="Organization_SyncConfiguration">Sync Configuration</x:String>
     <x:String x:Key="Organization_LeaveOrganization">Leave Organization</x:String>
     <x:String x:Key="Organization_JoinOrganization">Join Organization</x:String>
+
+    <!-- MITM experimental feature confirmation -->
+    <x:String x:Key="Network_MitmExperimental_Title">Experimental Feature</x:String>
+    <x:String x:Key="Network_MitmExperimental_Message">Deep Traffic Inspection (DTI) is an experimental feature. When enabled, all your HTTPS traffic will be decrypted and inspected by a local proxy, which may cause compatibility issues or performance degradation in some applications. Please confirm that you understand the associated risks and proceed with caution.</x:String>
+    <x:String x:Key="Network_MitmExperimental_Confirm">I understand the risks, enable it</x:String>
     <x:String x:Key="Organization_Processing">Processing, please wait...</x:String>
     <x:String x:Key="Organization_Usage_Title">Usage Instructions</x:String>
     <x:String x:Key="Organization_Usage_1">• After joining the organization, the software will automatically get security center configuration and network interception configuration from the server every time it starts</x:String>
     <x:String x:Key="Organization_Usage_2">• Configuration will be automatically applied locally, no manual operation required</x:String>
     <x:String x:Key="Organization_Usage_3">• You can click the "Sync Configuration" button to manually update the configuration</x:String>
     <x:String x:Key="Organization_Usage_4">• After leaving the organization, all configurations will be restored to local settings</x:String>
+    <x:String x:Key="Organization_OrgName">Organization Name:</x:String>
+    <x:String x:Key="Organization_OrgDescription">Description:</x:String>
+    <x:String x:Key="Organization_JoinedTime">Joined At:</x:String>
+    <x:String x:Key="Organization_LastSync">Last Sync:</x:String>
+    <x:String x:Key="Organization_ImportConfig">Import Config File</x:String>
+    <x:String x:Key="Organization_Wizard_Title">Join Organization</x:String>
+    <x:String x:Key="Organization_Wizard_Previous">Previous</x:String>
+    <x:String x:Key="Organization_Wizard_Next">Next</x:String>
+    <x:String x:Key="Organization_Wizard_Step0_Title">Connect Server</x:String>
+    <x:String x:Key="Organization_Wizard_Step0_Desc">Enter the control center backend API address</x:String>
+    <x:String x:Key="Organization_Wizard_Step1_Title">Organization ID</x:String>
+    <x:String x:Key="Organization_Wizard_Step1_Desc">Enter the organization ID to join</x:String>
+    <x:String x:Key="Organization_Wizard_Step2_Title">Device Info</x:String>
+    <x:String x:Key="Organization_Wizard_Step2_Desc">Fill in device information for centralized management</x:String>
+    <x:String x:Key="Organization_Wizard_Step3_Title">Confirm &amp; Join</x:String>
+    <x:String x:Key="Organization_Wizard_Step3_Desc">Please confirm the information below</x:String>
     
     <!-- Screenshot History -->
     <x:String x:Key="ScreenshotHistory_Title">Screen Records</x:String>
@@ -743,6 +798,18 @@
     <x:String x:Key="Automation_SelectWorkflow_Prompt">Please select or create a workflow on the left</x:String>
     <x:String x:Key="Automation_Disabled_Warning">The automation engine is currently disabled, all workflows will not take effect. Please enable automation above to restore functionality.</x:String>
     <x:String x:Key="Automation_EnableNow">Enable Now</x:String>
+    <x:String x:Key="Automation_SearchWatermark">Search workflows...</x:String>
+    <x:String x:Key="Automation_Templates">Quick Templates</x:String>
+    <x:String x:Key="Automation_Template_ClassStart">Class Start Lock</x:String>
+    <x:String x:Key="Automation_Template_ScheduledShutdown">Scheduled Shutdown</x:String>
+    <x:String x:Key="Automation_Template_ProcessGuard">Process Guard</x:String>
+    <x:String x:Key="Automation_Template_NetworkShot">Network Disconnect Shot</x:String>
+    <x:String x:Key="Automation_Pipeline_EmptyTrigger">No triggers added yet. Click the button above to add one.</x:String>
+    <x:String x:Key="Automation_Pipeline_EmptyCondition">Conditions are optional. Leave empty to execute on trigger.</x:String>
+    <x:String x:Key="Automation_Pipeline_EmptyAction">No actions added yet. Click the button above to add one.</x:String>
+    <x:String x:Key="Automation_Scheme_Label">Scheme</x:String>
+    <x:String x:Key="Automation_RecoveryEnabled">Recovery Actions</x:String>
+    <x:String x:Key="Automation_WorkflowSettings">Workflow Settings</x:String>
 
     <!-- Common buttons -->
     <x:String x:Key="Common_Close">Close</x:String>

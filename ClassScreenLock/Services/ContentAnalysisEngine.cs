@@ -37,6 +37,10 @@ public class ContentAnalysisEngine
         @"(?:https?://)?(?:www\.)?([a-zA-Z0-9][-a-zA-Z0-9]*(?:\.[a-zA-Z0-9][-a-zA-Z0-9]*)+)",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    private static readonly Regex SimpleDomainRegex = new(
+        @"\b([a-zA-Z0-9][-a-zA-Z0-9]{0,61}[a-zA-Z0-9]\.[a-zA-Z]{2,})\b",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     private ContentAnalysisEngine() { }
 
     public AnalysisResult Analyze(string text, List<Models.NetworkRule> rules)
@@ -159,8 +163,7 @@ public class ContentAnalysisEngine
             }
         }
 
-        var simpleDomainPattern = new Regex(@"\b([a-zA-Z0-9][-a-zA-Z0-9]{0,61}[a-zA-Z0-9]\.[a-zA-Z]{2,})\b", RegexOptions.IgnoreCase);
-        var simpleMatches = simpleDomainPattern.Matches(text);
+        var simpleMatches = SimpleDomainRegex.Matches(text);
         foreach (Match match in simpleMatches)
         {
             if (match.Success)

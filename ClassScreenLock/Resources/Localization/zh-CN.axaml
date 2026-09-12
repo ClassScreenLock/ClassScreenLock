@@ -23,45 +23,41 @@
     <x:String x:Key="Settings_Title">系统设置</x:String>
     <x:String x:Key="Settings_Appearance_Title">外观设置</x:String>
     <x:String x:Key="Settings_Theme">主题</x:String>
+    <x:String x:Key="Settings_ThemeMode">主题模式</x:String>
     <x:String x:Key="Settings_Language">语言</x:String>
     <x:String x:Key="Settings_AccentColor">强调色</x:String>
-    <x:String x:Key="Settings_FontSize">字体大小</x:String>
-    <x:String x:Key="Settings_FontFamily">字体</x:String>
-    <x:String x:Key="Settings_FontPreview">字体预览</x:String>
     <x:String x:Key="Settings_DarkMode">暗黑模式</x:String>
-    <x:String x:Key="Settings_Behavior_Title">行为设置</x:String>
     <x:String x:Key="Settings_Startup">开机自启动</x:String>
     <x:String x:Key="Settings_LockTimeout">锁定超时</x:String>
     <x:String x:Key="Settings_ShowNotifications">显示通知</x:String>
+    <x:String x:Key="Settings_Notification_Title">通知设置</x:String>
     <x:String x:Key="Settings_Language_Title">语言设置</x:String>
     <x:String x:Key="Settings_InterfaceLanguage">界面语言</x:String>
     <x:String x:Key="Settings_InterfaceLanguage_Description">选择应用的显示语言</x:String>
     <x:String x:Key="Settings_ResetToDefaults">恢复默认</x:String>
     <x:String x:Key="Settings_ThemeMode_Description">选择应用的主题模式</x:String>
-    <x:String x:Key="Settings_FontSize_Description">调整应用的字体大小</x:String>
-    <x:String x:Key="Settings_FontFamily_Description">选择应用的字体</x:String>
     <x:String x:Key="Settings_AccentColor_Description">选择应用的强调色</x:String>
-    <x:String x:Key="Settings_AccentColorSource">强调色来源</x:String>
-    <x:String x:Key="Settings_AccentColorSource_Description">选择使用系统颜色或自定义颜色</x:String>
-    <x:String x:Key="Settings_SelectColor">选择颜色</x:String>
     <x:String x:Key="Settings_CurrentColor">当前颜色:</x:String>
     <x:String x:Key="Settings_SystemAccentColor">系统强调色</x:String>
+    <x:String x:Key="Settings_SystemAccentColor_Desc">跟随系统主题自动适配</x:String>
     <x:String x:Key="Settings_ShowNotifications_Description">显示应用通知</x:String>
-    <x:String x:Key="Settings_FontPreview_Title">字体预览</x:String>
-    <x:String x:Key="Settings_FontPreview_Chinese">中文预览：你好，世界</x:String>
-    <x:String x:Key="Settings_FontPreview_English">English Preview: Hello, World!</x:String>
-    <x:String x:Key="Settings_FontRestartTip">重启应用以应用字体更改</x:String>
     <x:String x:Key="Settings_RestartApp">重启应用</x:String>
     <x:String x:Key="Settings_CustomColor">自定义颜色</x:String>
-    <x:String x:Key="Settings_NotificationPosition">通知位置</x:String>
-    <x:String x:Key="Settings_NotificationPosition_Description">选择通知显示位置</x:String>
+    <x:String x:Key="Settings_PresetColors">预设颜色</x:String>
+    <x:String x:Key="Settings_MoreColors">更多颜色</x:String>
+    <x:String x:Key="Settings_Notification_CenterHint">通知将始终显示在屏幕中央</x:String>
+    <x:String x:Key="Settings_NotificationDuration">通知停留时长</x:String>
+    <x:String x:Key="Settings_NotificationDuration_Description">通知自动消失前的显示时长</x:String>
+    <x:String x:Key="Settings_NotificationSound">通知声音</x:String>
+    <x:String x:Key="Settings_NotificationSound_Description">显示通知时播放系统提示音</x:String>
+    <x:String x:Key="Settings_Seconds">秒</x:String>
     <x:String x:Key="About_Developer">开发者</x:String>
     <x:String x:Key="About_License">许可证</x:String>
     
     <!-- 主题选项 -->
     <x:String x:Key="Theme_Default">默认</x:String>
-    <x:String x:Key="Theme_Light">深色</x:String>
-    <x:String x:Key="Theme_Dark">浅色</x:String>
+    <x:String x:Key="Theme_Light">浅色</x:String>
+    <x:String x:Key="Theme_Dark">深色</x:String>
     
     <!-- 颜色选项 -->
     <x:String x:Key="Color_Blue">蓝色</x:String>
@@ -81,6 +77,7 @@
     
     <!-- 按钮文本 -->
     <x:String x:Key="Btn_Save">保存</x:String>
+    <x:String x:Key="Btn_Ok">确定</x:String>
     <x:String x:Key="Btn_Cancel">取消</x:String>
     <x:String x:Key="Btn_Apply">应用</x:String>
     <x:String x:Key="Btn_Reset">重置</x:String>
@@ -165,6 +162,18 @@
     <x:String x:Key="AppManagement_RunningApps">运行中的应用</x:String>
     <x:String x:Key="AppManagement_BlockedApps">阻止运行的应用</x:String>
     <x:String x:Key="AppManagement_BasicProtection">基础防护</x:String>
+    <x:String x:Key="AppManagement_GlobalProtection">全局防护开关</x:String>
+    <x:String x:Key="AppManagement_GlobalProtectionDesc">开启后将根据下方规则自动拦截违规软件和脚本</x:String>
+    <x:String x:Key="SecurityCenter_MinimumAllowedRole">最低放行权限</x:String>
+    <x:String x:Key="SecurityCenter_MinimumAllowedRoleDesc">安全中心登录账户达到该权限等级时，直接放行被拦截的进程（CMD、PowerShell、ISE、任务管理器等），并自动撤销应用管控</x:String>
+    <x:String x:Key="SecurityCenter_MinimumAllowedRole_SuperAdmin">仅超级管理员</x:String>
+    <x:String x:Key="SecurityCenter_MinimumAllowedRole_Admin">管理员及以上</x:String>
+    <x:String x:Key="SecurityCenter_MinimumAllowedRole_User">所有登录账户</x:String>
+    <x:String x:Key="AppManagement_BackupRestore">备份与恢复机制</x:String>
+    <x:String x:Key="AppManagement_ProtectionItemsTitle">防护项目（可分别启用/禁用）</x:String>
+    <x:String x:Key="AppManagement_ProtectionItemsDesc">每一项独立控制，开启后将拦截对应的程序或脚本。可按需分别启用或禁用。</x:String>
+    <x:String x:Key="AppManagement_BackupRestoreDesc">启用防护前自动备份配置，解除时自动恢复并校验完整性</x:String>
+    <x:String x:Key="AppManagement_ManualRestore">手动恢复</x:String>
     <x:String x:Key="AppManagement_AddApp">添加应用</x:String>
     <x:String x:Key="AppManagement_RemoveApp">移除应用</x:String>
     <x:String x:Key="AppManagement_Refresh">刷新列表</x:String>
@@ -200,11 +209,6 @@
     <x:String x:Key="LockSettings_ShowFloatingLockWidget_Desc">在桌面上显示一个半透明的可拖动按钮，点击可快速进入下课锁定状态</x:String>
     <x:String x:Key="LockSettings_EarlyUnlockMinAccountType">提前解锁所需最小账户级别</x:String>
     <x:String x:Key="LockSettings_EarlyUnlockMinAccountType_Desc">低于此级别的账户无法在锁屏界面提前解锁</x:String>
-    <x:String x:Key="LockSettings_TopmostExempt">程序置顶豁免</x:String>
-    <x:String x:Key="LockSettings_TopmostExempt_Desc">在屏幕锁定期间，以下程序将被允许显示在锁屏界面之上</x:String>
-    <x:String x:Key="LockSettings_AddApp_Watermark">输入进程名称 (例如: Classisland)</x:String>
-    <x:String x:Key="LockSettings_ForcedTopmost">强制置顶程序</x:String>
-    <x:String x:Key="LockSettings_ForcedTopmost_Desc">在屏幕锁定期间，以下程序将被强制保持在最前端</x:String>
     
     <!-- 时间计划 -->
     <x:String x:Key="Schedule_Title">时间计划</x:String>
@@ -304,6 +308,8 @@
 1. 点击"应用更改"并允许管理员权限
 2. 关闭浏览器的"安全DNS(DNS-over-HTTPS)"设置
 3. 重启浏览器或清理浏览器缓存</x:String>
+    <x:String x:Key="Network_MitmTitle">深度流量检查（DTI）</x:String>
+    <x:String x:Key="Network_MitmExperimental">实验性功能</x:String>
     
     <!-- 系统托盘 -->
     <x:String x:Key="Tray_Show">显示主界面</x:String>
@@ -325,7 +331,6 @@
     <x:String x:Key="Init_AvailableInSettings">可在设置界面继续配置</x:String>
     <x:String x:Key="Settings_UseSystemAccentColor">使用系统强调色</x:String>
     <x:String x:Key="Init_UserPreferences_Title">用户偏好</x:String>
-    <x:String x:Key="Init_FontFamily_Watermark">示例：Microsoft YaHei UI</x:String>
     <x:String x:Key="Init_PermissionSetup_Title">权限设置</x:String>
     <x:String x:Key="Init_AvailableInSecurityCenter">可在安全中心继续配置</x:String>
     <x:String x:Key="Init_AdminLoginVerificationMode">管理员登录验证模式</x:String>
@@ -369,11 +374,6 @@
     <x:String x:Key="Btn_Back">返回</x:String>
     <x:String x:Key="Btn_Skip">跳过</x:String>
     <x:String x:Key="Btn_Next">下一步</x:String>
-    <x:String x:Key="NotificationPosition_Center">中间</x:String>
-    <x:String x:Key="NotificationPosition_TopLeft">左上</x:String>
-    <x:String x:Key="NotificationPosition_TopRight">右上</x:String>
-    <x:String x:Key="NotificationPosition_BottomLeft">左下</x:String>
-    <x:String x:Key="NotificationPosition_BottomRight">右下</x:String>
     <x:String x:Key="About_Repository">开源仓库</x:String>
     <x:String x:Key="About_UserAgreement">服务协议(注意链接可能打不开)</x:String>
     <x:String x:Key="About_PrivacyPolicy">隐私政策</x:String>
@@ -403,6 +403,15 @@
     <x:String x:Key="LockScreen_Tagline">Class Screen Lock - 维护课堂秩序，提高学习效率</x:String>
     <x:String x:Key="LockScreen_Clear">清除</x:String>
     <x:String x:Key="LockScreen_Space">空格</x:String>
+    
+    <!-- 仅防护模式悬浮窗 -->
+    <x:String x:Key="ProtectionWidget_Title">当前电脑已被管控</x:String>
+    <x:String x:Key="ProtectionWidget_Subtitle">仅防护模式运行中</x:String>
+    <x:String x:Key="ProtectionWidget_AdminAccount">管理员账户</x:String>
+    <x:String x:Key="ProtectionWidget_Password">密码</x:String>
+    <x:String x:Key="ProtectionWidget_Unlock">解除管控</x:String>
+    <x:String x:Key="ProtectionWidget_DragHint">可拖拽移动</x:String>
+    <x:String x:Key="ProtectionWidget_NoCredentials">请输入用户名和密码</x:String>
     
     <!-- 安全中心扩展 -->
     <x:String x:Key="SecurityCenter_Authentication">身份验证</x:String>
@@ -573,11 +582,36 @@
     <x:String x:Key="SecurityCenter_LockTextPreview">锁屏文字效果预览</x:String>
     <x:String x:Key="SecurityCenter_ScreenLocked">屏幕已锁定</x:String>
     <x:String x:Key="SecurityCenter_DistanceToNextClass">距离下节课: 10:00</x:String>
-    <x:String x:Key="SecurityCenter_TopmostExemptionSettings">置顶豁免设置</x:String>
-    <x:String x:Key="SecurityCenter_TopmostExemptionSettingsDesc">当屏幕锁定时，列表中的程序允许保持置顶以便操作（例如视频会议窗口）</x:String>
-    <x:String x:Key="SecurityCenter_EnterProcessNameOrKeyword">输入进程名或窗口标题关键字</x:String>
-    <x:String x:Key="SecurityCenter_ForcedTopmostSettings">强制置顶设置</x:String>
-    <x:String x:Key="SecurityCenter_ForcedTopmostSettingsDesc">屏幕锁定时强制将列表中的程序窗口置顶</x:String>
+    <x:String x:Key="SecurityCenter_WatchdogMonitorDuration">进程守护</x:String>
+    <x:String x:Key="SecurityCenter_WatchdogMonitorDurationDesc">看门狗与三个互监进程之间的守护机制。间隔越短，进程异常时恢复越快，但会略微增加 CPU 占用；间隔越长越省电。进程异常时系统会自动切换到更快的异常间隔。</x:String>
+    <x:String x:Key="SecurityCenter_WatchdogMonitorInterval">监测间隔</x:String>
+    <x:String x:Key="SecurityCenter_WatchdogMonitorIntervalDesc">正常状态下的互监检查间隔；检测到异常时会自动切换到更快的异常间隔</x:String>
+    <x:String x:Key="SecurityCenter_UsbKeyLogin">USB密钥登录</x:String>
+    <x:String x:Key="SecurityCenter_UsbKeyAuth">USB密钥认证</x:String>
+    <x:String x:Key="SecurityCenter_Refresh">刷新</x:String>
+    <x:String x:Key="SecurityCenter_RegisterNewUsbKey">注册新USB密钥</x:String>
+    <x:String x:Key="SecurityCenter_RegisterUsbKeyDesc">选择U盘，输入标签，密钥将绑定到当前登录账户</x:String>
+    <x:String x:Key="SecurityCenter_SelectUsbDrive">选择U盘</x:String>
+    <x:String x:Key="SecurityCenter_UsbKeyLabel">密钥标签</x:String>
+    <x:String x:Key="SecurityCenter_UsbKeyLabelWatermark">例如：我的教室U盘</x:String>
+    <x:String x:Key="SecurityCenter_RegisterUsbKey">注册USB密钥</x:String>
+    <x:String x:Key="SecurityCenter_MyUsbKeys">我的USB密钥</x:String>
+    <x:String x:Key="SecurityCenter_Revoke">撤销</x:String>
+    <x:String x:Key="UsbKeyLogin_Title">USB密钥登录</x:String>
+    <x:String x:Key="UsbKeyLogin_ConfirmTitle">你想使用此USB密钥登录吗？</x:String>
+    <x:String x:Key="UsbKeyLogin_SelectDrive">选择USB设备</x:String>
+    <x:String x:Key="UsbKeyLogin_SelectDriveDesc">请选择要用于登录的USB设备</x:String>
+    <x:String x:Key="UsbKeyLogin_Cancel">取消</x:String>
+    <x:String x:Key="UsbKeyLogin_NoDriveFound">未检测到可用的U盘</x:String>
+    <x:String x:Key="UsbKeyLogin_ScanError">扫描USB设备时出错</x:String>
+    <x:String x:Key="UsbKeyLogin_RemovableDisk">可移动磁盘</x:String>
+    <x:String x:Key="Verify_Title">身份验证</x:String>
+    <x:String x:Key="Verify_RequireAdminDesc">此操作需要管理员权限</x:String>
+    <x:String x:Key="Verify_VerifyAndExit">验证并退出</x:String>
+    <x:String x:Key="SecurityCenter_TopmostProtection">窗口置顶保护</x:String>
+    <x:String x:Key="SecurityCenter_TopmostProtectionDesc">通过定时刷新窗口置顶状态，防止其他程序覆盖锁屏界面。数值越小保护越强，但会略微增加CPU占用。</x:String>
+    <x:String x:Key="SecurityCenter_TopmostRefreshInterval">置顶刷新间隔</x:String>
+    <x:String x:Key="SecurityCenter_TopmostRefreshIntervalDesc">控制置顶状态检查的频率，数值越小保护越强，但会略微增加CPU占用</x:String>
     <x:String x:Key="SecurityCenter_NeedAdminLoginForSecurityReport">请先在「身份验证」页完成管理员登录后，再查看密码安全报告。</x:String>
     <x:String x:Key="SecurityCenter_SystemSecurityOverview">系统安全概览</x:String>
     <x:String x:Key="SecurityCenter_Last30DaysSecurityEvents">最近 30 天的安全事件记录</x:String>
@@ -611,12 +645,33 @@
     <x:String x:Key="Organization_SyncConfiguration">同步配置</x:String>
     <x:String x:Key="Organization_LeaveOrganization">退出组织</x:String>
     <x:String x:Key="Organization_JoinOrganization">加入组织</x:String>
+
+    <!-- MITM 实验性功能确认框 -->
+    <x:String x:Key="Network_MitmExperimental_Title">实验性功能</x:String>
+    <x:String x:Key="Network_MitmExperimental_Message">深度流量检查（DTI）是一项实验性功能。启用后，您的所有 HTTPS 流量将被本地代理解密检查，这可能导致某些应用出现兼容性问题或性能下降。请确认您了解相关风险并谨慎开启。</x:String>
+    <x:String x:Key="Network_MitmExperimental_Confirm">我已了解风险，确认开启</x:String>
     <x:String x:Key="Organization_Processing">正在处理，请稍候...</x:String>
     <x:String x:Key="Organization_Usage_Title">使用说明</x:String>
     <x:String x:Key="Organization_Usage_1">• 加入组织后，软件将在每次启动时自动从服务器获取安全中心配置和网络拦截配置</x:String>
     <x:String x:Key="Organization_Usage_2">• 配置会自动应用到本地，无需手动操作</x:String>
     <x:String x:Key="Organization_Usage_3">• 可以点击「同步配置」按钮手动更新配置</x:String>
     <x:String x:Key="Organization_Usage_4">• 退出组织后，所有配置将恢复为本地设置</x:String>
+    <x:String x:Key="Organization_OrgName">组织名称：</x:String>
+    <x:String x:Key="Organization_OrgDescription">组织描述：</x:String>
+    <x:String x:Key="Organization_JoinedTime">加入时间：</x:String>
+    <x:String x:Key="Organization_LastSync">最后同步：</x:String>
+    <x:String x:Key="Organization_ImportConfig">导入配置文件</x:String>
+    <x:String x:Key="Organization_Wizard_Title">加入组织</x:String>
+    <x:String x:Key="Organization_Wizard_Previous">上一步</x:String>
+    <x:String x:Key="Organization_Wizard_Next">下一步</x:String>
+    <x:String x:Key="Organization_Wizard_Step0_Title">连接服务器</x:String>
+    <x:String x:Key="Organization_Wizard_Step0_Desc">请输入集控端后端 API 地址</x:String>
+    <x:String x:Key="Organization_Wizard_Step1_Title">组织标识</x:String>
+    <x:String x:Key="Organization_Wizard_Step1_Desc">请输入要加入的组织 ID</x:String>
+    <x:String x:Key="Organization_Wizard_Step2_Title">设备信息</x:String>
+    <x:String x:Key="Organization_Wizard_Step2_Desc">填写设备相关信息以便集中管理</x:String>
+    <x:String x:Key="Organization_Wizard_Step3_Title">确认并加入</x:String>
+    <x:String x:Key="Organization_Wizard_Step3_Desc">请确认以下信息无误</x:String>
     
     <!-- Screenshot History -->
     <x:String x:Key="ScreenshotHistory_Title">屏幕记录</x:String>
@@ -750,6 +805,18 @@
     <x:String x:Key="Automation_SelectWorkflow_Prompt">请在左侧选择或创建一个工作流</x:String>
     <x:String x:Key="Automation_Disabled_Warning">自动化引擎目前已禁用，所有的工作流将不会生效。请在上方开启自动化以恢复功能。</x:String>
     <x:String x:Key="Automation_EnableNow">立即开启</x:String>
+    <x:String x:Key="Automation_SearchWatermark">搜索工作流...</x:String>
+    <x:String x:Key="Automation_Templates">快速模板</x:String>
+    <x:String x:Key="Automation_Template_ClassStart">上课锁屏</x:String>
+    <x:String x:Key="Automation_Template_ScheduledShutdown">定时关机</x:String>
+    <x:String x:Key="Automation_Template_ProcessGuard">进程守护</x:String>
+    <x:String x:Key="Automation_Template_NetworkShot">断网截图</x:String>
+    <x:String x:Key="Automation_Pipeline_EmptyTrigger">尚未添加触发器，点击上方按钮添加</x:String>
+    <x:String x:Key="Automation_Pipeline_EmptyCondition">条件为可选，留空则触发即执行</x:String>
+    <x:String x:Key="Automation_Pipeline_EmptyAction">尚未添加动作，点击上方按钮添加</x:String>
+    <x:String x:Key="Automation_Scheme_Label">方案</x:String>
+    <x:String x:Key="Automation_RecoveryEnabled">恢复动作</x:String>
+    <x:String x:Key="Automation_WorkflowSettings">工作流设置</x:String>
 
     <!-- 通用按钮 -->
     <x:String x:Key="Common_Close">关闭</x:String>

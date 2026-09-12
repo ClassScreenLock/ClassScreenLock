@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ClassScreenLock.Services;
@@ -17,20 +18,48 @@ public class LogEntry
     public string Details { get; set; } = string.Empty;
 }
 
-public class LogService
+public class LogService : IDisposable
 {
     private static readonly LogService _instance = new();
     public static LogService Instance => _instance;
 
     private static readonly string LogDirectory = Path.Combine(
-        AppDomain.CurrentDomain.BaseDirectory,
+        Helpers.AppPathHelper.AppDirectory,
         "Data",
         "Logs");
 
     private readonly object _lock = new();
     private Dictionary<string, List<LogEntry>> _cachedLogs = new();
+    private readonly HashSet<string> _dirtyDates = new(StringComparer.Ordinal);
+    private Timer? _flushTimer;
+    private bool _disposed;
 
-    private LogService() { }
+    private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(1);
+    private const int MaxUnflushedEntriesPerDay = 80;
+
+    private LogService()
+    {
+        _flushTimer = new Timer(OnFlushTimer, null, FlushInterval, FlushInterval);
+    }
+
+    public void FlushNow()
+    {
+        OnFlushTimer(null);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _flushTimer?.Dispose();
+        _flushTimer = null;
+        FlushDirty();
+    }
+
+    private void OnFlushTimer(object? state)
+    {
+        FlushDirty();
+    }
 
     private string GetLogFilePath(DateTime date)
     {
@@ -67,7 +96,16 @@ public class LogService
                     Details = details
                 });
 
-                SaveDayLogs(dateKey, dayLogs);
+                // 标记脏数据，延迟批量写入
+                _dirtyDates.Add(dateKey);
+
+                // 如果当日累积条目过多，立即刷盘
+                if (dayLogs.Count % MaxUnflushedEntriesPerDay == 0)
+                {
+                    FlushDateLocked(dateKey, dayLogs);
+                    _dirtyDates.Remove(dateKey);
+                }
+
                 System.Diagnostics.Debug.WriteLine($"[LOG][{type}][{action}] {target}: {details}");
             }
             catch (Exception ex)
@@ -77,6 +115,50 @@ public class LogService
         }
     }
 
+    private void FlushDirty()
+    {
+        List<string> datesToFlush;
+        lock (_lock)
+        {
+            if (_dirtyDates.Count == 0) return;
+            datesToFlush = _dirtyDates.ToList();
+        }
+
+        foreach (var dateKey in datesToFlush)
+        {
+            lock (_lock)
+            {
+                if (_cachedLogs.TryGetValue(dateKey, out var dayLogs))
+                {
+                    FlushDateLocked(dateKey, dayLogs);
+                    _dirtyDates.Remove(dateKey);
+                }
+            }
+        }
+    }
+
+    private static void FlushDateLocked(string dateKey, List<LogEntry> logs)
+    {
+        // 必须在 _lock 内调用
+        try
+        {
+            if (!Directory.Exists(LogDirectory))
+            {
+                Directory.CreateDirectory(LogDirectory);
+            }
+
+            var filePath = Path.Combine(LogDirectory, $"logs_{dateKey}.json");
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            var json = JsonSerializer.Serialize(logs, options);
+            File.WriteAllText(filePath, json);
+        }
+        catch { }
+    }
+
     public void ClearLogs()
     {
         lock (_lock)
@@ -84,15 +166,12 @@ public class LogService
             try
             {
                 _cachedLogs.Clear();
+                _dirtyDates.Clear();
                 if (Directory.Exists(LogDirectory))
                 {
                     foreach (var file in Directory.GetFiles(LogDirectory, "logs_*.json"))
                     {
-                        try
-                        {
-                            File.Delete(file);
-                        }
-                        catch { }
+                        try { File.Delete(file); } catch { }
                     }
                 }
             }
@@ -108,7 +187,8 @@ public class LogService
             {
                 var dateKey = GetDateKey(date);
                 _cachedLogs.Remove(dateKey);
-                
+                _dirtyDates.Remove(dateKey);
+
                 var filePath = GetLogFilePath(date);
                 if (File.Exists(filePath))
                 {
@@ -123,8 +203,19 @@ public class LogService
     {
         lock (_lock)
         {
+            // 加载前先刷盘，确保磁盘数据是最新的
+            var datesToFlush = _dirtyDates.ToList();
+            foreach (var dk in datesToFlush)
+            {
+                if (_cachedLogs.TryGetValue(dk, out var dayLogs))
+                {
+                    FlushDateLocked(dk, dayLogs);
+                    _dirtyDates.Remove(dk);
+                }
+            }
+
             var allLogs = new List<LogEntry>();
-            
+
             try
             {
                 if (!Directory.Exists(LogDirectory))
@@ -140,13 +231,13 @@ public class LogService
                 {
                     var fileName = Path.GetFileNameWithoutExtension(file);
                     var dateKey = fileName.Replace("logs_", "");
-                    
+
                     if (!_cachedLogs.TryGetValue(dateKey, out var dayLogs))
                     {
                         dayLogs = LoadDayLogsFromFile(file);
                         _cachedLogs[dateKey] = dayLogs;
                     }
-                    
+
                     allLogs.AddRange(dayLogs);
                 }
             }
@@ -180,31 +271,10 @@ public class LogService
         }
     }
 
-    private void SaveDayLogs(string dateKey, List<LogEntry> logs)
-    {
-        try
-        {
-            if (!Directory.Exists(LogDirectory))
-            {
-                Directory.CreateDirectory(LogDirectory);
-            }
-
-            var filePath = Path.Combine(LogDirectory, $"logs_{dateKey}.json");
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
-            var json = JsonSerializer.Serialize(logs, options);
-            File.WriteAllText(filePath, json);
-        }
-        catch { }
-    }
-
     public List<string> GetAvailableDates()
     {
         var dates = new List<string>();
-        
+
         try
         {
             if (!Directory.Exists(LogDirectory))
@@ -219,7 +289,7 @@ public class LogService
                 var dateStr = fileName.Replace("logs_", "");
                 dates.Add(dateStr);
             }
-            
+
             dates.Sort();
             dates.Reverse();
         }

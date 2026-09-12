@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text.Json;
 using ClassScreenLock.Models;
@@ -23,7 +23,7 @@ public class InitializationService
     private static readonly Lazy<InitializationService> _instance = new(() => new InitializationService());
     public static InitializationService Instance => _instance.Value;
 
-    private static readonly string DataDirectory = Path.Combine(AppContext.BaseDirectory, "Data");
+    private static readonly string DataDirectory = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data");
     private static readonly string StatePath = Path.Combine(DataDirectory, "init_state.json");
 
     private readonly object _lock = new();

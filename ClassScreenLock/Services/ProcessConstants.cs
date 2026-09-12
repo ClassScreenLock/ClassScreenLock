@@ -25,6 +25,15 @@ public static class ProcessConstants
         };
 
     /// <summary>
+    /// 软件内部 PowerShell 调用的显式命令行放行标记。
+    /// 所有由软件自身发起的 powershell/pwsh 调用（自启动修复、计划任务管理、
+    /// hosts 清理、文件 ACL 恢复等）都会在 -Command 脚本内嵌入该标记；
+    /// AppBlockingService 与 IFEO Redirector 据此放行，不再依赖脆弱的短时间窗
+    /// 或"命令行恰好包含自身进程名"的隐式匹配，杜绝内部调用被误杀。
+    /// </summary>
+    public const string PowerShellAllowMarker = "__CSL_ALLOW__";
+
+    /// <summary>
     /// 判断是否是自身进程。
     /// </summary>
     public static bool IsOwnProcess(string? processName)

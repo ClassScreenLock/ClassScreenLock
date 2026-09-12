@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -23,7 +23,7 @@ public class ScreenshotService
     
     private ScreenshotService()
     {
-        _screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Screenshots");
+        _screenshotDirectory = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data", "Screenshots");
         if (!Directory.Exists(_screenshotDirectory))
         {
             Directory.CreateDirectory(_screenshotDirectory);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -29,7 +29,6 @@ public sealed class UiAccessService
         {
             HasUiAccess = _cachedUiAccessStatus.Value;
             StatusMessage = HasUiAccess ? "UIAccess 已启用 (缓存)" : "UIAccess 未启用 (缓存)";
-            LogService.Instance.Log("Debug", "UIAccess", "CheckAndElevate", "使用缓存的UIAccess状态");
             return;
         }
 
@@ -47,11 +46,9 @@ public sealed class UiAccessService
             }
             else
             {
-                LogService.Instance.Log("Debug", "UIAccess", "CheckAndElevate", "UIAccess 未启用，尝试提权到SYSTEM...");
                 dwErr = CreateSystemProcess();
                 if (dwErr == 0)
                 {
-                    LogService.Instance.Log("Info", "UIAccess", "CheckAndElevate", "SYSTEM进程已启动，退出当前进程");
                     Environment.Exit(0);
                 }
                 else
@@ -100,7 +97,6 @@ public sealed class UiAccessService
             if (GetWindowBand(hWnd, out var band))
             {
                 pfUIAccess = band == ZBID_UIACCESS;
-                LogService.Instance.Log("Info", "UIAccess", "CheckForUIAccess", $"GetWindowBand = {band} (ZBID_UIACCESS = {ZBID_UIACCESS})");
                 return true;
             }
 
@@ -134,8 +130,6 @@ public sealed class UiAccessService
             return err;
         }
 
-        LogService.Instance.Log("Debug", "UIAccess", "CreateSystemProcess", $"当前 SessionId: {sessionId}");
-
         var dwErr = DuplicateWinloginToken(sessionId, TOKEN_IMPERSONATE, out var hTokenImpersonation);
         if (dwErr != 0)
         {
@@ -152,8 +146,6 @@ public sealed class UiAccessService
             return dwErr;
         }
 
-        LogService.Instance.Log("Debug", "UIAccess", "CreateSystemProcess", "已模拟SYSTEM身份");
-
         dwErr = DuplicateTokenForProcess(hTokenSelf, hTokenImpersonation, out var hTokenPrimary);
         if (dwErr != 0)
         {
@@ -161,8 +153,6 @@ public sealed class UiAccessService
             CleanupTokenHandle(hTokenSelf, hTokenImpersonation, IntPtr.Zero);
             return dwErr;
         }
-
-        LogService.Instance.Log("Info", "UIAccess", "CreateSystemProcess", "SYSTEM + UIAccess 主令牌创建成功");
 
         dwErr = CreateProcessWithToken(hTokenPrimary);
         
@@ -216,14 +206,12 @@ public sealed class UiAccessService
     /// </summary>
     private uint CreateProcessWithToken(IntPtr hTokenPrimary)
     {
-        var exePath = Process.GetCurrentProcess().MainModule?.FileName ?? Environment.ProcessPath ?? AppContext.BaseDirectory;
+        var exePath = Process.GetCurrentProcess().MainModule?.FileName ?? Environment.ProcessPath ?? Helpers.AppPathHelper.AppDirectory;
         var args = Environment.GetCommandLineArgs();
         var commandLine = BuildCommandLine(exePath, args);
 
         var si = new STARTUPINFOEX();
         si.cb = (uint)Marshal.SizeOf<STARTUPINFOEX>();
-
-        LogService.Instance.Log("Debug", "UIAccess", "CreateProcessWithToken", $"以SYSTEM身份创建新进程: {commandLine}");
 
         if (CreateProcessWithTokenW(hTokenPrimary, 0, null, commandLine, 0, IntPtr.Zero, null, ref si, out var pi))
         {
@@ -278,8 +266,6 @@ public sealed class UiAccessService
             return err;
         }
 
-        LogService.Instance.Log("Debug", "UIAccess", "DuplicateWinloginToken", $"SeTcbPrivilege LUID: {luidTcb.LowPart}");
-
         var hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         if (hSnapshot == (IntPtr)(-1))
         {
@@ -317,7 +303,6 @@ public sealed class UiAccessService
                 continue;
 
             winlogonCount++;
-            LogService.Instance.Log("Debug", "UIAccess", "FindAndDuplicateWinlogonToken", $"找到 winlogon.exe PID: {pe.th32ProcessID}");
 
             var result = TryDuplicateWinlogonToken(pe.th32ProcessID, dwSessionId, dwDesiredAccess, luidTcb, out phToken);
             if (result == 0)
@@ -340,14 +325,12 @@ public sealed class UiAccessService
         var hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, processId);
         if (hProcess == IntPtr.Zero)
         {
-            var err = (uint)Marshal.GetLastWin32Error();
-            LogService.Instance.Log("Debug", "UIAccess", "TryDuplicateWinlogonToken", $"OpenProcess 失败 PID {processId}: {err}");
             return ERROR_NOT_FOUND;
         }
 
         try
         {
-            return GetWinlogonTokenFromProcess(hProcess, processId, dwSessionId, dwDesiredAccess, luidTcb, out phToken);
+            return GetWinlogonTokenFromProcess(hProcess, dwSessionId, dwDesiredAccess, luidTcb, out phToken);
         }
         finally
         {
@@ -358,14 +341,12 @@ public sealed class UiAccessService
     /// <summary>
     /// 从进程获取 winlogon 令牌
     /// </summary>
-    private uint GetWinlogonTokenFromProcess(IntPtr hProcess, int processId, int dwSessionId, uint dwDesiredAccess, LUID luidTcb, out IntPtr phToken)
+    private uint GetWinlogonTokenFromProcess(IntPtr hProcess, int dwSessionId, uint dwDesiredAccess, LUID luidTcb, out IntPtr phToken)
     {
         phToken = IntPtr.Zero;
 
         if (!OpenProcessToken(hProcess, TOKEN_QUERY | TOKEN_DUPLICATE, out var hToken))
         {
-            var err = (uint)Marshal.GetLastWin32Error();
-            LogService.Instance.Log("Debug", "UIAccess", "GetWinlogonTokenFromProcess", $"OpenProcessToken 失败 PID {processId}: {err}");
             return ERROR_NOT_FOUND;
         }
 
@@ -373,17 +354,13 @@ public sealed class UiAccessService
         {
             if (!PrivilegeCheck(hToken, luidTcb, out var fTcb))
             {
-                var err = (uint)Marshal.GetLastWin32Error();
-                LogService.Instance.Log("Debug", "UIAccess", "GetWinlogonTokenFromProcess", $"PrivilegeCheck 调用失败: {err}");
                 return ERROR_NOT_FOUND;
             }
-
-            LogService.Instance.Log("Debug", "UIAccess", "GetWinlogonTokenFromProcess", $"PrivilegeCheck PID {processId}: fTcb={fTcb}");
 
             if (!fTcb)
                 return ERROR_NOT_FOUND;
 
-            return ValidateAndDuplicateToken(hToken, processId, dwSessionId, dwDesiredAccess, out phToken);
+            return ValidateAndDuplicateToken(hToken, dwSessionId, dwDesiredAccess, out phToken);
         }
         finally
         {
@@ -394,30 +371,26 @@ public sealed class UiAccessService
     /// <summary>
     /// 验证会话ID并复制令牌
     /// </summary>
-    private uint ValidateAndDuplicateToken(IntPtr hToken, int processId, int dwSessionId, uint dwDesiredAccess, out IntPtr phToken)
+    private uint ValidateAndDuplicateToken(IntPtr hToken, int dwSessionId, uint dwDesiredAccess, out IntPtr phToken)
     {
         phToken = IntPtr.Zero;
 
         int sid = 0;
         if (!GetTokenInformationInt(hToken, TOKEN_INFORMATION_CLASS.TokenSessionId, ref sid, sizeof(int), out _))
         {
-            var err = (uint)Marshal.GetLastWin32Error();
-            LogService.Instance.Log("Debug", "UIAccess", "ValidateAndDuplicateToken", $"GetTokenInformation SessionId 失败: {err}");
             return ERROR_NOT_FOUND;
         }
-
-        LogService.Instance.Log("Debug", "UIAccess", "ValidateAndDuplicateToken", $"SessionId PID {processId}: {sid} (目标: {dwSessionId})");
 
         if (sid != dwSessionId)
             return ERROR_NOT_FOUND;
 
-        return DuplicateTokenWithAccess(hToken, dwDesiredAccess, processId, out phToken);
+        return DuplicateTokenWithAccess(hToken, dwDesiredAccess, out phToken);
     }
 
     /// <summary>
     /// 根据访问权限复制令牌
     /// </summary>
-    private uint DuplicateTokenWithAccess(IntPtr hToken, uint dwDesiredAccess, int processId, out IntPtr phToken)
+    private uint DuplicateTokenWithAccess(IntPtr hToken, uint dwDesiredAccess, out IntPtr phToken)
     {
         phToken = IntPtr.Zero;
 
@@ -435,8 +408,6 @@ public sealed class UiAccessService
             return err;
         }
 
-        LogService.Instance.Log("Info", "UIAccess", "DuplicateTokenWithAccess", 
-            $"成功复制 winlogon {(tokenType == TOKEN_TYPE.TokenImpersonation ? "模拟" : "主")}令牌 PID: {processId}");
         return 0;
     }
 

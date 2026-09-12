@@ -22,6 +22,14 @@ public class WindowProtectionService
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool GetWindowDisplayAffinity(IntPtr hWnd, out uint dwAffinity);
 
+    [DllImport("user32.dll")]
+    private static extern bool RedrawWindow(IntPtr hWnd, IntPtr lprcUpdate, IntPtr hrgnUpdate, uint flags);
+
+    private const uint RDW_INVALIDATE = 0x0001;
+    private const uint RDW_ALLCHILDREN = 0x0080;
+    private const uint RDW_FRAME = 0x0400;
+    private const uint RDW_UPDATENOW = 0x0100;
+
     [DllImport("kernel32.dll")]
     private static extern bool GetVersionEx(ref OSVERSIONINFOEX lpVersionInformation);
 
@@ -206,6 +214,12 @@ public class WindowProtectionService
                     string mode = affinity == WDA_EXCLUDEFROMCAPTURE ? "完全排除捕获" : "仅显示器显示";
                     LogService.Instance.Log("Info", "WindowProtection", "Applied", 
                         $"窗口保护已启用, hWnd={hWnd}, 模式: {mode}");
+
+                    // SetWindowDisplayAffinity 生效时可能干扰 DWM 对窗口的合成
+                    // （尤其首次显示时原生标题栏会消失、看起来被内容区覆盖）。
+                    // 强制重绘客户区与非客户区（含标题栏），确保边框/标题栏正常呈现。
+                    RedrawWindow(hWnd, IntPtr.Zero, IntPtr.Zero,
+                        RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME | RDW_UPDATENOW);
                 }
                 else
                 {
@@ -225,6 +239,8 @@ public class WindowProtectionService
                             _protectedWindows.Add(hWnd);
                             LogService.Instance.Log("Info", "WindowProtection", "Applied", 
                                 $"窗口保护已启用(回退模式), hWnd={hWnd}, 模式: 仅显示器显示");
+                            RedrawWindow(hWnd, IntPtr.Zero, IntPtr.Zero,
+                                RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME | RDW_UPDATENOW);
                             return true;
                         }
                     }

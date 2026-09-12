@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,7 +13,7 @@ namespace ClassScreenLock.Services;
 public class NetworkRuleService
 {
     private static readonly string RulesFilePath = Path.Combine(
-        AppDomain.CurrentDomain.BaseDirectory,
+        Helpers.AppPathHelper.AppDirectory,
         "Data",
         "Networkblockage.json");
 

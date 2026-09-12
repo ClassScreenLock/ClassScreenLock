@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -78,7 +78,7 @@ public class SecurityService
     private const int AnomalyThreshold = 5;
     private const int WorkFactor = 12;
 
-    private static readonly string DataDirectory = Path.Combine(AppContext.BaseDirectory, "Data");
+    private static readonly string DataDirectory = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data");
     private static readonly string SecuritySettingsPath = Path.Combine(DataDirectory, "security.json");
 
     private static readonly Lazy<SecurityService> _instance = new(() => new SecurityService());

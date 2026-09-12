@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -22,7 +22,7 @@ public class InterceptionDatabase
     public static InterceptionDatabase Instance => _instance;
 
     private static readonly string DbFilePath = Path.Combine(
-        AppDomain.CurrentDomain.BaseDirectory,
+        Helpers.AppPathHelper.AppDirectory,
         "Data",
         "violation_logs.json");
 

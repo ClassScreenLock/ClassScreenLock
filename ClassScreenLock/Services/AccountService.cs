@@ -14,7 +14,7 @@ public class AccountService
 {
     private const int MaxSubAccounts = 5;
 
-    private static readonly string DataDirectory = Path.Combine(AppContext.BaseDirectory, "Data");
+    private static readonly string DataDirectory = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data");
     private static readonly string AccountsPath = Path.Combine(DataDirectory, "accounts.json");
 
     private static readonly Lazy<AccountService> _instance = new(() => new AccountService());
@@ -25,6 +25,7 @@ public class AccountService
     private AccountModel? _currentAccount;
     private DateTime? _loginTime;
     private bool _isInitialized;
+    private bool _isUsbKeySession;
 
     private AccountService()
     {
@@ -83,6 +84,17 @@ public class AccountService
             {
                 return _accounts.Where(a => !a.IsDisabled).OrderByDescending(a => a.AccountType).ThenBy(a => a.Username).ToList();
             }
+        }
+    }
+
+    /// <summary>
+    /// 根据账户ID查找账户（包括禁用账户）
+    /// </summary>
+    public AccountModel? FindAccountById(Guid accountId)
+    {
+        lock (_lock)
+        {
+            return _accounts.FirstOrDefault(a => a.Id == accountId && !a.IsDisabled);
         }
     }
 
@@ -451,6 +463,58 @@ public class AccountService
         return true;
     }
 
+    /// <summary>
+    /// 通过USB密钥登录（免密码）- 使用USB密钥中绑定的账户信息
+    /// </summary>
+    public void LoginWithUsbKey(UsbKeyModel usbKey)
+    {
+        lock (_lock)
+        {
+            // 创建虚拟USB密钥账户，使用绑定的账户信息
+            _currentAccount = new AccountModel
+            {
+                Id = usbKey.AccountId,
+                Username = usbKey.AccountUsername,
+                AccountType = usbKey.AccountType,
+                CreatedAt = DateTime.Now,
+                LastLoginAt = DateTime.Now
+            };
+            _loginTime = DateTime.Now;
+            _isUsbKeySession = true;
+        }
+
+        LogService.Instance.Log("Account", "UsbKeyLogin", _currentAccount.Username,
+            $"USB密钥认证: {usbKey.Label} -> {usbKey.AccountUsername}({usbKey.AccountType})");
+    }
+
+    /// <summary>
+    /// 登出USB密钥会话
+    /// </summary>
+    public void LogoutUsbKey()
+    {
+        lock (_lock)
+        {
+            if (_isUsbKeySession)
+            {
+                LogService.Instance.Log("Account", "UsbKeyLogout", _currentAccount?.Username ?? "未知");
+                _currentAccount = null;
+                _loginTime = null;
+                _isUsbKeySession = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 当前是否为USB密钥会话
+    /// </summary>
+    public bool IsUsbKeySession
+    {
+        get
+        {
+            lock (_lock) { return _isUsbKeySession; }
+        }
+    }
+
     public void Logout()
     {
         lock (_lock)
@@ -461,8 +525,15 @@ public class AccountService
             }
             _currentAccount = null;
             _loginTime = null;
+            _isUsbKeySession = false;
         }
-        
+
+        // 立即清除进程放行心跳标记：登出后马上恢复对所有被拦截进程的拦截，
+        // 无需等待下一个监控周期（ProcessBypassService.RefreshHeartbeat）。
+        ProcessBypassService.ClearHeartbeat();
+
+        // 如果当前不是USB密钥会话，登出安全服务
+        // USB会话不使用SecurityService
         SecurityService.Instance.Logout();
     }
 

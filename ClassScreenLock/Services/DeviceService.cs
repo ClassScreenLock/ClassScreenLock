@@ -26,7 +26,7 @@ public class DeviceService
 
     public DeviceService()
     {
-        _httpClient = new HttpClient();
+        _httpClient = new HttpClient(new SocketsHttpHandler { UseProxy = false });
         _httpClient.Timeout = TimeSpan.FromSeconds(10); // 设置默认超时时间为10秒
         _deviceId = GenerateDeviceId();
         _deviceName = Environment.MachineName;
@@ -85,7 +85,7 @@ public class DeviceService
                 macAddress = _macAddress,
                 organizationId = org.Id,
                 osVersion = Environment.OSVersion.ToString(),
-                appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0",
+                appVersion = GetAppVersionString(),
                 dotnetVersion = Environment.Version.ToString(),
                 registeredAt = DateTime.Now,
                 // 组织登记信息
@@ -167,7 +167,7 @@ public class DeviceService
                 memoryUsage = GetMemoryUsage(),
                 diskUsage = GetDiskUsage(),
                 osVersion = Environment.OSVersion.ToString(),
-                appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0",
+                appVersion = GetAppVersionString(),
                 dotnetVersion = Environment.Version.ToString(),
                 deviceName = _deviceName,
                 ipAddress = currentIpAddress,
@@ -424,7 +424,7 @@ public class DeviceService
         {
             try
             {
-                using var client = new HttpClient();
+                using var client = new HttpClient(new SocketsHttpHandler { UseProxy = false });
                 client.Timeout = TimeSpan.FromSeconds(10);
                 
                 Console.WriteLine($"[DEBUG] 尝试从 {service} 获取公网IP...");
@@ -517,6 +517,18 @@ public class DeviceService
         {
             return 0.0;
         }
+    }
+
+    /// <summary>
+    /// 应用版本号字符串。Revision 为日期式四位编号（程序集版本号不允许前导零，
+    /// 存储为 909），上报时补零与界面显示保持一致（如 1.20.10.0909）
+    /// </summary>
+    private static string GetAppVersionString()
+    {
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        return version != null
+            ? $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision:D4}"
+            : "1.0.0";
     }
 
     /// <summary>
