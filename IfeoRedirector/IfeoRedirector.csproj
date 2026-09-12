@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net9.0-windows</TargetFramework>
+        <!-- 拒绝路径的 WDAC 风格提示框基于 WinForms 绘制（与主项目同属 Desktop Runtime，无额外运行时负担） -->
+        <UseWindowsForms>true</UseWindowsForms>
+        <Nullable>enable</Nullable>
+        <Platform>x64</Platform>
+        <NuGetAudit>false</NuGetAudit>
+        <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
+        <Version>1.20.10.909</Version>
+        <AssemblyVersion>1.20.10.909</AssemblyVersion>
+        <FileVersion>1.20.10.909</FileVersion>
+        <InformationalVersion>1.20.10.909</InformationalVersion>
+        <AssemblyName>CSL.IfeoRedirector</AssemblyName>
+        <ApplicationName>CSL.IfeoRedirector</ApplicationName>
+        <OutDir>..\ClassScreenLock\bin\$(Configuration)\$(TargetFramework)\</OutDir>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>false</SelfContained>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <PublishTrimmed>false</PublishTrimmed>
+        <!-- 单文件发布直接输出到主程序发布目录，统一部署 -->
+        <PublishDir>..\ClassScreenLock\bin\$(Configuration)\$(TargetFramework)\win-x64\publish\</PublishDir>
+    </PropertyGroup>
+</Project>
