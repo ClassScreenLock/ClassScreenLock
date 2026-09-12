@@ -51,12 +51,6 @@ public partial class LockSettingsViewModel : ViewModelBase
     private double _lockTextShadowBlurRadius;
 
     [ObservableProperty]
-    private string _newAllowedApp = string.Empty;
-
-    [ObservableProperty]
-    private string _newForcedApp = string.Empty;
-
-    [ObservableProperty]
     private bool _enableLockStateFileCheck;
 
     [ObservableProperty]
@@ -69,9 +63,6 @@ public partial class LockSettingsViewModel : ViewModelBase
     {
         0.01, 0.05, 0.1, 0.5, 1, 5, 10, 25, 50, 100, 200, 500
     };
-
-    public ObservableCollection<string> AllowedTopmostApps { get; } = new();
-    public ObservableCollection<string> ForcedTopmostApps { get; } = new();
 
     public LockSettingsViewModel()
     {
@@ -91,18 +82,6 @@ public partial class LockSettingsViewModel : ViewModelBase
         LockBackgroundOpacity = settings.LockBackgroundOpacity;
         LockTextShadowOpacity = settings.LockTextShadowOpacity;
         LockTextShadowBlurRadius = settings.LockTextShadowBlurRadius;
-
-        AllowedTopmostApps.Clear();
-        foreach (var app in settings.AllowedTopmostApps)
-        {
-            AllowedTopmostApps.Add(app);
-        }
-
-        ForcedTopmostApps.Clear();
-        foreach (var app in settings.ForcedTopmostApps)
-        {
-            ForcedTopmostApps.Add(app);
-        }
 
         EnableLockStateFileCheck = settings.EnableLockStateFileCheck;
         LockStateFileCheckIntervalSeconds = settings.LockStateFileCheckIntervalSeconds;
@@ -130,8 +109,6 @@ public partial class LockSettingsViewModel : ViewModelBase
             settings.LockTimeout = LockTimeout;
             settings.ShowFloatingLockWidget = ShowFloatingLockWidget;
             settings.EarlyUnlockMinAccountType = (AccountType)EarlyUnlockMinAccountTypeIndex;
-            settings.AllowedTopmostApps = AllowedTopmostApps.ToList();
-            settings.ForcedTopmostApps = ForcedTopmostApps.ToList();
 
             settings.LockBackgroundOpacity = LockBackgroundOpacity;
             settings.LockTextShadowOpacity = LockTextShadowOpacity;
@@ -154,36 +131,4 @@ public partial class LockSettingsViewModel : ViewModelBase
     partial void OnEnableBreakTimeLockChanged(bool value) { }
     partial void OnBreakTimeLockModeChanged(LockMode value) { }
     partial void OnAutoUnlockBeforeClassMinutesChanged(decimal value) { }
-
-    [RelayCommand]
-    private void AddAllowedApp()
-    {
-        if (!string.IsNullOrWhiteSpace(NewAllowedApp) && !AllowedTopmostApps.Contains(NewAllowedApp))
-        {
-            AllowedTopmostApps.Add(NewAllowedApp);
-            NewAllowedApp = string.Empty;
-        }
-    }
-
-    [RelayCommand]
-    private void RemoveAllowedApp(string app)
-    {
-        AllowedTopmostApps.Remove(app);
-    }
-
-    [RelayCommand]
-    private void AddForcedApp()
-    {
-        if (!string.IsNullOrWhiteSpace(NewForcedApp) && !ForcedTopmostApps.Contains(NewForcedApp))
-        {
-            ForcedTopmostApps.Add(NewForcedApp);
-            NewForcedApp = string.Empty;
-        }
-    }
-
-    [RelayCommand]
-    private void RemoveForcedApp(string app)
-    {
-        ForcedTopmostApps.Remove(app);
-    }
 }

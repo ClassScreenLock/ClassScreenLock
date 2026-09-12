@@ -1,12 +1,10 @@
-using System.ComponentModel;
-using System.Runtime.InteropServices;
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using ClassScreenLock.ViewModels;
 using ClassScreenLock.Services;
-using System;
 
 namespace ClassScreenLock.Views;
 
@@ -15,50 +13,24 @@ public partial class MainWindow : Window
     private bool _isClosing = false;
     private MainWindowViewModel? _viewModel;
 
-    // 手动拖动窗口所需的状态（同时支持鼠标与触屏，因 BeginMoveDrag 在 Windows 上仅响应鼠标）。
-    // 关键：必须使用与窗口位置无关的屏幕坐标源（GetCursorPos），否则设置 Position 后
-    // 下一次 PointerMoved 的相对坐标会随窗口一起漂移，形成正反馈导致严重抖动。
-    private bool _isManualDragging;
-    private PixelPoint _dragStartCursorScreen;   // 按下时指针的屏幕坐标
-    private PixelPoint _dragStartWindowPosition; // 按下时窗口的屏幕坐标
-    private int _dragPointerId = -1;              // 正在拖动的指针 id，用于过滤多指
-
-    [DllImport("user32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetCursorPos(out POINT lpPoint);
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct POINT
-    {
-        public int X;
-        public int Y;
-    }
-
     public MainWindow()
     {
         InitializeComponent();
 
         DataContextChanged += OnDataContextChanged;
         PropertyChanged += OnPropertyChanged;
-
-        var titleBar = this.FindControl<Border>("TitleBar");
-        if (titleBar != null)
-        {
-            // 使用 PointerPressed / PointerMoved / PointerReleased 手动驱动窗口拖动，
-            // 这样对鼠标和触屏都有效；Window.BeginMoveDrag 在 Windows 触屏下不会触发。
-            titleBar.PointerPressed += OnTitleBarPointerPressed;
-            titleBar.PointerMoved += OnTitleBarPointerMoved;
-            titleBar.PointerReleased += OnTitleBarPointerReleased;
-            titleBar.PointerCaptureLost += OnTitleBarPointerCaptureLost;
-            titleBar.DoubleTapped += OnTitleBarDoubleTapped;
-        }
     }
 
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
 
+        // 应用窗口防截屏保护。自定义标题栏已成为客户区的一部分，
+        // SetWindowDisplayAffinity 不再干扰标题栏渲染。
         WindowProtectionService.Instance.ApplyProtectionAsync(this);
+
+        // 拦截 Ctrl+V：用 Win32 原始剪贴板 API 读取粘贴内容（SYSTEM 下 OLE 封送失败会导致中文丢失）
+        SystemPasteInterceptor.Attach(this);
     }
 
     private void OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -66,6 +38,12 @@ public partial class MainWindow : Window
         if (e.Property == WindowStateProperty)
         {
             _viewModel?.UpdateMaximizedState(WindowState == WindowState.Maximized);
+        }
+        else if (e.Property == IsVisibleProperty && e.NewValue is bool visible)
+        {
+            // 窗口"关闭即隐藏"时不会经过导航流程，需在此显式暂停/恢复应用管理页的后台定时器，
+            // 否则隐藏后定时器仍每隔数秒全量枚举进程，持续占用 CPU 与句柄。
+            _viewModel?.OnWindowVisibilityChanged(visible);
         }
     }
 
@@ -78,84 +56,42 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnTitleBarPointerPressed(object? sender, PointerPressedEventArgs e)
+    /// <summary>
+    /// 标题栏拖拽：点击空白区域拖动窗口。
+    /// </summary>
+    private void TitleBar_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (_isManualDragging) return;
-
-        // 仅对主指针（第一个手指/鼠标左键）启动拖动，避免与多指手势冲突
-        var point = e.GetCurrentPoint(this);
-        if (!point.Properties.IsLeftButtonPressed) return;
-
-        // 已最大化时不通过手动拖动调整位置（保持平台原生体验）
-        if (WindowState == WindowState.Maximized || WindowState == WindowState.FullScreen) return;
-
-        // 用 GetCursorPos 取一次稳定的屏幕坐标作为基准，避免依赖窗口相对坐标
-        if (!GetCursorPos(out var cursor)) return;
-
-        _isManualDragging = true;
-        _dragPointerId = e.Pointer.Id;
-        _dragStartCursorScreen = new PixelPoint(cursor.X, cursor.Y);
-        _dragStartWindowPosition = Position;
-
-        // 捕获指针，使后续 PointerMoved 在用户拖出标题栏时仍能持续触发
-        if (sender is IInputElement inputElement)
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
-            e.Pointer.Capture(inputElement);
-        }
-        e.Handled = true;
-    }
-
-    private void OnTitleBarPointerMoved(object? sender, PointerEventArgs e)
-    {
-        if (!_isManualDragging) return;
-        // 只跟踪启动拖动的那根指针，忽略其它手指
-        if (e.Pointer.Id != _dragPointerId) return;
-
-        // 始终用屏幕坐标计算位移，避免窗口位置变化反过来影响坐标（这是抖动的根因）
-        if (!GetCursorPos(out var cursor)) return;
-
-        var dx = cursor.X - _dragStartCursorScreen.X;
-        var dy = cursor.Y - _dragStartCursorScreen.Y;
-
-        Position = new PixelPoint(
-            _dragStartWindowPosition.X + dx,
-            _dragStartWindowPosition.Y + dy);
-
-        e.Handled = true;
-    }
-
-    private void OnTitleBarPointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        EndManualDrag(e.Pointer);
-    }
-
-    private void OnTitleBarPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
-    {
-        EndManualDrag(e.Pointer);
-    }
-
-    private void EndManualDrag(Avalonia.Input.IPointer? pointer)
-    {
-        if (!_isManualDragging) return;
-
-        _isManualDragging = false;
-        _dragPointerId = -1;
-
-        try
-        {
-            pointer?.Capture(null);
-        }
-        catch
-        {
-            // 指针可能已失效，忽略
+            BeginMoveDrag(e);
         }
     }
 
-    private void OnTitleBarDoubleTapped(object? sender, TappedEventArgs e)
+    /// <summary>
+    /// 双击标题栏最大化/还原。
+    /// </summary>
+    private void TitleBar_OnDoubleTapped(object? sender, TappedEventArgs e)
     {
         WindowState = WindowState == WindowState.Maximized
             ? WindowState.Normal
             : WindowState.Maximized;
+    }
+
+    private void MinimizeButton_Click(object? sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void MaximizeButton_Click(object? sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Maximized
+            ? WindowState.Normal
+            : WindowState.Maximized;
+    }
+
+    private void CloseButton_Click(object? sender, RoutedEventArgs e)
+    {
+        Close();
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)

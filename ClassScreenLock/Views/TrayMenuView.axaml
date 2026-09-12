@@ -95,7 +95,7 @@
                 <Grid ColumnDefinitions="Auto,*">
                     <Border Classes="menu-icon-bg" Background="#1A0078D4" Grid.Column="0">
                         <fluent:SymbolIcon Classes="menu-icon" Symbol="PanelLeft"
-                                           Foreground="#0078D4"/>
+                                           Foreground="#0067C0"/>
                     </Border>
                     <TextBlock Classes="menu-text" Grid.Column="1"
                                Text="{DynamicResource Tray_Show}"
@@ -108,7 +108,7 @@
                 <Grid ColumnDefinitions="Auto,*">
                     <Border Classes="menu-icon-bg" Background="#1A0078D4" Grid.Column="0">
                         <fluent:SymbolIcon Classes="menu-icon" Symbol="LockClosed"
-                                           Foreground="#0078D4"/>
+                                           Foreground="#0067C0"/>
                     </Border>
                     <TextBlock Classes="menu-text" Grid.Column="1"
                                Text="{DynamicResource Tray_QuickLock}"
@@ -198,7 +198,7 @@
                 <Grid ColumnDefinitions="Auto,*">
                     <Border Classes="menu-icon-bg" Background="#1A0078D4" Grid.Column="0">
                         <fluent:SymbolIcon Classes="menu-icon" Symbol="Calendar"
-                                           Foreground="#0078D4"/>
+                                           Foreground="#0067C0"/>
                     </Border>
                     <TextBlock Classes="menu-text" Grid.Column="1"
                                Text="{DynamicResource Tray_OpenSchedule}"

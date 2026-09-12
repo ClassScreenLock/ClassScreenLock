@@ -33,7 +33,7 @@ public partial class QuickActionItemViewModel : ObservableObject
     private string _iconName = string.Empty;
 
     [ObservableProperty]
-    private string _accentColor = "#0078D4";
+    private string _accentColor = "#0067C0";
 
     [ObservableProperty]
     private string _description = string.Empty;

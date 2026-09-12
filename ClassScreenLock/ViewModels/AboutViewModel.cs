@@ -12,7 +12,7 @@ public partial class AboutViewModel : ViewModelBase
     private string _appName = "ClassScreenLock";
     
     [ObservableProperty]
-    private string _appVersion = "V1.15.37.3639 - Creeper";
+    private string _appVersion = "V1.20.10.0909 - Creeper";
     
     [ObservableProperty]
     private string _appDescription = "一款专业的课堂屏幕锁定工具，帮助教师管理课堂环境，提高教学效率。";
@@ -43,7 +43,9 @@ public partial class AboutViewModel : ViewModelBase
         var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         if (version != null)
         {
-            AppVersion = $"V{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+            // Revision 为日期式四位编号（如 0909），程序集版本号不允许前导零，
+            // 存储为 909，显示时补零还原
+            AppVersion = $"V{version.Major}.{version.Minor}.{version.Build}.{version.Revision:D4}";
         }
     }
 

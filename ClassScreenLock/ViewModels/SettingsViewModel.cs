@@ -29,22 +29,19 @@ public partial class SettingsViewModel : ViewModelBase
     private SettingsModel _settings = null!;
     
     [ObservableProperty]
-    private double _fontSize = 14.0;
-    
-    [ObservableProperty]
-    private string _fontFamily = "Microsoft YaHei UI";
-    
-    [ObservableProperty]
     private bool _darkMode = false;
     
     [ObservableProperty]
-    private string _accentColor = "#0078D4";
+    private string _accentColor = "#0067C0";
     
     [ObservableProperty]
     private bool _showNotifications = true;
 
     [ObservableProperty]
-    private int _notificationPositionIndex = 0;
+    private double _notificationDurationSeconds = 3;
+
+    [ObservableProperty]
+    private bool _notificationSound = true;
 
     [ObservableProperty]
     private int _weeklyCycleCount = 4;
@@ -59,17 +56,16 @@ public partial class SettingsViewModel : ViewModelBase
     private bool _useSystemAccentColor = false;
     
     [ObservableProperty]
-    private string _customAccentColor = "#0078D4";
-    
-    [ObservableProperty]
-    private ObservableCollection<string> _availableFontFamilies = new();
+    private string _customAccentColor = "#0067C0";
     
     public List<string> AvailableLanguages { get; private set; } = new List<string>();
     public List<string> AvailableAccentColors { get; private set; } = new List<string>();
+
+    [ObservableProperty]
+    private ObservableCollection<AccentColorOption> _accentColorOptions = new();
     
     public SettingsViewModel()
     {
-        LoadAvailableFontFamilies();
         LoadSettings();
         
         // 订阅语言变化事件
@@ -103,83 +99,27 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
     
-    private void LoadAvailableFontFamilies()
-    {
-        // 获取系统字体
-        var systemFonts = new List<string>();
-        
-        try
-        {
-            // 使用 Avalonia 的 FontManager 获取系统字体，这是最可靠且跨平台的方式
-            var installedFonts = Avalonia.Media.FontManager.Current.SystemFonts;
-            foreach (var font in installedFonts)
-            {
-                if (!string.IsNullOrEmpty(font.Name))
-                {
-                    systemFonts.Add(font.Name);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"使用 FontManager 获取系统字体失败: {ex.Message}");
-            
-            // 回退到常用字体列表
-            var commonFonts = new List<string>
-            {
-                "Microsoft YaHei UI",
-                "Microsoft YaHei",
-                "SimSun",
-                "SimHei",
-                "Arial",
-                "Segoe UI"
-            };
-            systemFonts.AddRange(commonFonts);
-        }
-        
-        // 去重并过滤掉不支持的字体（华文、隶书）
-        var unsupportedKeywords = new[] { "华文", "隶书", "STHupo", "STXingkai", "STXinwei", "STLiti", "STXihei", "STKaiti", "STSong", "STFangsong", "STCaiyun", "LiSu" };
-        
-        var fonts = systemFonts
-            .Distinct()
-            .Where(f => !unsupportedKeywords.Any(k => f.Contains(k, StringComparison.OrdinalIgnoreCase)))
-            .OrderBy(f => f)
-            .ToList();
-            
-        AvailableFontFamilies.Clear();
-        foreach (var font in fonts)
-        {
-            AvailableFontFamilies.Add(font);
-        }
-    }
-    
     private void LoadSettings()
     {
         Settings = SettingsService.General;
         
         // 初始化属性
-        FontSize = Settings.FontSize;
-        
-        // 检查加载的字体是否在禁用列表中
-        var unsupportedKeywords = new[] { "华文", "隶书", "STHupo", "STXingkai", "STXinwei", "STLiti", "STXihei", "STKaiti", "STSong", "STFangsong", "STCaiyun", "LiSu" };
-        if (unsupportedKeywords.Any(k => Settings.FontFamily.Contains(k, StringComparison.OrdinalIgnoreCase)))
-        {
-            FontFamily = "Microsoft YaHei UI"; // 回退到安全默认字体
-            UpdateSetting(s => s.FontFamily = FontFamily);
-        }
-        else
-        {
-            FontFamily = Settings.FontFamily;
-        }
         DarkMode = Settings.DarkMode;
         AccentColor = Settings.AccentColor;
         ShowNotifications = Settings.ShowNotifications;
+        NotificationDurationSeconds = Settings.NotificationDurationMs > 0 ? Settings.NotificationDurationMs / 1000.0 : 3;
+        NotificationSound = Settings.NotificationSound;
         Language = Settings.Language;
         UseSystemAccentColor = Settings.UseSystemAccentColor;
         CustomAccentColor = Settings.AccentColor; // 初始化为当前强调色
-        NotificationPositionIndex = (int)Settings.NotificationPosition;
         WeeklyCycleCount = Settings.WeeklyCycleCount;
         TermStartDate = Settings.TermStartDate;
+
+        // 通知位置固定为屏幕中央
+        if (Settings.NotificationPosition != NotificationPosition.Center)
+        {
+            UpdateSetting(s => s.NotificationPosition = NotificationPosition.Center);
+        }
 
         AutomationSchemes = new ObservableCollection<string>(Settings.AutomationSchemes ?? new System.Collections.Generic.List<string> { "Default" });
         CurrentAutomationScheme = string.IsNullOrWhiteSpace(Settings.CurrentAutomationScheme) ? "Default" : Settings.CurrentAutomationScheme;
@@ -199,7 +139,7 @@ public partial class SettingsViewModel : ViewModelBase
         
         AvailableAccentColors = new List<string>
         {
-            "#0078D4", // 默认蓝色
+            "#0067C0", // 默认蓝色
             "#FF6B00", // 橙色
             "#107C10", // 绿色
             "#E81123", // 红色
@@ -210,6 +150,22 @@ public partial class SettingsViewModel : ViewModelBase
             "#FFB900", // 亮黄色
             "#E3008C"  // 亮粉色
         };
+
+        // 构建预设色板
+        AccentColorOptions = new ObservableCollection<AccentColorOption>(
+            AvailableAccentColors.Select(c => new AccentColorOption { Hex = c }));
+        RefreshAccentColorSelection();
+    }
+
+    /// <summary>
+    /// 根据当前强调色刷新预设色板的选中状态。
+    /// </summary>
+    private void RefreshAccentColorSelection()
+    {
+        foreach (var option in AccentColorOptions)
+        {
+            option.IsSelected = string.Equals(option.Hex, AccentColor, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     [RelayCommand]
@@ -259,20 +215,6 @@ public partial class SettingsViewModel : ViewModelBase
         ClassScreenLock.Services.AutomationService.Instance.ForceCheck();
     }
     
-    partial void OnFontSizeChanged(double value)
-    {
-        if (_suppressSettingSideEffects) return;
-        UpdateSetting(s => s.FontSize = value);
-        // 立即应用字体大小更改
-        ApplyFontSizeChange(value);
-    }
-    
-    partial void OnFontFamilyChanged(string value)
-    {
-        if (_suppressSettingSideEffects) return;
-        ApplyFontFamilyChange(value);
-    }
-    
     partial void OnDarkModeChanged(bool value)
     {
         if (_suppressSettingSideEffects) return;
@@ -287,6 +229,8 @@ public partial class SettingsViewModel : ViewModelBase
         UpdateSetting(s => s.AccentColor = value);
         // 立即应用强调色更改
         ApplyAccentColorChange(value);
+        // 刷新预设色板选中状态
+        RefreshAccentColorSelection();
     }
     
     partial void OnUseSystemAccentColorChanged(bool value)
@@ -339,7 +283,7 @@ public partial class SettingsViewModel : ViewModelBase
         }
         
         // 如果获取失败，返回默认颜色
-        return "#0078D4";
+        return "#0067C0";
     }
     
     partial void OnShowNotificationsChanged(bool value)
@@ -348,9 +292,20 @@ public partial class SettingsViewModel : ViewModelBase
         NotificationService.Instance.UpdateNotificationSettings(value);
     }
 
-    partial void OnNotificationPositionIndexChanged(int value)
+    partial void OnNotificationDurationSecondsChanged(double value)
     {
-        UpdateSetting(s => s.NotificationPosition = (NotificationPosition)value);
+        if (_suppressSettingSideEffects) return;
+        if (value < 1) value = 1;
+        if (value > 8) value = 8;
+        // 取整到 0.5 秒粒度，避免滑块产生抖动值
+        value = Math.Round(value * 2) / 2;
+        UpdateSetting(s => s.NotificationDurationMs = (int)(value * 1000));
+    }
+
+    partial void OnNotificationSoundChanged(bool value)
+    {
+        if (_suppressSettingSideEffects) return;
+        UpdateSetting(s => s.NotificationSound = value);
     }
 
     partial void OnWeeklyCycleCountChanged(int value)
@@ -408,114 +363,6 @@ public partial class SettingsViewModel : ViewModelBase
                 }
             }
         }
-    }
-    
-    private void ApplyFontSizeChange(double fontSize)
-    {
-        // 应用字体大小到应用程序
-        if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            var mainWindow = desktop.MainWindow;
-            if (mainWindow != null)
-            {
-                // 应用到主窗口
-                mainWindow.FontSize = fontSize;
-                
-                // 递归应用到所有子控件
-                ApplyFontSizeToChildren(mainWindow, fontSize);
-            }
-        }
-    }
-    
-    private void ApplyFontSizeToChildren(Control parent, double fontSize, HashSet<Control>? visitedControls = null)
-    {
-        if (parent == null) return;
-        
-        // 初始化已访问控件集合
-        visitedControls ??= new HashSet<Control>();
-        
-        // 如果已访问过此控件，跳过以防止循环引用
-        if (visitedControls.Contains(parent))
-            return;
-            
-        // 将当前控件添加到已访问集合
-        visitedControls.Add(parent);
-        
-        try
-        {
-            // 应用到当前控件
-            if (parent is TextBlock textBlock)
-            {
-                textBlock.FontSize = fontSize;
-            }
-            else if (parent is Button button)
-            {
-                button.FontSize = fontSize;
-            }
-            else if (parent is TextBox textBox)
-            {
-                textBox.FontSize = fontSize;
-            }
-            else if (parent is ComboBox comboBox)
-            {
-                comboBox.FontSize = fontSize;
-            }
-            else if (parent is CheckBox checkBox)
-            {
-                checkBox.FontSize = fontSize;
-            }
-            else if (parent is RadioButton radioButton)
-            {
-                radioButton.FontSize = fontSize;
-            }
-            else if (parent is ToggleSwitch toggleSwitch)
-            {
-                toggleSwitch.FontSize = fontSize;
-            }
-            else if (parent is Slider slider)
-            {
-                slider.FontSize = fontSize;
-            }
-            else if (parent is HeaderedContentControl headeredContent)
-            {
-                headeredContent.FontSize = fontSize;
-            }
-            
-            // 递归应用到子控件
-            if (parent is Panel panel)
-            {
-                foreach (var child in panel.Children)
-                {
-                    if (child is Control childControl)
-                    {
-                        ApplyFontSizeToChildren(childControl, fontSize, visitedControls);
-                    }
-                }
-            }
-            else if (parent is ContentControl contentControl && contentControl.Content is Control content)
-            {
-                ApplyFontSizeToChildren(content, fontSize, visitedControls);
-            }
-            else if (parent is ItemsControl itemsControl)
-            {
-                foreach (var item in itemsControl.Items)
-                {
-                    if (item is Control itemControl)
-                    {
-                        ApplyFontSizeToChildren(itemControl, fontSize, visitedControls);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"应用字体大小到控件时出错: {ex.Message}");
-        }
-    }
-    
-    private void ApplyFontFamilyChange(string fontFamily)
-    {
-        UpdateSetting(s => s.FontFamily = fontFamily);
     }
     
     private void ApplyAccentColorChange(string accentColor)
@@ -600,23 +447,20 @@ public partial class SettingsViewModel : ViewModelBase
             SettingsService.SaveGeneral(defaultSettings);
             Settings = SettingsService.General;
 
-            FontSize = defaultSettings.FontSize;
-            FontFamily = defaultSettings.FontFamily;
             DarkMode = defaultSettings.DarkMode;
             UseSystemAccentColor = defaultSettings.UseSystemAccentColor;
             CustomAccentColor = defaultSettings.AccentColor;
             AccentColor = defaultSettings.AccentColor;
             ShowNotifications = defaultSettings.ShowNotifications;
+            NotificationDurationSeconds = defaultSettings.NotificationDurationMs / 1000.0;
+            NotificationSound = defaultSettings.NotificationSound;
             Language = defaultSettings.Language;
-            NotificationPositionIndex = (int)defaultSettings.NotificationPosition;
         }
         finally
         {
             _suppressSettingSideEffects = false;
         }
 
-        ApplyFontSizeChange(FontSize);
-        ApplyFontFamilyChange(FontFamily);
         ApplyThemeChange(DarkMode);
 
         var appliedAccent = UseSystemAccentColor ? GetSystemAccentColor() : CustomAccentColor;
@@ -625,6 +469,7 @@ public partial class SettingsViewModel : ViewModelBase
             AccentColor = appliedAccent;
         }
         ApplyAccentColorChange(AccentColor);
+        RefreshAccentColorSelection();
 
         NotificationService.Instance.UpdateNotificationSettings(ShowNotifications);
         ApplyLanguageChange(Language, false);
@@ -638,10 +483,16 @@ public partial class SettingsViewModel : ViewModelBase
     {
         try
         {
-            // 在重启前等待备份完成，确保最新设置被保存
+            // 重启前尽量备份最新设置，但最多等 1 秒，避免后台数据验证/备份未完成时长时间卡顿。
+            // 备份失败或超时都不影响重启（新实例启动时会再次验证恢复数据）。
             try
             {
-                await DataProtectionService.Instance.SyncToAppDataAsync();
+                var syncTask = DataProtectionService.Instance.SyncToAppDataAsync();
+                var completed = await Task.WhenAny(syncTask, Task.Delay(1000));
+                if (completed != syncTask)
+                {
+                    // 超时：放弃等待，继续重启
+                }
             }
             catch
             {
@@ -712,9 +563,6 @@ public partial class SettingsViewModel : ViewModelBase
         {
             if (disposing)
             {
-                // 释放托管资源
-                AvailableFontFamilies?.Clear();
-                
                 // 清理事件订阅
                 if (LocalizationService.Instance != null)
                 {

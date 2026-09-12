@@ -9,10 +9,10 @@
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>ClassScreenLock.ico</ApplicationIcon>
         <DefineConstants Condition="'$(OS)' == 'Windows_NT'">$(DefineConstants);WINDOWS</DefineConstants>
-    <Version>1.15.37.3639</Version>
-    <AssemblyVersion>1.15.37.3639</AssemblyVersion>
-    <FileVersion>1.15.37.3639</FileVersion>
-    <InformationalVersion>1.15.37.3639</InformationalVersion>
+    <Version>1.20.10.909</Version>
+    <AssemblyVersion>1.20.10.909</AssemblyVersion>
+    <FileVersion>1.20.10.909</FileVersion>
+    <InformationalVersion>1.20.10.909</InformationalVersion>
     <Copyright>© 旧故里小牛（jiugulixiaoniu）</Copyright>
     <Authors>旧故里小牛（jiugulixiaoniu）</Authors>
     <Company>旧故里小牛（jiugulixiaoniu）</Company>
@@ -21,7 +21,7 @@
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <DebugType>none</DebugType>
         <DebugSymbols>false</DebugSymbols>
-        <SelfContained>true</SelfContained>
+        <SelfContained>false</SelfContained>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <PublishReadyToRun>true</PublishReadyToRun>
         <PublishSingleFile>true</PublishSingleFile>
@@ -62,6 +62,7 @@
         <PackageReference Include="SocketIOClient" Version="4.0.4" />
         <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+        <PackageReference Include="Titanium.Web.Proxy" Version="3.2.0" />
         <PackageReference Include="YamlDotNet" Version="13.7.1" />
         <PackageReference Include="System.Management" Version="8.0.0" />
         <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
@@ -71,6 +72,20 @@
 
     <ItemGroup>
         <FrameworkReference Include="Microsoft.WindowsDesktop.App.WPF" />
+    </ItemGroup>
+
+    <!-- 编译主项目时自动编译看门狗服务与 IFEO 重定向程序（不引用其程序集，仅建立编译依赖） -->
+    <ItemGroup>
+        <ProjectReference Include="..\WatchdogService\WatchdogService.csproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+            <Private>false</Private>
+        </ProjectReference>
+        <ProjectReference Include="..\IfeoRedirector\IfeoRedirector.csproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+            <Private>false</Private>
+        </ProjectReference>
     </ItemGroup>
 
 </Project>

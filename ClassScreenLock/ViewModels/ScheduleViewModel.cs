@@ -147,6 +147,9 @@ public partial class ScheduleViewModel : ViewModelBase
         LoadSchedules();
         IsWeeklyMode = true;
 
+        // 进入页面默认选中"今天"的课表，星期 Tab 与之一致
+        SelectedDayTabIndex = Math.Clamp(SelectedDayIndex - 1, 0, 6);
+
         SelectedWeekNumber = WeeklyScheduleService.GetCurrentCycleIndex();
 
         _breakTimer = new DispatcherTimer(TimeSpan.FromSeconds(10), DispatcherPriority.Background, (_, _) => UpdateBreakState());
@@ -197,7 +200,7 @@ public partial class ScheduleViewModel : ViewModelBase
         if (value != null)
         {
             UpdateDayPlans();
-            SelectedDayIndex = 1;
+            RefreshWeeklySelection();
         }
     }
 

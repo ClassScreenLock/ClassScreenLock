@@ -15,12 +15,40 @@
     </Design.DataContext>
 
     <Grid RowDefinitions="Auto,Auto,Auto,*">
-        <TextBlock Grid.Row="0" Text="{DynamicResource Log_Title}" Classes="h1" Margin="24,24,24,8"/>
+        <StackPanel Grid.Row="0" Spacing="4" Margin="24,24,24,8">
+            <TextBlock Text="{DynamicResource Log_Title}" Classes="h1"/>
+            <TextBlock Text="查看系统运行日志与安全事件记录" Classes="caption" Opacity="0.6"/>
+        </StackPanel>
 
         <!-- 第一行：搜索与筛选 -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="24,0,24,8">
-            <TextBox Grid.Column="0" Text="{Binding SearchText}" Watermark="{DynamicResource Log_Search_Watermark}" Margin="0,0,8,0"/>
-            <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableTypes}" SelectedItem="{Binding SelectedType}" Width="140" Margin="0,0,8,0"/>
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto,Auto" Margin="24,0,24,8">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" Margin="0,0,8,0">
+                <ToggleButton IsChecked="{Binding ShowWarningLogs}" ToolTip.Tip="警告级别日志（默认显示）">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <fluent:SymbolIcon Symbol="Warning" FontSize="14"/>
+                        <TextBlock Text="警告"/>
+                    </StackPanel>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding ShowErrorLogs}" ToolTip.Tip="错误与致命日志（默认显示）">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <fluent:SymbolIcon Symbol="DismissCircle" FontSize="14"/>
+                        <TextBlock Text="错误"/>
+                    </StackPanel>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding ShowInfoLogs}" ToolTip.Tip="程序运行日志（默认隐藏，点击开启）">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <fluent:SymbolIcon Symbol="Info" FontSize="14"/>
+                        <TextBlock Text="运行"/>
+                    </StackPanel>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding ShowDebugLogs}" ToolTip.Tip="调试日志（默认隐藏，点击开启）">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <fluent:SymbolIcon Symbol="Code" FontSize="14"/>
+                        <TextBlock Text="调试"/>
+                    </StackPanel>
+                </ToggleButton>
+            </StackPanel>
+            <TextBox Grid.Column="1" Text="{Binding SearchText}" Watermark="{DynamicResource Log_Search_Watermark}" Margin="0,0,8,0"/>
             <ComboBox Grid.Column="2" ItemsSource="{Binding AvailableSources}" SelectedItem="{Binding SelectedSource}" Width="160" Margin="0,0,8,0"/>
             <Button Grid.Column="3" Command="{Binding RefreshLogsCommand}" Classes="outline" Width="100" Margin="0,0,8,0">
                 <StackPanel Orientation="Horizontal" Spacing="8">

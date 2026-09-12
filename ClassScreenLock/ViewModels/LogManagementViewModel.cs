@@ -44,19 +44,27 @@ public partial class LogManagementViewModel : ViewModelBase
     private ObservableCollection<LogEntryWrapper> _displayLogs = new();
 
     [ObservableProperty]
-    private ObservableCollection<string> _availableTypes = new();
-
-    [ObservableProperty]
     private string _searchText = string.Empty;
-
-    [ObservableProperty]
-    private string _selectedType = "全部";
 
     [ObservableProperty]
     private ObservableCollection<string> _availableSources = new();
 
     [ObservableProperty]
     private string _selectedSource = "全部";
+
+    // 级别开关：默认只展示警告与错误，运行/调试日志（含模块名类遗留类型）默认隐藏，
+    // 管理员可在界面上自行点开
+    [ObservableProperty]
+    private bool _showWarningLogs = true;
+
+    [ObservableProperty]
+    private bool _showErrorLogs = true;
+
+    [ObservableProperty]
+    private bool _showInfoLogs;
+
+    [ObservableProperty]
+    private bool _showDebugLogs;
 
     [ObservableProperty]
     private bool _isTableView = true;
@@ -77,7 +85,6 @@ public partial class LogManagementViewModel : ViewModelBase
     {
         var logList = LogService.Instance.LoadLogs();
         Logs = new ObservableCollection<LogEntry>(logList);
-        UpdateAvailableTypes();
         UpdateAvailableSources();
         ApplyFilter();
     }
@@ -272,24 +279,23 @@ public partial class LogManagementViewModel : ViewModelBase
         ApplyFilter();
     }
 
-    partial void OnSelectedTypeChanged(string value)
-    {
-        ApplyFilter();
-    }
-
     partial void OnSelectedSourceChanged(string value)
     {
         ApplyFilter();
     }
 
+    partial void OnShowWarningLogsChanged(bool value) => ApplyFilter();
+    partial void OnShowErrorLogsChanged(bool value) => ApplyFilter();
+    partial void OnShowInfoLogsChanged(bool value) => ApplyFilter();
+    partial void OnShowDebugLogsChanged(bool value) => ApplyFilter();
+
     private void ApplyFilter()
     {
         var q = (SearchText ?? string.Empty).Trim().ToLowerInvariant();
-        var type = SelectedType ?? "全部";
         var source = SelectedSource ?? "全部";
         var src = Logs?.ToList() ?? new();
         var filtered = src.Where(e =>
-            (type == "全部" || string.Equals(e.Type, type, StringComparison.OrdinalIgnoreCase)) &&
+            IsSeverityVisible(e.Type) &&
             (source == "全部" || string.Equals(e.Target, source, StringComparison.OrdinalIgnoreCase)) &&
             (q.Length == 0 ||
              (e.Type ?? string.Empty).ToLowerInvariant().Contains(q) ||
@@ -300,14 +306,33 @@ public partial class LogManagementViewModel : ViewModelBase
         DisplayLogs = new ObservableCollection<LogEntryWrapper>(filtered);
     }
 
-    private void UpdateAvailableTypes()
+    private bool IsSeverityVisible(string? type)
     {
-        var types = Logs.Select(l => l.Type).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().OrderBy(t => t).ToList();
-        var list = new ObservableCollection<string>();
-        list.Add("全部");
-        foreach (var t in types) list.Add(t);
-        AvailableTypes = list;
-        if (!AvailableTypes.Contains(SelectedType)) SelectedType = "全部";
+        return GetSeverityClass(type) switch
+        {
+            "debug" => ShowDebugLogs,
+            "warning" => ShowWarningLogs,
+            "error" => ShowErrorLogs,
+            _ => ShowInfoLogs
+        };
+    }
+
+    /// <summary>
+    /// 将日志类型归类为四级之一：debug / info / warning / error。
+    /// 历史遗留的模块名类类型（Security、Account、Network 等）视为程序运行日志归入 info；
+    /// Fatal 与 *Error 后缀变体归入 error；中文"警告"归入 warning。
+    /// </summary>
+    private static string GetSeverityClass(string? type)
+    {
+        var t = type?.Trim();
+        if (string.IsNullOrEmpty(t)) return "info";
+        if (t.Equals("Debug", StringComparison.OrdinalIgnoreCase)) return "debug";
+        if (t.Equals("Warning", StringComparison.OrdinalIgnoreCase) ||
+            t.Equals("警告", StringComparison.Ordinal)) return "warning";
+        if (t.Equals("Error", StringComparison.OrdinalIgnoreCase) ||
+            t.Equals("Fatal", StringComparison.OrdinalIgnoreCase) ||
+            t.EndsWith("Error", StringComparison.OrdinalIgnoreCase)) return "error";
+        return "info";
     }
 
     private void UpdateAvailableSources()

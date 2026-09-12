@@ -578,7 +578,7 @@ public partial class WebcamHistoryViewModel : ViewModelBase, IImageViewerViewMod
     {
         try
         {
-            var folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "WebcamPhotos");
+            var folder = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data", "WebcamPhotos");
             if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
             Process.Start(new ProcessStartInfo
@@ -599,6 +599,13 @@ public partial class WebcamHistoryViewModel : ViewModelBase, IImageViewerViewMod
         if (SelectedCount == 0) return;
 
         var selectedItems = AllScreenshots.Where(x => x.IsSelected).ToList();
+
+        // 与屏幕截图删除保持同款确认 UI（Fluent 2 ContentDialog 遮罩/弹出动画/阴影）。
+        var confirmed = await NotificationService.Instance.ShowConfirmAsync(
+            $"将删除 {selectedItems.Count} 张图片且无法撤销，确定继续？",
+            "批量删除");
+        if (!confirmed) return;
+
         var errors = new List<string>();
 
         await Task.Run(() =>

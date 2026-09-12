@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -7,6 +8,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ClassScreenLock.Services;
@@ -62,9 +64,54 @@ public partial class OrganizationViewModel : ViewModelBase
     [ObservableProperty]
     private string _successMessage = string.Empty;
 
-    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+    // ========== 向导弹窗状态 ==========
+    [ObservableProperty]
+    private bool _isJoinDialogOpen;
 
+    [ObservableProperty]
+    private int _currentJoinStep;
+
+    /// <summary>导入配置后的状态提示（仅在步骤 0 显示）</summary>
+    [ObservableProperty]
+    private string _importStatusMessage = string.Empty;
+
+    /// <summary>
+    /// 主页面是否显示加载状态（向导打开时不显示，避免与向导内进度条重复）
+    /// </summary>
+    public bool IsPageLoading => IsLoading && !IsJoinDialogOpen;
+
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
     public bool HasSuccess => !string.IsNullOrEmpty(SuccessMessage);
+    public bool HasImportStatus => !string.IsNullOrEmpty(ImportStatusMessage);
+
+    // ========== 步骤指示器 ==========
+    public int StepNumber => CurrentJoinStep + 1;
+    public bool IsStep0 => CurrentJoinStep == 0;
+    public bool IsStep1 => CurrentJoinStep == 1;
+    public bool IsStep2 => CurrentJoinStep == 2;
+    public bool IsStep3 => CurrentJoinStep == 3;
+
+    public double Step0Opacity => 1;
+    public double Step1Opacity => CurrentJoinStep >= 1 ? 1 : 0.2;
+    public double Step2Opacity => CurrentJoinStep >= 2 ? 1 : 0.2;
+    public double Step3Opacity => CurrentJoinStep >= 3 ? 1 : 0.2;
+
+    // ========== 步骤验证 ==========
+    public bool CanNextFromStep0 => !string.IsNullOrWhiteSpace(ServerUrl);
+    public bool CanNextFromStep1 => !string.IsNullOrWhiteSpace(OrganizationId);
+    public bool CanNextFromStep2 =>
+        !string.IsNullOrWhiteSpace(ContactPhone) &&
+        !string.IsNullOrWhiteSpace(ClassName) &&
+        !string.IsNullOrWhiteSpace(PersonInCharge);
+
+    /// <summary>"下一步"按钮是否可用</summary>
+    public bool CanProceed => CurrentJoinStep switch
+    {
+        0 => CanNextFromStep0,
+        1 => CanNextFromStep1,
+        2 => CanNextFromStep2,
+        _ => true
+    };
 
     public OrganizationViewModel()
     {
@@ -78,21 +125,78 @@ public partial class OrganizationViewModel : ViewModelBase
         });
     }
 
+    // ========== 属性变更通知 ==========
+
+    partial void OnIsLoadingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsPageLoading));
+    }
+
+    partial void OnIsJoinDialogOpenChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsPageLoading));
+    }
+
+    partial void OnCurrentJoinStepChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsStep0));
+        OnPropertyChanged(nameof(IsStep1));
+        OnPropertyChanged(nameof(IsStep2));
+        OnPropertyChanged(nameof(IsStep3));
+        OnPropertyChanged(nameof(StepNumber));
+        OnPropertyChanged(nameof(Step0Opacity));
+        OnPropertyChanged(nameof(Step1Opacity));
+        OnPropertyChanged(nameof(Step2Opacity));
+        OnPropertyChanged(nameof(Step3Opacity));
+        OnPropertyChanged(nameof(CanProceed));
+        // 步骤切换时清除导入提示
+        ImportStatusMessage = string.Empty;
+    }
+
+    partial void OnServerUrlChanged(string value)
+    {
+        OnPropertyChanged(nameof(CanNextFromStep0));
+        OnPropertyChanged(nameof(CanProceed));
+    }
+
+    partial void OnOrganizationIdChanged(string value)
+    {
+        OnPropertyChanged(nameof(CanNextFromStep1));
+        OnPropertyChanged(nameof(CanProceed));
+    }
+
+    partial void OnContactPhoneChanged(string value)
+    {
+        OnPropertyChanged(nameof(CanNextFromStep2));
+        OnPropertyChanged(nameof(CanProceed));
+    }
+
+    partial void OnClassNameChanged(string value)
+    {
+        OnPropertyChanged(nameof(CanNextFromStep2));
+        OnPropertyChanged(nameof(CanProceed));
+    }
+
+    partial void OnPersonInChargeChanged(string value)
+    {
+        OnPropertyChanged(nameof(CanNextFromStep2));
+        OnPropertyChanged(nameof(CanProceed));
+    }
+
+    // ========== 加载组织信息 ==========
+
     private void LoadCurrentOrganization()
     {
         Console.WriteLine("[DEBUG] OrganizationViewModel: 开始加载当前组织信息");
-        
+
         var org = _organizationService.CurrentOrganization;
-        
+
         if (org != null)
         {
             Console.WriteLine($"[DEBUG] OrganizationViewModel: 找到组织信息，ID={org.Id}, Name={org.Name}, ServerUrl={org.ServerUrl}, IsActive={org.IsActive}");
-            
+
             if (!string.IsNullOrEmpty(org.ServerUrl))
             {
-                // 只要有组织信息就显示已加入，不检查 IsActive 状态
-                // IsActive 状态仅用于控制设备注册和心跳
-                Console.WriteLine($"[DEBUG] OrganizationViewModel: 组织服务器地址有效，设置 HasJoinedOrganization=true");
                 HasJoinedOrganization = true;
                 OrganizationName = org.Name;
                 OrganizationDescription = org.Description;
@@ -102,43 +206,35 @@ public partial class OrganizationViewModel : ViewModelBase
                 OrganizationId = org.Id;
                 JoinedAtText = org.JoinedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "未知";
                 LastSyncTimeText = org.LastSyncTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "未知";
-                
-                // 如果组织是活跃的，确保设备已注册
+
                 if (org.IsActive)
                 {
-                    Console.WriteLine($"[DEBUG] OrganizationViewModel: 组织是活跃状态，启动设备注册");
                     _ = _organizationService.DeviceService.RegisterDeviceAsync();
-                }
-                else
-                {
-                    Console.WriteLine($"[DEBUG] OrganizationViewModel: 组织是非活跃状态，不自动注册设备");
                 }
             }
             else
             {
-                Console.WriteLine($"[DEBUG] OrganizationViewModel: 组织服务器地址为空，设置 HasJoinedOrganization=false");
                 HasJoinedOrganization = false;
-                OrganizationName = string.Empty;
-                OrganizationDescription = string.Empty;
-                JoinedAt = null;
-                LastSyncTime = null;
-                JoinedAtText = string.Empty;
-                LastSyncTimeText = string.Empty;
+                ClearOrganizationInfo();
             }
         }
         else
         {
-            Console.WriteLine($"[DEBUG] OrganizationViewModel: 未找到组织信息，设置 HasJoinedOrganization=false");
             HasJoinedOrganization = false;
-            OrganizationName = string.Empty;
-            OrganizationDescription = string.Empty;
-            JoinedAt = null;
-            LastSyncTime = null;
-            JoinedAtText = string.Empty;
-            LastSyncTimeText = string.Empty;
+            ClearOrganizationInfo();
         }
-        
+
         Console.WriteLine($"[DEBUG] OrganizationViewModel: 加载完成，HasJoinedOrganization={HasJoinedOrganization}");
+    }
+
+    private void ClearOrganizationInfo()
+    {
+        OrganizationName = string.Empty;
+        OrganizationDescription = string.Empty;
+        JoinedAt = null;
+        LastSyncTime = null;
+        JoinedAtText = string.Empty;
+        LastSyncTimeText = string.Empty;
     }
 
     /// <summary>
@@ -148,6 +244,48 @@ public partial class OrganizationViewModel : ViewModelBase
     {
         LoadCurrentOrganization();
     }
+
+    // ========== 向导命令 ==========
+
+    [RelayCommand]
+    private void OpenJoinDialog()
+    {
+        ErrorMessage = string.Empty;
+        SuccessMessage = string.Empty;
+        ImportStatusMessage = string.Empty;
+        CurrentJoinStep = 0;
+        IsJoinDialogOpen = true;
+    }
+
+    [RelayCommand]
+    private void CloseJoinDialog()
+    {
+        if (!IsLoading)
+        {
+            IsJoinDialogOpen = false;
+        }
+    }
+
+    [RelayCommand]
+    private void NextStep()
+    {
+        if (!CanProceed) return;
+        if (CurrentJoinStep < 3)
+        {
+            CurrentJoinStep++;
+        }
+    }
+
+    [RelayCommand]
+    private void PreviousStep()
+    {
+        if (CurrentJoinStep > 0)
+        {
+            CurrentJoinStep--;
+        }
+    }
+
+    // ========== 加入组织 ==========
 
     [RelayCommand]
     private async Task JoinOrganizationAsync()
@@ -191,19 +329,15 @@ public partial class OrganizationViewModel : ViewModelBase
             {
                 Console.WriteLine($"[DEBUG] OrganizationViewModel: 加入组织成功，调用 LoadCurrentOrganization");
                 LoadCurrentOrganization();
-                // 强制更新 UI 状态
-                await Task.Delay(100); // 短暂延迟确保状态更新
-                Console.WriteLine($"[DEBUG] OrganizationViewModel: 加入组织后，HasJoinedOrganization={HasJoinedOrganization}");
-                
-                // 启动定期同步定时器
+                await Task.Delay(100);
+
                 OrganizationService.Instance.StartPeriodicSyncWithTimer();
-                Console.WriteLine("[DEBUG] 已启动定期同步定时器");
-                
-                // 上传软件列表
                 _ = _organizationService.DeviceService.UploadSoftwareListAsync();
-                Console.WriteLine("[DEBUG] 已触发软件列表上传");
-                
+
+                // 关闭弹窗并显示通知
+                IsJoinDialogOpen = false;
                 SuccessMessage = "成功加入组织！配置将自动同步";
+                NotificationService.Instance.ShowSuccess("成功加入组织！配置将自动同步");
             }
             else
             {
@@ -225,7 +359,7 @@ public partial class OrganizationViewModel : ViewModelBase
     {
         await _organizationService.LeaveOrganizationAsync();
         LoadCurrentOrganization();
-        
+
         ServerUrl = string.Empty;
         OrganizationId = string.Empty;
         ContactPhone = string.Empty;
@@ -266,14 +400,14 @@ public partial class OrganizationViewModel : ViewModelBase
         {
             if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
             {
-                ErrorMessage = "无法访问文件系统";
+                ImportStatusMessage = "无法访问文件系统";
                 return;
             }
 
             var mainWindow = desktop.MainWindow;
             if (mainWindow == null)
             {
-                ErrorMessage = "无法访问文件系统";
+                ImportStatusMessage = "无法访问文件系统";
                 return;
             }
 
@@ -317,31 +451,60 @@ public partial class OrganizationViewModel : ViewModelBase
 
             if (config == null || config.Type != "ClassScreenLock.OrganizationConfig")
             {
-                ErrorMessage = "无效的配置文件格式";
-                SuccessMessage = string.Empty;
+                ImportStatusMessage = "无效的配置文件格式";
                 return;
             }
 
             ServerUrl = config.Server?.Url ?? string.Empty;
             OrganizationId = config.Organization?.Id ?? string.Empty;
 
-            SuccessMessage = $"已导入配置：{config.Organization?.Name ?? "未知组织"}";
+            ImportStatusMessage = string.IsNullOrEmpty(config.Organization?.Name)
+                ? "已导入配置"
+                : $"已导入配置：{config.Organization.Name}";
             ErrorMessage = string.Empty;
+
+            // 更新验证状态
+            OnPropertyChanged(nameof(CanNextFromStep0));
+            OnPropertyChanged(nameof(CanNextFromStep1));
+            OnPropertyChanged(nameof(CanProceed));
+
+            // 导入成功后，短暂展示提示再自动跳转到需要填写的步骤
+            _ = AutoAdvanceAfterImportAsync();
         }
         catch (FormatException)
         {
-            ErrorMessage = "配置文件格式错误，请确保文件未损坏";
-            SuccessMessage = string.Empty;
+            ImportStatusMessage = "配置文件格式错误，请确保文件未损坏";
         }
         catch (JsonException)
         {
-            ErrorMessage = "配置文件解析失败，请确保文件格式正确";
-            SuccessMessage = string.Empty;
+            ImportStatusMessage = "配置文件解析失败，请确保文件格式正确";
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"导入配置失败：{ex.Message}";
-            SuccessMessage = string.Empty;
+            ImportStatusMessage = $"导入配置失败：{ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// 导入配置成功后，短暂展示提示再自动跳转到第一个需要用户填写的步骤：
+    /// - 服务器地址和组织 ID 均已填好 → 跳到步骤 2（设备信息）
+    /// - 仅服务器地址填好 → 跳到步骤 1（组织 ID）
+    /// - 均未填好 → 留在步骤 0
+    /// </summary>
+    private async Task AutoAdvanceAfterImportAsync()
+    {
+        await Task.Delay(1200);
+
+        // 确保弹窗仍处于打开状态（用户可能已手动关闭）
+        if (!IsJoinDialogOpen) return;
+
+        if (CanNextFromStep0 && CanNextFromStep1)
+        {
+            CurrentJoinStep = 2;
+        }
+        else if (CanNextFromStep0)
+        {
+            CurrentJoinStep = 1;
         }
     }
 

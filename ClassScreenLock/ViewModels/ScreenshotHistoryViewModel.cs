@@ -362,7 +362,7 @@ public partial class ScreenshotHistoryViewModel : ViewModelBase, IImageViewerVie
     {
         try
         {
-            var folder = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Screenshots");
+            var folder = System.IO.Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data", "Screenshots");
             if (!System.IO.Directory.Exists(folder)) System.IO.Directory.CreateDirectory(folder);
             
             Process.Start(new ProcessStartInfo

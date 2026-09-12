@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +8,7 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Management;
 using ClassScreenLock.Helpers;
 using ClassScreenLock.Services;
 
@@ -17,7 +18,7 @@ sealed class Program
 {
     private static Mutex? _appMutex;
     private const string AppGuid = "ClassScreenLock-8A31-D0624A328FE5";
-    private static string _exitFlagFile = Path.Combine(AppContext.BaseDirectory, "exit.dat");
+    private static string _exitFlagFile = Path.Combine(Helpers.AppPathHelper.AppDirectory, "exit.dat");
     private static bool _isStartingWatchdog = false;
     private static readonly object _watchdogStartLock = new object();
 
@@ -234,7 +235,7 @@ sealed class Program
         }
     }
 
-    private static void CreateExitFlag()
+    internal static void CreateExitFlag()
     {
         try
         {
@@ -315,33 +316,71 @@ sealed class Program
             
             int needToStart = 3 - existingWatchdogs.Length;
             
-            var baseDir = AppContext.BaseDirectory;
-            string watchdogExe = Path.Combine(baseDir, "CSL.Watchdog.exe");
+            // 使用 Environment.ProcessPath 获取主程序路径，然后定位到同目录
+            var mainExePath = Environment.ProcessPath;
+            if (string.IsNullOrWhiteSpace(mainExePath))
+            {
+                mainExePath = Process.GetCurrentProcess().MainModule?.FileName;
+            }
             
+            string baseDir = !string.IsNullOrWhiteSpace(mainExePath)
+                ? Path.GetDirectoryName(mainExePath) ?? Helpers.AppPathHelper.AppDirectory
+                : Helpers.AppPathHelper.AppDirectory;
+            
+            string watchdogExe = Path.Combine(baseDir, "CSL.Watchdog.exe");
+
             if (File.Exists(watchdogExe))
             {
                 for (int i = 0; i < needToStart; i++)
                 {
-                    var startInfo = new ProcessStartInfo
+                    try
                     {
-                        FileName = "cmd.exe",
-                        Arguments = $"/c start \"Watchdog Instance {existingWatchdogs.Length + i}\" /B \"{watchdogExe}\" {existingWatchdogs.Length + i}",
-                        UseShellExecute = true,
-                        CreateNoWindow = true,
-                        WindowStyle = ProcessWindowStyle.Hidden
-                    };
-                    
-                    Process.Start(startInfo);
-                    LogService.Instance.Log("Info", "Watchdog", "StartWatchdog", $"CSL.Watchdog instance {existingWatchdogs.Length + i} started");
-                    
+                        var instanceId = existingWatchdogs.Length + i;
+                        // 关键修复：不能再用 Process.Start 直接启动看门狗。C# 直接
+                        // Process.Start 会让看门狗成为本进程的直接子进程，被分到同一个
+                        // 进程树 / Job Object 下——主程序退出或被"结束进程树"时看门狗
+                        // 会被连带清理，看门功能失效。
+                        // 改用 WMI Win32_Process.Create 拉起看门狗：
+                        //   1) 看门狗继承调用者（本进程）的令牌：主程序经 UIAccess
+                        //      提权为 SYSTEM（UiAccessService 复制 winlogon 令牌重启）
+                        //      时，看门狗同为 SYSTEM 权限，且保持在主程序的用户会话中
+                        //      （无 Session 0 问题，看门狗重启主程序时 UI 正常）；
+                        //      主程序未提权（管理员）时看门狗同样继承管理员权限，
+                        //      两种模式都自动与主程序一致，不降权；
+                        //   2) 看门狗的父进程变成 WMI 服务进程（WmiPrvSE），完全脱离
+                        //      本进程树与 Job，主程序退出不影响看门狗；
+                        //   3) 不经过 cmd.exe，锁屏时 DisableCMD 组策略不会误伤；
+                        //   4) CSL.Watchdog 不在 IFEO 劫持名单，且在本软件
+                        //      OwnProcessNames 白名单内，实时进程拦截会直接放行。
+                        // 注意：不能改用 schtasks 计划任务——由 SYSTEM 创建的默认任务
+                        // 会在 Session 0 运行，看门狗会跑到错误的会话导致重启主程序时
+                        // UI 不可见；WMI 创建则始终跟随调用者的令牌与会话。
+                        var commandLine = $"\"{watchdogExe}\" {instanceId}";
+                        using var processClass = new ManagementClass("Win32_Process");
+                        using var methodParams = processClass.GetMethodParameters("Create");
+                        methodParams["CommandLine"] = commandLine;
+                        using var result = processClass.InvokeMethod("Create", methodParams, null);
+                        var returnValue = Convert.ToUInt32(result?["ReturnValue"] ?? 1u);
+                        if (returnValue != 0)
+                        {
+                            LogService.Instance.Log("Error", "Watchdog", "StartWatchdog",
+                                $"看门狗实例 {instanceId} 启动失败（代码 {returnValue}），将由监测机制重试");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogService.Instance.Log("Error", "Watchdog", "StartWatchdog",
+                            $"启动看门狗实例失败: {ex.Message}");
+                    }
+
                     System.Threading.Thread.Sleep(500);
                 }
-                
+
                 System.Threading.Thread.Sleep(1000);
             }
             else
             {
-                LogService.Instance.Log("Error", "Watchdog", "StartWatchdog", $"Watchdog executable not found: {watchdogExe}");
+                LogService.Instance.Log("Error", "Watchdog", "StartWatchdog", "看门狗程序未找到，无法启动");
             }
         }
         catch (Exception ex)
@@ -356,7 +395,7 @@ sealed class Program
             }
         }
     }
-    
+
     private static string GetCommandLine(int processId)
     {
         try

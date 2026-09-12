@@ -25,7 +25,7 @@
                         <GradientStop Color="#2D2D2D" Offset="1"/>
                     </LinearGradientBrush>
                     <SolidColorBrush x:Key="ProgressBackgroundBrush" Color="#333333"/>
-                    <SolidColorBrush x:Key="ProgressForegroundBrush" Color="#0078D4"/>
+                    <SolidColorBrush x:Key="ProgressForegroundBrush" Color="#0067C0"/>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Light">
                     <LinearGradientBrush x:Key="SplashBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
@@ -33,7 +33,7 @@
                         <GradientStop Color="#FFFFFF" Offset="1"/>
                     </LinearGradientBrush>
                     <SolidColorBrush x:Key="ProgressBackgroundBrush" Color="#E0E0E0"/>
-                    <SolidColorBrush x:Key="ProgressForegroundBrush" Color="#0078D4"/>
+                    <SolidColorBrush x:Key="ProgressForegroundBrush" Color="#0067C0"/>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>

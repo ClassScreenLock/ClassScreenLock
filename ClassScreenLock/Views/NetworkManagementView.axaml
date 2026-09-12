@@ -14,8 +14,8 @@
         <Border Grid.Row="0" Classes="chrome" Padding="24,16" Background="Transparent">
             <Grid ColumnDefinitions="*,Auto">
                 <StackPanel Grid.Column="0" Spacing="4">
-                    <TextBlock Text="{DynamicResource Network_Title}" FontSize="24" FontWeight="Bold"/>
-                    <TextBlock Text="{DynamicResource Network_DomainRules}" Opacity="0.6"/>
+                    <TextBlock Text="{DynamicResource Network_Title}" Classes="h1"/>
+                    <TextBlock Text="{DynamicResource Network_DomainRules}" Classes="caption" Opacity="0.6"/>
                 </StackPanel>
                 
                 <Button Grid.Column="1" Command="{Binding ApplyChangesCommand}" Classes="accent" VerticalContentAlignment="Center">
@@ -38,6 +38,21 @@
                             <TextBlock Text="{DynamicResource Network_GlobalLock_Desc}" Opacity="0.6" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                         <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsNetworkLockEnabled}" OnContent="" OffContent=""/>
+                    </Grid>
+                </Border>
+
+                <!-- MITM 深度流量检查（实验性功能） -->
+                <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                        CornerRadius="8" Padding="20">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <TextBlock Text="{DynamicResource Network_MitmTitle}" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"/>
+                            <!-- 实验性功能显著标识 -->
+                            <Border Background="#E6A23C" CornerRadius="4" Padding="8,2" VerticalAlignment="Center">
+                                <TextBlock Text="{StaticResource Network_MitmExperimental}" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                            </Border>
+                        </StackPanel>
+                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsMitmInterceptionEnabled}" OnContent="" OffContent=""/>
                     </Grid>
                 </Border>
 

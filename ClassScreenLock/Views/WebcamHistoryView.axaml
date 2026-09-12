@@ -22,16 +22,9 @@
 
     <Grid RowDefinitions="Auto, *">
         <StackPanel Grid.Row="0" Spacing="8" Margin="32,32,32,24">
-            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                <Border Background="{DynamicResource SystemAccentColorLightBrush}"
-                        Width="48" Height="48" CornerRadius="8">
-                    <fluent:SymbolIcon Symbol="Video" Width="24" Height="24"
-                                Foreground="{DynamicResource SystemAccentColor}"/>
-                </Border>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{DynamicResource WebcamHistory_Title}" Classes="h1" Margin="0"/>
-                    <TextBlock Text="{DynamicResource WebcamHistory_Description}" Classes="caption" Opacity="0.6"/>
-                </StackPanel>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="{DynamicResource WebcamHistory_Title}" Classes="h1" Margin="0"/>
+                <TextBlock Text="{DynamicResource WebcamHistory_Description}" Classes="caption" Opacity="0.6"/>
             </StackPanel>
         </StackPanel>
 
@@ -253,7 +246,7 @@
                             <TextBlock Text="{Binding SelectedCount, StringFormat='已选 {0}'}" Opacity="0.8" VerticalAlignment="Center"/>
                             <Button Command="{Binding DeleteSelectedCommand}" Padding="12,8" IsEnabled="{Binding IsSelectionMode}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <fluent:SymbolIcon Symbol="Delete" Width="20" Height="20" Foreground="#FF4444"/>
+                                    <fluent:SymbolIcon Symbol="Delete" Width="20" Height="20" Foreground="{DynamicResource F2SystemCriticalBrush}"/>
                                     <TextBlock Text="删除已选"/>
                                 </StackPanel>
                             </Button>

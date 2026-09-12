@@ -20,6 +20,9 @@ public partial class NetworkManagementViewModel : ViewModelBase
     private bool _isNetworkLockEnabled;
 
     [ObservableProperty]
+    private bool _isMitmInterceptionEnabled;
+
+    [ObservableProperty]
     private string _newDomain = string.Empty;
 
     [ObservableProperty]
@@ -45,6 +48,7 @@ public partial class NetworkManagementViewModel : ViewModelBase
         if (settings != null)
         {
             IsNetworkLockEnabled = settings.IsNetworkLockEnabled;
+            IsMitmInterceptionEnabled = settings.IsMitmInterceptionEnabled;
         }
         
         _isInitialLoad = false;
@@ -132,6 +136,7 @@ public partial class NetworkManagementViewModel : ViewModelBase
         SettingsService.UpdateBlockage(settings =>
         {
             settings.IsNetworkLockEnabled = IsNetworkLockEnabled;
+            settings.IsMitmInterceptionEnabled = IsMitmInterceptionEnabled;
         });
 
         // 保存拦截规则到独立的 Networkblockage.json
@@ -161,5 +166,93 @@ public partial class NetworkManagementViewModel : ViewModelBase
                 });
             }
         });
+    }
+
+    partial void OnIsMitmInterceptionEnabledChanged(bool value)
+    {
+        if (_isInitialLoad) return;
+
+        if (value)
+        {
+            // 开启 MITM：先弹出实验性功能确认框（在 UI 线程直接调用，避免跨线程创建 UI 元素）
+            _ = ConfirmAndEnableMitmAsync();
+        }
+        else
+        {
+            // 关闭 MITM：保存设置并在后台应用规则
+            SaveSettings();
+            _ = ApplyMitmRulesAsync();
+        }
+    }
+
+    /// <summary>
+    /// 弹出实验性功能确认框，用户确认后保存设置并应用规则。
+    /// 整个流程在 UI 线程启动，仅网络服务调用在后台执行。
+    /// </summary>
+    private async Task ConfirmAndEnableMitmAsync()
+    {
+        bool confirmed = await ShowMitmExperimentalConfirmAsync();
+
+        if (!confirmed)
+        {
+            // 用户取消，还原开关（回到 UI 线程）
+            IsMitmInterceptionEnabled = false;
+            return;
+        }
+
+        // 用户确认，保存设置并在后台应用规则
+        SaveSettings();
+        await ApplyMitmRulesAsync();
+    }
+
+    /// <summary>
+    /// 在后台调用网络服务应用规则，完成后回到 UI 线程显示通知。
+    /// </summary>
+    private static async Task ApplyMitmRulesAsync()
+    {
+        try
+        {
+            await NetworkBlockingService.Instance.ApplyRulesAsync("MitmToggle");
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                NotificationService.Instance.ShowSuccess(LocalizationService.Instance.GetString("Notify_SettingsSaved"));
+            });
+        }
+        catch (Exception ex)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                NotificationService.Instance.ShowError($"应用规则失败: {ex.Message}");
+            });
+        }
+    }
+
+    /// <summary>
+    /// 显示 MITM 实验性功能确认框（与删除确认框同款 ContentDialog 遮罩/弹出动画/阴影）。
+    /// </summary>
+    private async Task<bool> ShowMitmExperimentalConfirmAsync()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime
+            is not Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            return true;
+        }
+
+        var owner = desktop.MainWindow;
+        var L = LocalizationService.Instance.GetString;
+        var dialog = new FluentAvalonia.UI.Controls.ContentDialog
+        {
+            Title = L("Network_MitmExperimental_Title"),
+            Content = L("Network_MitmExperimental_Message"),
+            PrimaryButtonText = L("Network_MitmExperimental_Confirm"),
+            CloseButtonText = L("Btn_Cancel"),
+            DefaultButton = FluentAvalonia.UI.Controls.ContentDialogButton.Close
+        };
+
+        var result = owner != null
+            ? await dialog.ShowAsync(owner)
+            : await dialog.ShowAsync();
+
+        return result == FluentAvalonia.UI.Controls.ContentDialogResult.Primary;
     }
 }

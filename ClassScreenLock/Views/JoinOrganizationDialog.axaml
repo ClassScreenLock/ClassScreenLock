@@ -1,0 +1,409 @@
+<UserControl
+    x:Class="ClassScreenLock.Views.JoinOrganizationDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+    d:DesignHeight="640"
+    d:DesignWidth="540"
+    x:DataType="vm:OrganizationViewModel"
+    mc:Ignorable="d">
+
+    <!-- 加入组织向导内容（作为 ContentDialog 的 Content 使用）。
+         遮罩、弹出动画、阴影均由 ContentDialog 提供，与删除确认对话框一致。 -->
+    <UserControl.Styles>
+        <!-- 步骤内容：淡入淡出 -->
+        <Style Selector="Panel.step-content">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!-- 步骤指示器段落：透明度过渡 -->
+        <Style Selector="Border.step-segment">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Width="500" RowDefinitions="Auto,*,Auto">
+
+        <!-- ===== 弹窗头部 ===== -->
+        <Border
+            Grid.Row="0"
+            Padding="0,0,0,16"
+            BorderBrush="{DynamicResource F2DividerStrokeBrush}"
+            BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="4">
+                    <TextBlock
+                        FontSize="20"
+                        FontWeight="SemiBold"
+                        Text="{DynamicResource Organization_Wizard_Title}" />
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource F2TextSecondaryBrush}"
+                        Text="{Binding StepNumber, StringFormat={}{0} / 4}" />
+                </StackPanel>
+                <Button
+                    Grid.Column="1"
+                    Classes="transparent"
+                    Padding="8"
+                    Command="{Binding CloseJoinDialogCommand}"
+                    IsEnabled="{Binding !IsLoading}">
+                    <fluent:SymbolIcon
+                        Symbol="Dismiss"
+                        Width="16"
+                        Height="16" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ===== 步骤内容 ===== -->
+        <ScrollViewer
+            Grid.Row="1"
+            Padding="0,24,0,24"
+            HorizontalScrollBarVisibility="Disabled">
+            <Panel x:Name="StepContentPanel" Classes="step-content">
+
+                <!-- 步骤 0：连接服务器 -->
+                <StackPanel IsVisible="{Binding IsStep0}" Spacing="20">
+                    <StackPanel
+                        Spacing="4"
+                        HorizontalAlignment="Center">
+                        <TextBlock
+                            FontSize="18"
+                            FontWeight="SemiBold"
+                            HorizontalAlignment="Center"
+                            Text="{DynamicResource Organization_Wizard_Step0_Title}" />
+                        <TextBlock
+                            Foreground="{DynamicResource F2TextSecondaryBrush}"
+                            HorizontalAlignment="Center"
+                            Text="{DynamicResource Organization_Wizard_Step0_Desc}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock FontWeight="SemiBold" Text="{DynamicResource Organization_ServerUrl}" />
+                        <TextBox
+                            Text="{Binding ServerUrl}"
+                            Watermark="{DynamicResource Organization_ServerUrl_Watermark}" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource F2TextTertiaryBrush}"
+                            Text="{DynamicResource Organization_ServerUrl_Note}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Button
+                        Command="{Binding ImportConfigCommand}"
+                        HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <fluent:SymbolIcon Symbol="ArrowImport" Width="16" Height="16" />
+                            <TextBlock Text="{DynamicResource Organization_ImportConfig}" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 导入状态提示 -->
+                    <Border
+                        Padding="12,8"
+                        CornerRadius="4"
+                        Background="{DynamicResource F2SystemSuccessBackgroundBrush}"
+                        IsVisible="{Binding HasImportStatus}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <fluent:SymbolIcon
+                                Symbol="CheckmarkCircle"
+                                Width="16"
+                                Height="16"
+                                Foreground="{DynamicResource F2SystemSuccessBrush}" />
+                            <TextBlock
+                                Foreground="{DynamicResource F2SystemSuccessBrush}"
+                                Text="{Binding ImportStatusMessage}"
+                                TextWrapping="Wrap"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 步骤 1：组织标识 -->
+                <StackPanel IsVisible="{Binding IsStep1}" Spacing="20">
+                    <StackPanel
+                        Spacing="8"
+                        HorizontalAlignment="Center">
+                        <Border
+                            Width="48"
+                            Height="48"
+                            CornerRadius="8"
+                            Background="{DynamicResource F2AccentDefaultBrush}">
+                            <fluent:SymbolIcon
+                                Symbol="Organization"
+                                Width="24"
+                                Height="24"
+                                Foreground="{DynamicResource F2TextOnAccentPrimaryBrush}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock
+                            FontSize="18"
+                            FontWeight="SemiBold"
+                            HorizontalAlignment="Center"
+                            Text="{DynamicResource Organization_Wizard_Step1_Title}" />
+                        <TextBlock
+                            Foreground="{DynamicResource F2TextSecondaryBrush}"
+                            HorizontalAlignment="Center"
+                            Text="{DynamicResource Organization_Wizard_Step1_Desc}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock FontWeight="SemiBold" Text="{DynamicResource Organization_OrganizationId}" />
+                        <TextBox
+                            Text="{Binding OrganizationId}"
+                            Watermark="{DynamicResource Organization_OrganizationId_Watermark}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- 步骤 2：设备信息 -->
+                <StackPanel IsVisible="{Binding IsStep2}" Spacing="20">
+                    <StackPanel
+                        Spacing="8"
+                        HorizontalAlignment="Center">
+                        <Border
+                            Width="48"
+                            Height="48"
+                            CornerRadius="8"
+                            Background="{DynamicResource F2AccentDefaultBrush}">
+                            <fluent:SymbolIcon
+                                Symbol="DeviceEq"
+                                Width="24"
+                                Height="24"
+                                Foreground="{DynamicResource F2TextOnAccentPrimaryBrush}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock
+                            FontSize="18"
+                            FontWeight="SemiBold"
+                            HorizontalAlignment="Center"
+                            Text="{DynamicResource Organization_Wizard_Step2_Title}" />
+                        <TextBlock
+                            Foreground="{DynamicResource F2TextSecondaryBrush}"
+                            HorizontalAlignment="Center"
+                            Text="{DynamicResource Organization_Wizard_Step2_Desc}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="16">
+                        <StackPanel Spacing="8">
+                            <TextBlock FontWeight="SemiBold" Text="{DynamicResource Organization_ContactPhone}" />
+                            <TextBox
+                                Text="{Binding ContactPhone}"
+                                Watermark="{DynamicResource Organization_ContactPhone_Watermark}" />
+                        </StackPanel>
+                        <StackPanel Spacing="8">
+                            <TextBlock FontWeight="SemiBold" Text="{DynamicResource Organization_ClassName}" />
+                            <TextBox
+                                Text="{Binding ClassName}"
+                                Watermark="{DynamicResource Organization_ClassName_Watermark}" />
+                        </StackPanel>
+                        <StackPanel Spacing="8">
+                            <TextBlock FontWeight="SemiBold" Text="{DynamicResource Organization_PersonInCharge}" />
+                            <TextBox
+                                Text="{Binding PersonInCharge}"
+                                Watermark="{DynamicResource Organization_PersonInCharge_Watermark}" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- 步骤 3：确认并加入 -->
+                <StackPanel IsVisible="{Binding IsStep3}" Spacing="20">
+                    <StackPanel
+                        Spacing="8"
+                        HorizontalAlignment="Center">
+                        <Border
+                            Width="48"
+                            Height="48"
+                            CornerRadius="8"
+                            Background="{DynamicResource F2AccentDefaultBrush}">
+                            <fluent:SymbolIcon
+                                Symbol="CheckmarkCircle"
+                                Width="24"
+                                Height="24"
+                                Foreground="{DynamicResource F2TextOnAccentPrimaryBrush}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock
+                            FontSize="18"
+                            FontWeight="SemiBold"
+                            HorizontalAlignment="Center"
+                            Text="{DynamicResource Organization_Wizard_Step3_Title}" />
+                        <TextBlock
+                            Foreground="{DynamicResource F2TextSecondaryBrush}"
+                            HorizontalAlignment="Center"
+                            Text="{DynamicResource Organization_Wizard_Step3_Desc}" />
+                    </StackPanel>
+
+                    <!-- 信息汇总 -->
+                    <Border
+                        Padding="16"
+                        CornerRadius="8"
+                        Background="{DynamicResource F2CardBackgroundSecondaryBrush}">
+                        <StackPanel Spacing="12">
+                            <Grid ColumnDefinitions="100,*">
+                                <TextBlock
+                                    Foreground="{DynamicResource F2TextSecondaryBrush}"
+                                    Text="{DynamicResource Organization_ServerUrl}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    FontFamily="Consolas"
+                                    Text="{Binding ServerUrl}" />
+                            </Grid>
+                            <Border Background="{DynamicResource F2DividerStrokeBrush}" Height="1" />
+                            <Grid ColumnDefinitions="100,*">
+                                <TextBlock
+                                    Foreground="{DynamicResource F2TextSecondaryBrush}"
+                                    Text="{DynamicResource Organization_OrganizationId}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    FontFamily="Consolas"
+                                    Text="{Binding OrganizationId}" />
+                            </Grid>
+                            <Border Background="{DynamicResource F2DividerStrokeBrush}" Height="1" />
+                            <Grid ColumnDefinitions="100,*">
+                                <TextBlock
+                                    Foreground="{DynamicResource F2TextSecondaryBrush}"
+                                    Text="{DynamicResource Organization_ContactPhone}" />
+                                <TextBlock Grid.Column="1" Text="{Binding ContactPhone}" />
+                            </Grid>
+                            <Border Background="{DynamicResource F2DividerStrokeBrush}" Height="1" />
+                            <Grid ColumnDefinitions="100,*">
+                                <TextBlock
+                                    Foreground="{DynamicResource F2TextSecondaryBrush}"
+                                    Text="{DynamicResource Organization_ClassName}" />
+                                <TextBlock Grid.Column="1" Text="{Binding ClassName}" />
+                            </Grid>
+                            <Border Background="{DynamicResource F2DividerStrokeBrush}" Height="1" />
+                            <Grid ColumnDefinitions="100,*">
+                                <TextBlock
+                                    Foreground="{DynamicResource F2TextSecondaryBrush}"
+                                    Text="{DynamicResource Organization_PersonInCharge}" />
+                                <TextBlock Grid.Column="1" Text="{Binding PersonInCharge}" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 错误提示 -->
+                    <Border
+                        Padding="12,8"
+                        CornerRadius="4"
+                        Background="{DynamicResource F2SystemCriticalBackgroundBrush}"
+                        IsVisible="{Binding HasError}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <fluent:SymbolIcon
+                                Symbol="ErrorCircle"
+                                Width="16"
+                                Height="16"
+                                Foreground="{DynamicResource F2SystemCriticalBrush}" />
+                            <TextBlock
+                                Foreground="{DynamicResource F2SystemCriticalBrush}"
+                                Text="{Binding ErrorMessage}"
+                                TextWrapping="Wrap"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 加载状态 -->
+                    <StackPanel
+                        Orientation="Horizontal"
+                        Spacing="12"
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding IsLoading}">
+                        <ProgressBar
+                            Width="20"
+                            Height="20"
+                            IsIndeterminate="True" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="{DynamicResource Organization_Processing}" />
+                    </StackPanel>
+                </StackPanel>
+
+            </Panel>
+        </ScrollViewer>
+
+        <!-- ===== 弹窗底部：步骤指示器 + 导航按钮 ===== -->
+        <Border
+            Grid.Row="2"
+            Padding="0,16,0,0"
+            BorderBrush="{DynamicResource F2DividerStrokeBrush}"
+            BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+
+                <!-- 步骤进度条 -->
+                <StackPanel
+                    Grid.Column="0"
+                    Orientation="Horizontal"
+                    Spacing="6"
+                    VerticalAlignment="Center">
+                    <Border
+                        Classes="step-segment"
+                        Width="32"
+                        Height="4"
+                        CornerRadius="2"
+                        Background="{DynamicResource F2AccentDefaultBrush}"
+                        Opacity="{Binding Step0Opacity}" />
+                    <Border
+                        Classes="step-segment"
+                        Width="32"
+                        Height="4"
+                        CornerRadius="2"
+                        Background="{DynamicResource F2AccentDefaultBrush}"
+                        Opacity="{Binding Step1Opacity}" />
+                    <Border
+                        Classes="step-segment"
+                        Width="32"
+                        Height="4"
+                        CornerRadius="2"
+                        Background="{DynamicResource F2AccentDefaultBrush}"
+                        Opacity="{Binding Step2Opacity}" />
+                    <Border
+                        Classes="step-segment"
+                        Width="32"
+                        Height="4"
+                        CornerRadius="2"
+                        Background="{DynamicResource F2AccentDefaultBrush}"
+                        Opacity="{Binding Step3Opacity}" />
+                </StackPanel>
+
+                <!-- 导航按钮 -->
+                <StackPanel
+                    Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="12">
+                    <Button
+                        Command="{Binding PreviousStepCommand}"
+                        Content="{DynamicResource Organization_Wizard_Previous}"
+                        IsVisible="{Binding !IsStep0}" />
+                    <Button
+                        Classes="accent"
+                        Command="{Binding NextStepCommand}"
+                        Content="{DynamicResource Organization_Wizard_Next}"
+                        IsEnabled="{Binding CanProceed}"
+                        IsVisible="{Binding !IsStep3}" />
+                    <Button
+                        Classes="accent"
+                        Command="{Binding JoinOrganizationCommand}"
+                        Content="{DynamicResource Organization_JoinOrganization}"
+                        IsEnabled="{Binding !IsLoading}"
+                        IsVisible="{Binding IsStep3}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+</UserControl>

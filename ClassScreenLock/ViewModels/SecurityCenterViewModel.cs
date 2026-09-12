@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Security.Cryptography;
@@ -8,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.IO;
 using Avalonia.Media.Imaging;
+using FluentAvalonia.UI.Controls;
 using ClassScreenLock.Services;
 using ClassScreenLock.Models;
 
@@ -28,6 +30,10 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isPasswordVisible;
+
+    /// <summary>当前选中的胶囊导航项索引（0-5），驱动内容区切换</summary>
+    [ObservableProperty]
+    private int _selectedTabIndex;
 
     public char PasswordChar => IsPasswordVisible ? '\0' : '●';
 
@@ -180,6 +186,14 @@ public partial class SecurityCenterViewModel : ViewModelBase
     [ObservableProperty]
     private string _sidebarAboutLevel = "无";
 
+    /// <summary>
+    /// 安全中心登录账户的最低放行权限等级（0=仅超管，1=管理员及以上，2=所有登录账户）。
+    /// 登录账户权限等级（数值）不高于该值时，直接放行所有被拦截的进程
+    /// （CMD / PowerShell / ISE / 任务管理器 / 注册表编辑器等，见 ProcessBypassService）。
+    /// </summary>
+    [ObservableProperty]
+    private int _minimumAllowedAccountType = 1;
+
     // 账户管理相关
     [ObservableProperty]
     private ObservableCollection<AccountModel> _accounts = new();
@@ -195,6 +209,31 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<AccountType> _availableAccountTypes = new() { AccountType.User, AccountType.Admin };
+
+    // USB密钥管理（每个账户管理自己的USB密钥）
+    [ObservableProperty]
+    private ObservableCollection<UsbKeyModel> _usbKeys = new();
+
+    [ObservableProperty]
+    private ObservableCollection<string> _availableUsbDrives = new();
+
+    [ObservableProperty]
+    private string _selectedUsbDrive = string.Empty;
+
+    [ObservableProperty]
+    private string _usbKeyLabel = string.Empty;
+
+    [ObservableProperty]
+    private bool _isUsbKeyAuthenticated;
+
+    [ObservableProperty]
+    private string _usbKeyStatusText = "未认证";
+
+    [ObservableProperty]
+    private string _usbKeyCurrentAccountText = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasUsbKeyAccount; // 当前已登录账户是否有配置USB密钥
 
     public SecurityCenterViewModel()
     {
@@ -235,6 +274,9 @@ public partial class SecurityCenterViewModel : ViewModelBase
         SidebarOrganizationLevel = ToLevelText(lockSettings.SidebarOrganizationMinAccountType);
         SidebarSettingsLevel = ToLevelText(lockSettings.SidebarSettingsMinAccountType);
         SidebarAboutLevel = ToLevelText(lockSettings.SidebarAboutMinAccountType);
+
+        // 最低放行权限：读取软件拦截配置（Blockage）
+        MinimumAllowedAccountType = SettingsService.Blockage?.MinimumAllowedAccountType ?? 1;
 
         // 加载双重验证状态
         IsTwoFactorEnabled = SecurityService.Instance.Settings.IsTwoFactorEnabled;
@@ -480,6 +522,7 @@ public partial class SecurityCenterViewModel : ViewModelBase
                     
                     UpdateSuperAdminStatus();
                     RefreshAccounts();
+                    RefreshUsbKeys();
 
                     if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                         desktop.MainWindow?.DataContext is MainWindowViewModel mainVm)
@@ -657,6 +700,9 @@ public partial class SecurityCenterViewModel : ViewModelBase
             s.SidebarAboutMinAccountType = sbAbout;
         });
 
+        // 最低放行权限（存于软件拦截配置 Blockage）
+        SettingsService.UpdateBlockage(s => s.MinimumAllowedAccountType = MinimumAllowedAccountType);
+
         LogPermissionChange("SidebarHome", before.SidebarHomeMinAccountType, sbHome);
         LogPermissionChange("SidebarLockSettings", before.SidebarLockSettingsMinAccountType, sbLock);
         LogPermissionChange("BreakTimeLockSettings", before.BreakTimeLockSettingsMinAccountType, brLock);
@@ -796,6 +842,12 @@ public partial class SecurityCenterViewModel : ViewModelBase
         0.01, 0.05, 0.1, 0.5, 1, 5, 10, 25, 50, 100, 200, 500
     };
 
+    // ===== 看门狗监测时长挡位 =====
+    [ObservableProperty]
+    private WatchdogTier? _selectedWatchdogTier;
+
+    public ObservableCollection<WatchdogTier> WatchdogTierOptions { get; } = new(WatchdogTier.All);
+
     [ObservableProperty]
     private int _maxLockDurationHours = 48;
 
@@ -815,15 +867,6 @@ public partial class SecurityCenterViewModel : ViewModelBase
         }
     }
 
-    [ObservableProperty]
-    private string _newAllowedApp = string.Empty;
-
-    [ObservableProperty]
-    private string _newForcedApp = string.Empty;
-
-    public ObservableCollection<string> AllowedTopmostApps { get; } = new();
-    public ObservableCollection<string> ForcedTopmostApps { get; } = new();
-
     [RelayCommand]
     private void SaveLockSettings()
     {
@@ -835,8 +878,6 @@ public partial class SecurityCenterViewModel : ViewModelBase
             settings.LockTimeout = LockTimeout;
             settings.ShowFloatingLockWidget = ShowFloatingLockWidget;
             settings.EarlyUnlockMinAccountType = (AccountType)EarlyUnlockMinAccountTypeIndex;
-            settings.AllowedTopmostApps = AllowedTopmostApps.ToList();
-            settings.ForcedTopmostApps = ForcedTopmostApps.ToList();
             settings.LockBackgroundOpacity = LockBackgroundOpacity;
             settings.LockTextShadowOpacity = LockTextShadowOpacity;
             settings.LockTextShadowBlurRadius = LockTextShadowBlurRadius;
@@ -857,9 +898,22 @@ public partial class SecurityCenterViewModel : ViewModelBase
         }
     }
 
+    [RelayCommand]
+    private void SaveWatchdogSettings()
+    {
+        var tier = SelectedWatchdogTier ?? WatchdogTier.GetByTier(SettingsService.General.WatchdogMonitorTier);
+        SettingsService.UpdateGeneral(settings =>
+        {
+            settings.WatchdogMonitorTier = tier.Tier;
+        });
+        App.ApplyWatchdogMonitorTier(tier.Tier);
+        NotificationService.Instance.ShowSuccess(LocalizationService.Instance.GetString("Notify_SettingsSaved") ?? "设置已保存");
+    }
+
     private void LoadLockSettings()
     {
         var settings = SettingsService.Lock;
+        SelectedWatchdogTier = WatchdogTier.GetByTier(SettingsService.General.WatchdogMonitorTier);
         EnableBreakTimeLock = settings.EnableBreakTimeLock;
         BreakTimeLockMode = settings.BreakTimeLockMode;
         AutoUnlockBeforeClassMinutes = settings.AutoUnlockBeforeClassMinutes;
@@ -873,56 +927,12 @@ public partial class SecurityCenterViewModel : ViewModelBase
 
         MaxLockDurationHours = SettingsService.General.MaxLockDurationHours;
 
-        AllowedTopmostApps.Clear();
-        foreach (var app in settings.AllowedTopmostApps)
-        {
-            AllowedTopmostApps.Add(app);
-        }
-
-        ForcedTopmostApps.Clear();
-        foreach (var app in settings.ForcedTopmostApps)
-        {
-            ForcedTopmostApps.Add(app);
-        }
-
         EnableLockStateFileCheck = settings.EnableLockStateFileCheck;
         LockStateFileCheckIntervalSeconds = settings.LockStateFileCheckIntervalSeconds;
 
         CanEditBreakTimeLock = settings.BreakTimeLockSettingsMinAccountType == null
                                || SecurityService.Instance.IsAuthenticated
                                || AccountService.Instance.HasPermission(settings.BreakTimeLockSettingsMinAccountType.Value);
-    }
-
-    [RelayCommand]
-    private void AddAllowedApp()
-    {
-        if (!string.IsNullOrWhiteSpace(NewAllowedApp) && !AllowedTopmostApps.Contains(NewAllowedApp))
-        {
-            AllowedTopmostApps.Add(NewAllowedApp);
-            NewAllowedApp = string.Empty;
-        }
-    }
-
-    [RelayCommand]
-    private void RemoveAllowedApp(string app)
-    {
-        AllowedTopmostApps.Remove(app);
-    }
-
-    [RelayCommand]
-    private void AddForcedApp()
-    {
-        if (!string.IsNullOrWhiteSpace(NewForcedApp) && !ForcedTopmostApps.Contains(NewForcedApp))
-        {
-            ForcedTopmostApps.Add(NewForcedApp);
-            NewForcedApp = string.Empty;
-        }
-    }
-
-    [RelayCommand]
-    private void RemoveForcedApp(string app)
-    {
-        ForcedTopmostApps.Remove(app);
     }
 
     partial void OnSidebarHomeLevelChanged(string value) => ApplySidebarPermissionLevelsImmediate();
@@ -1299,6 +1309,192 @@ public partial class SecurityCenterViewModel : ViewModelBase
         builder.AppendLine($"· 密码泄露告警次数：{report.LeakDetectedCount}");
 
         SecurityReportText = builder.ToString();
+    }
+
+    // ==================== USB密钥管理 ====================
+
+    /// <summary>
+    /// 使用USB密钥登录 - 弹出 ContentDialog（与删除确认对话框同款遮罩/动画），用户选盘后统一认证
+    /// </summary>
+    [RelayCommand]
+    private async Task LoginWithUsbKey()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is not Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            return;
+
+        var content = new ClassScreenLock.Views.UsbKeyLoginDialog();
+        var dialog = new ContentDialog
+        {
+            Title = L("UsbKeyLogin_Title"),
+            Content = content,
+            CloseButtonText = L("UsbKeyLogin_Cancel"),
+            DefaultButton = ContentDialogButton.Close
+        };
+
+        // 点击设备项 → 关闭对话框并返回盘符
+        content.DriveSelected += _ => dialog.Hide();
+
+        if (desktop.MainWindow != null)
+            await dialog.ShowAsync(desktop.MainWindow);
+        else
+            await dialog.ShowAsync();
+
+        // 用户点取消/Esc 时兜底完成
+        if (!content.Result.IsCompleted)
+            content.Cancel();
+
+        var selectedDrive = await content.Result;
+        if (string.IsNullOrEmpty(selectedDrive))
+            return;
+
+        // 尝试用所选U盘认证
+        var usbKey = UsbKeyAuthService.Instance.TryAuthenticateDrive(selectedDrive);
+        if (usbKey == null)
+        {
+            NotificationService.Instance.ShowWarning("此USB设备不是有效的USB密钥");
+            return;
+        }
+
+        var account = AccountService.Instance.FindAccountById(usbKey.AccountId);
+        if (account == null)
+        {
+            NotificationService.Instance.ShowWarning("此USB设备不是有效的USB密钥");
+            return;
+        }
+
+        // 执行USB密钥登录
+        AccountService.Instance.LoginWithUsbKey(usbKey);
+
+        // 设置认证状态
+        IsAuthenticated = true;
+        IsLocked = false;
+        Username = account.Username;
+        LoginPassword = string.Empty;
+        LoginTwoFactorCode = string.Empty;
+        IsTwoFactorRequired = false;
+        LoginMessage = string.Empty;
+
+        UpdateSuperAdminStatus();
+        RefreshAccounts();
+        RefreshUsbKeys();
+
+        if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime appDesktop &&
+            appDesktop.MainWindow?.DataContext is MainWindowViewModel mainVm)
+        {
+            mainVm.SidebarViewModel.RefreshAccountInfo();
+        }
+
+        LogService.Instance.Log("SecurityCenter", "UsbKeyLogin", account.Username,
+            "通过USB密钥登录");
+        NotificationService.Instance.ShowSuccess("USB密钥登录成功");
+    }
+
+    [RelayCommand]
+    private void RefreshUsbKeys()
+    {
+        var currentAccount = AccountService.Instance.CurrentAccount;
+        HasUsbKeyAccount = currentAccount != null;
+
+        if (currentAccount != null)
+        {
+            var myKeys = UsbKeyAuthService.Instance.GetKeysForAccount(currentAccount.Id);
+            UsbKeys = new ObservableCollection<UsbKeyModel>(myKeys);
+            UsbKeyCurrentAccountText = $"{currentAccount.Username} ({currentAccount.AccountType})";
+        }
+        else
+        {
+            UsbKeys = new ObservableCollection<UsbKeyModel>();
+            UsbKeyCurrentAccountText = "未登录";
+        }
+
+        IsUsbKeyAuthenticated = UsbKeyAuthService.Instance.IsUsbKeyAuthenticated;
+        var authUsername = UsbKeyAuthService.Instance.CurrentUsbKeyUsername;
+        var authLabel = UsbKeyAuthService.Instance.CurrentUsbKeyLabel;
+        var authType = UsbKeyAuthService.Instance.CurrentUsbKeyAccountType;
+
+        UsbKeyStatusText = IsUsbKeyAuthenticated
+            ? $"已认证 - {authUsername}({authType}) - {authLabel}"
+            : (currentAccount != null ? $"已登录: {currentAccount.Username}" : "未认证");
+        RefreshAvailableDrives();
+    }
+
+    [RelayCommand]
+    private void RefreshAvailableDrives()
+    {
+        var drives = new ObservableCollection<string>();
+        try
+        {
+            foreach (var drive in System.IO.DriveInfo.GetDrives())
+            {
+                if (drive.DriveType == System.IO.DriveType.Removable && drive.IsReady)
+                {
+                    var letter = drive.Name.TrimEnd('\\', ':');
+                    drives.Add($"{letter}: ({drive.VolumeLabel})");
+                }
+            }
+        }
+        catch { }
+        AvailableUsbDrives = drives;
+    }
+
+    [RelayCommand]
+    private void RegisterUsbKey()
+    {
+        var currentAccount = AccountService.Instance.CurrentAccount;
+        if (currentAccount == null)
+        {
+            NotificationService.Instance.ShowWarning("请先登录账户");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(SelectedUsbDrive))
+        {
+            NotificationService.Instance.ShowWarning("请先选择一个可用的U盘");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(UsbKeyLabel))
+        {
+            NotificationService.Instance.ShowWarning("请输入密钥标签");
+            return;
+        }
+
+        var driveLetter = SelectedUsbDrive.Split(':')[0].Trim();
+
+        var result = UsbKeyAuthService.Instance.RegisterKey(driveLetter, UsbKeyLabel, currentAccount);
+        if (result.success)
+        {
+            NotificationService.Instance.ShowSuccess(result.message);
+            UsbKeyLabel = string.Empty;
+            RefreshUsbKeys();
+        }
+        else
+        {
+            NotificationService.Instance.ShowWarning(result.message);
+        }
+    }
+
+    [RelayCommand]
+    private void RevokeUsbKey(string keyId)
+    {
+        var currentAccount = AccountService.Instance.CurrentAccount;
+        var result = UsbKeyAuthService.Instance.RevokeKey(keyId, currentAccount?.Id);
+        if (result.success)
+        {
+            NotificationService.Instance.ShowSuccess(result.message);
+            RefreshUsbKeys();
+        }
+        else
+        {
+            NotificationService.Instance.ShowWarning(result.message);
+        }
+    }
+
+    [RelayCommand]
+    private void LogoutUsbKey()
+    {
+        UsbKeyAuthService.Instance.LogoutUsbKeySession();
+        RefreshUsbKeys();
     }
 
     partial void OnNewPasswordChanged(string value)

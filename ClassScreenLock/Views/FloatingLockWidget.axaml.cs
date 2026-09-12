@@ -88,6 +88,9 @@ public partial class FloatingLockWidget : Window
                 LogService.Instance.Log("Debug", "FloatingLockWidget", "WndProc",
                     "已移除最小化/最大化按钮样式，设置置顶扩展样式");
 
+                // 拦截 Ctrl+V：用 Win32 原始剪贴板 API 读取粘贴内容（SYSTEM 下 OLE 封送失败会导致中文丢失）
+                Services.SystemPasteInterceptor.Attach(this);
+
                 StartProtectionTimer();
             }
         }

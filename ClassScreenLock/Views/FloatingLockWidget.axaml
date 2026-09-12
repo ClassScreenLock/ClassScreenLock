@@ -3,52 +3,152 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+        xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
         mc:Ignorable="d"
         x:Class="ClassScreenLock.Views.FloatingLockWidget"
         x:DataType="vm:FloatingLockWidgetViewModel"
         Title="仅防护管理"
-        Width="400" Height="170"
+        Width="420" Height="200"
         WindowStartupLocation="Manual"
         SystemDecorations="None"
         Topmost="True"
         ShowInTaskbar="False"
         CanResize="False"
         Background="Transparent"
-        TransparencyLevelHint="Transparent">
+        TransparencyLevelHint="Transparent"
+        RequestedThemeVariant="Dark">
+
+    <Window.Styles>
+        <!-- Underlined Text Field — Fluent 规范：透明背景、无圆角、仅底线 -->
+        <Style Selector="TextBox.widget-input">
+            <Setter Property="FontFamily" Value="{DynamicResource GlobalFontFamily}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#66FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBox.widget-input /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#66FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+        <Style Selector="TextBox.widget-input:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#99FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+        <Style Selector="TextBox.widget-input:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+        </Style>
+        <Style Selector="TextBox.widget-input /template/ TextBlock#PART_Watermark">
+            <Setter Property="Foreground" Value="#8CFFFFFF"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <Style Selector="Button.widget-unlock">
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.widget-unlock:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight1}"/>
+        </Style>
+        <Style Selector="Button.widget-unlock:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark1}"/>
+        </Style>
+    </Window.Styles>
 
     <Panel Background="Transparent" PointerPressed="OnPointerPressed">
-        <Border Background="#CC202020"
-                CornerRadius="12"
-                Padding="16"
+        <Border CornerRadius="14"
+                Padding="20"
                 HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch">
-            <StackPanel Spacing="8">
-                <TextBlock Text="当前电脑已被管控"
-                           FontWeight="Bold"
-                           Foreground="White"/>
+                VerticalAlignment="Stretch"
+                BoxShadow="0 8 32 0 #99000000">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Offset="0" Color="#E6202020"/>
+                    <GradientStop Offset="1" Color="#E61A1A1A"/>
+                </LinearGradientBrush>
+            </Border.Background>
 
-                <TextBlock Text="{Binding InfoText}"
-                           TextWrapping="Wrap"
-                           Foreground="White"
-                           Opacity="0.9"/>
+            <Panel>
+                <!-- 左侧强调色装饰条 -->
+                <Border HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                        Width="4" CornerRadius="2" Margin="-20,-20,0,-20"
+                        Background="{DynamicResource SystemAccentColor}"/>
 
-                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-                    <TextBox Width="120"
-                             Watermark="管理员账户"
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                <!-- 标题区域：图标 + 标题 + 副标题 -->
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,12">
+                    <Border Grid.Column="0" Width="44" Height="44" CornerRadius="10"
+                            Background="{DynamicResource SystemAccentColor}"
+                            Opacity="0.18"
+                            HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <fluent:SymbolIcon Symbol="Shield" FontSize="24"
+                                           Foreground="{DynamicResource SystemAccentColor}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="2" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{DynamicResource ProtectionWidget_Title}"
+                                   FontSize="15" FontWeight="SemiBold" Foreground="White"/>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <!-- 脉冲指示点 -->
+                            <Ellipse Width="8" Height="8" Fill="#22C55E" VerticalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource ProtectionWidget_Subtitle}"
+                                       FontSize="12" Foreground="#99FFFFFF" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- 信息文本 -->
+                <TextBlock Grid.Row="1" Text="{Binding InfoText}"
+                           TextWrapping="Wrap" FontSize="12"
+                           Foreground="#B3FFFFFF" Margin="0,0,0,10"
+                           MaxLines="2" TextTrimming="CharacterEllipsis"/>
+
+                <!-- 输入区域 -->
+                <Grid Grid.Row="2" ColumnDefinitions="*,*,Auto" ColumnSpacing="8" Margin="0,0,0,6">
+                    <TextBox Grid.Column="0" Classes="widget-input"
+                             Watermark="{DynamicResource ProtectionWidget_AdminAccount}"
                              Text="{Binding Username, Mode=TwoWay}"/>
-                    <TextBox Width="120"
-                             Watermark="密码"
+                    <TextBox Grid.Column="1" Classes="widget-input"
+                             Watermark="{DynamicResource ProtectionWidget_Password}"
                              Text="{Binding Password, Mode=TwoWay}"
                              PasswordChar="*"/>
-                    <Button Width="90"
-                            Content="解除管控"
-                            Command="{Binding UnlockCommand}"/>
-                </StackPanel>
+                    <Button Grid.Column="2" Classes="widget-unlock"
+                            Width="80" Height="34"
+                            Command="{Binding UnlockCommand}"
+                            Content="{DynamicResource ProtectionWidget_Unlock}"/>
+                </Grid>
 
-                <TextBlock Text="{Binding ErrorMessage}"
-                           Foreground="#FFE81123"
-                           TextWrapping="Wrap"/>
-            </StackPanel>
+                <!-- 错误信息 + 拖拽提示 -->
+                <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="{Binding ErrorMessage}"
+                               Foreground="#FF6B6B" FontSize="11"
+                               TextWrapping="Wrap" MaxLines="1"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="{DynamicResource ProtectionWidget_DragHint}"
+                                   FontSize="10" Foreground="#55FFFFFF"/>
+                    </StackPanel>
+                </Grid>
+                </Grid>
+            </Panel>
         </Border>
     </Panel>
 </Window>

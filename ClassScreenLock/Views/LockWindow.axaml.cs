@@ -89,6 +89,9 @@ public partial class LockWindow : Window
                 
                 StartProtectionTimer();
             }
+            
+            // 拦截 Ctrl+V：用 Win32 原始剪贴板 API 读取粘贴内容（SYSTEM 下 OLE 封送失败会导致中文丢失）
+            Services.SystemPasteInterceptor.Attach(this);
         }
         catch (Exception ex)
         {

@@ -13,7 +13,7 @@ namespace ClassScreenLock.ViewModels;
 public partial class SidebarViewModel : ViewModelBase
     {
         [ObservableProperty]
-        private double _sidebarWidth = 220;
+        private double _sidebarWidth = 280;
         
         [ObservableProperty]
         private bool _isExpanded = true;
@@ -74,9 +74,9 @@ public partial class SidebarViewModel : ViewModelBase
 
         public SidebarViewModel()
         {
-            // 获取版本号
+            // 获取版本号（Revision 为日期式四位编号，补零显示）
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            _versionInfo = version != null ? $"v{version.Major}.{version.Minor}.{version.Build}.{version.Revision}" : "v1.0.0.0";
+            _versionInfo = version != null ? $"v{version.Major}.{version.Minor}.{version.Build}.{version.Revision:D4}" : "v1.0.0.0";
 
             // 初始化本地化文本
             _toggleText = IsExpanded ? 
@@ -258,7 +258,7 @@ public partial class SidebarViewModel : ViewModelBase
         ToggleText = value ? LocalizationService.Instance.GetString("Sidebar_Collapse") : LocalizationService.Instance.GetString("Sidebar_Expand");
         
         // 立即更新宽度，Avalonia 的 DoubleTransition 会处理动画
-        SidebarWidth = value ? 220 : 50;
+        SidebarWidth = value ? 280 : 50;
     }
     
     [RelayCommand]

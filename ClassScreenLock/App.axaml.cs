@@ -21,6 +21,7 @@ using Avalonia.Styling;
 using Avalonia.Platform;
 using System.Diagnostics;
 using System.Threading;
+using FluentAvalonia.UI.Controls;
 
 namespace ClassScreenLock;
 
@@ -106,13 +107,20 @@ public partial class App : Application
     private static readonly object _watchdogLock = new object();
     private static App? _appInstance;
     
-    private static int _watchdogConsecutiveExceptions = 0;
     private static int _watchdogConsecutiveNormal = 0;
     private static bool _watchdogIsAbnormalState = false;
     private static readonly object _watchdogStateLock = new object();
-    private static readonly TimeSpan _watchdogNormalInterval = TimeSpan.FromMilliseconds(375);
-    private static readonly TimeSpan _watchdogAbnormalInterval = TimeSpan.FromMilliseconds(125);
+
+    // 看门狗监测间隔：由安全中心"监测时长"挡位决定（正常 100ms-5000ms，异常联动）
+    private static TimeSpan _watchdogNormalInterval = TimeSpan.FromMilliseconds(1000);
+    private static TimeSpan _watchdogAbnormalInterval = TimeSpan.FromMilliseconds(500);
     private const int WATCHDOG_REQUIRED_NORMAL_COUNT = 10;
+
+    // 服务状态检查计数器：每 30 次监测检查一次 Windows 看门狗服务
+    //（挡位 4 下约 30 秒一次）。服务进程被强制结束且 SCM 三次恢复机会耗尽时，
+    // 由主程序周期性兜底拉起，避免服务长时间处于停止状态。
+    private const int WATCHDOG_SERVICE_CHECK_INTERVAL = 30;
+    private int _watchdogServiceCheckCounter = 0;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct POINT
@@ -322,11 +330,27 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // 确保 Data 目录存在，否则后续所有文件IO都失败
+            var dataDir = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data");
+            if (!Directory.Exists(dataDir))
+            {
+                Directory.CreateDirectory(dataDir);
+            }
+
+            // 开机诊断日志，写入临时目录确保一定能看到
+            var diagLog = Path.Combine(Path.GetTempPath(), "ClassScreenLock_startup.log");
+            File.AppendAllText(diagLog, $"[{DateTime.Now:HH:mm:ss}] 启动: BaseDir={Helpers.AppPathHelper.AppDirectory}\n");
+            File.AppendAllText(diagLog, $"[{DateTime.Now:HH:mm:ss}] Data目录={dataDir}, 存在={Directory.Exists(dataDir)}\n");
+
             var splashWindow = CreateAndShowSplashWindow();
             var isMinimized = CheckMinimizedMode(desktop);
 
             InitializeServices(splashWindow);
+
+            // 主窗口创建移到后台数据验证完成后，确保 RequiresInitialization 准确后再创建窗口。
+            // 之前提前创建会导致首次重启时短暂显示主界面而非初始化页面。
             StartBackgroundTasks(splashWindow, desktop, isMinimized);
+
             ApplyThemeSettings(splashWindow);
 
             DisableAvaloniaDataAnnotationValidation();
@@ -372,26 +396,8 @@ public partial class App : Application
         // 先停止锁屏状态文件检查，确保不会在恢复前触发
         LockScreenService.Instance.StopLockStateFileCheck();
 
-        // 执行数据恢复，确保在任何其他服务初始化之前完成
-        try
-        {
-            Task.Run(async () =>
-            {
-                try
-                {
-                    // 标记初始化正在进行，暂停文件监控同步
-                    DataProtectionService.Instance.SetInitializationInProgress(true);
-                    await DataProtectionService.Instance.VerifyAndRestoreDataAsync();
-                    DataProtectionService.Instance.SetInitializationInProgress(false);
-                }
-                catch (Exception ex)
-                {
-                    DataProtectionService.Instance.SetInitializationInProgress(false);
-                    LogService.Instance.Log("Error", "DataProtection", "App", $"数据恢复失败：{ex.Message}");
-                }
-            }).GetAwaiter().GetResult();
-        }
-        catch { }
+        // 数据完整性验证/恢复改为在后台初始化阶段异步执行（InitializeDataProtectionAsync），
+        // 不再在此同步阻塞主线程，避免启动卡顿。
 
         // 启动看门狗监测定时器
         StartWatchdogMonitor();
@@ -415,6 +421,10 @@ public partial class App : Application
         {
             try { UiAccessService.Instance.CheckAndElevate(); } catch { }
             try { ProcessProtector.EnableProtection(); } catch { }
+
+            // 每次启动都自动安装/修复并加固看门狗服务（即使初始化未完成也执行）
+            try { _ = WindowsServiceManager.InstallAndStartServicesAsync(); } catch { }
+
             try
             {
                 var existingWatchdogs = Process.GetProcessesByName("CSL.Watchdog");
@@ -444,12 +454,25 @@ public partial class App : Application
         LogService.Instance.Log("Info", "Startup", "App", "开始初始化后台服务...");
         splashWindow?.SetProgress(20, "正在准备通知系统…");
 
-        await InitializeNotificationServiceAsync();
-        await InitializeDataProtectionAsync(splashWindow);
-        await InitializeWindowProtectionAsync(splashWindow);
+        // 阻止提示 IPC 服务：尽早启动，确保劫持程序随时可通知主程序显示 WDAC 置顶弹窗
+        try { BlockNoticeService.Instance.Start(); } catch { }
+
+        // 三个独立初始化并行执行：通知系统 / 数据验证恢复 / 窗口保护
+        await Task.WhenAll(
+            InitializeNotificationServiceAsync(),
+            InitializeDataProtectionAsync(splashWindow),
+            InitializeWindowProtectionAsync(splashWindow)
+        );
 
         var requiresInit = InitializationService.Instance.RequiresInitialization;
         LogService.Instance.Log("Info", "Startup", "App", $"RequiresInitialization = {requiresInit}");
+
+        // 数据验证已完成，RequiresInitialization 现在准确。创建主窗口——
+        // MainWindowViewModel 构造时 CheckInitialization 会根据准确状态导航到正确页面。
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            CreateMainWindowImmediately(splashWindow, desktop, isMinimized);
+        });
 
         if (!requiresInit)
         {
@@ -458,7 +481,21 @@ public partial class App : Application
 
         ConfigureAutoStartAsync();
         await ApplyInterfaceSettingsAsync(splashWindow);
-        await CreateMainWindowAsync(splashWindow, desktop, isMinimized);
+
+        // 主窗口已提前创建显示。数据验证恢复完成后，在 UI 线程补做锁屏状态恢复与定时检查。
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            try
+            {
+                LockScreenService.Instance.RestoreLockStateOnStartup();
+                LockScreenService.Instance.StartLockStateFileCheck();
+                LogService.Instance.Log("Info", "Startup", "App", "后台初始化完成，锁屏状态已恢复");
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.Log("Error", "LockState", "App", $"锁屏状态恢复失败：{ex.Message}");
+            }
+        });
     }
 
     private async Task InitializeNotificationServiceAsync()
@@ -556,10 +593,21 @@ public partial class App : Application
 
     private async Task InitializeDataProtectionAsync(SplashWindow? splashWindow)
     {
-        splashWindow?.SetProgress(35, "正在更新数据备份…");
+        splashWindow?.SetProgress(35, "正在核验数据完整性…");
         try
         {
-            await DataProtectionService.Instance.CreateEncryptedBackupAsync();
+            // 标记初始化正在进行，暂停文件监控同步
+            DataProtectionService.Instance.SetInitializationInProgress(true);
+            try
+            {
+                // 验证并恢复数据（无备份则创建一次；有备份则校验，损坏/缺失时恢复）。
+                // 合并了原启动同步验证与 CreateEncryptedBackupAsync，启动全程只做一次。
+                await DataProtectionService.Instance.VerifyAndRestoreDataAsync();
+            }
+            finally
+            {
+                DataProtectionService.Instance.SetInitializationInProgress(false);
+            }
             DataProtectionService.Instance.EnsureAllFilesProtected();
         }
         catch (Exception ex)
@@ -587,33 +635,12 @@ public partial class App : Application
         LogService.Instance.Log("Info", "Startup", "App", "初始化已完成，启动后台服务...");
         splashWindow?.SetProgress(55, "正在启动后台服务…");
 
-        InstallWindowsServicesAsync().ContinueWith(_ =>
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                splashWindow?.SetProgress(65, "正在启动后台服务…");
-            });
-        });
-
         StartBackgroundServiceInstances();
         LoadOrganizationConfigurationAsync();
         ApplyNetworkRulesAsync();
 
         splashWindow?.SetProgress(80, "正在启动后台服务…");
         return Task.CompletedTask;
-    }
-
-    private async Task InstallWindowsServicesAsync()
-    {
-        try
-        {
-            await WindowsServiceManager.InstallAndStartServicesAsync();
-            LogService.Instance.Log("Info", "ServiceManager", "App", "Windows services installed and started");
-        }
-        catch (Exception ex)
-        {
-            LogService.Instance.Log("Error", "ServiceManager", "App", $"Failed to install/start services: {ex.Message}");
-        }
     }
 
     private void StartBackgroundServiceInstances()
@@ -624,7 +651,8 @@ public partial class App : Application
             Task.Run(() => ScreenshotService.Instance.Start()),
             Task.Run(() => WebcamService.Instance.Start()),
             Task.Run(() => AutomationService.Instance.Start()),
-            Task.Run(() => MutualProtectionService.Instance.Start())
+            Task.Run(() => MutualProtectionService.Instance.Start()),
+            Task.Run(() => UsbKeyAuthService.Instance.Start())
         };
 
         _ = Task.WhenAll(serviceTasks).ContinueWith(t =>
@@ -687,7 +715,6 @@ public partial class App : Application
                 AutoStartHelper.CheckAndRepairAutoStart();
                 AutoStartHelper.CheckAndRepairWatchdogAutoStart();
                 AutoStartHelper.StartPeriodicCheck();
-                LogService.Instance.Log("Info", "AutoStart", "App", "开机自启动已检查并修复完成（主程序 + 看门狗），定时检查已启动");
             }
             catch (Exception ex)
             {
@@ -705,7 +732,6 @@ public partial class App : Application
             {
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    ApplySavedFontSettings();
                     ApplySavedAccentColorSettings();
                 });
             }
@@ -717,44 +743,37 @@ public partial class App : Application
         return Task.CompletedTask;
     }
 
-    private async Task CreateMainWindowAsync(SplashWindow? splashWindow, IClassicDesktopStyleApplicationLifetime desktop, bool isMinimized)
+    private void CreateMainWindowImmediately(SplashWindow? splashWindow, IClassicDesktopStyleApplicationLifetime desktop, bool isMinimized)
     {
-        splashWindow?.SetProgress(100, "启动完成");
-        await Task.Delay(300);
-
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        // 同步立即构建主窗口：splash 停留期间完成 XAML 解析 + 首屏构建，
+        // splash 关闭瞬间主界面即可用。后台数据服务全程并行，不阻塞此过程。
+        try
         {
-            try
-            {
-                LogService.Instance.Log("Info", "MainWindow", "App", "开始创建主窗口...");
-                Console.WriteLine("[DEBUG] Creating MainWindow...");
+            LogService.Instance.Log("Info", "MainWindow", "App", "开始创建主窗口...");
+            Console.WriteLine("[DEBUG] Creating MainWindow...");
 
-                var mainWindow = CreateMainWindow();
-                desktop.MainWindow = mainWindow;
-                desktop.Exit += OnApplicationExit;
+            var mainWindow = CreateMainWindow();
+            desktop.MainWindow = mainWindow;
+            desktop.Exit += OnApplicationExit;
 
-                LogService.Instance.Log("Info", "MainWindow", "App", $"主窗口已创建，isMinimized = {isMinimized}");
-                Console.WriteLine($"[DEBUG] isMinimized = {isMinimized}");
+            LogService.Instance.Log("Info", "MainWindow", "App", $"主窗口已创建，isMinimized = {isMinimized}");
+            Console.WriteLine($"[DEBUG] isMinimized = {isMinimized}");
 
-                RippleEffectService.Instance.Attach(desktop.MainWindow);
-                IpcService.Instance.Start();
+            IpcService.Instance.Start();
 
-                ShowMainWindowByMode(mainWindow, isMinimized);
+            ShowMainWindowByMode(mainWindow, isMinimized);
 
-                splashWindow?.Close();
-                LogService.Instance.Log("Info", "MainWindow", "App", "启动完成，闪屏窗口已关闭");
+            splashWindow?.Close();
+            LogService.Instance.Log("Info", "MainWindow", "App", "启动完成，闪屏窗口已关闭");
 
-                // 先恢复锁屏状态，再启动定时检查
-                LockScreenService.Instance.RestoreLockStateOnStartup();
-                // 在锁屏状态恢复完成后，启动定时检查
-                LockScreenService.Instance.StartLockStateFileCheck();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[DEBUG] Error creating MainWindow: {ex}");
-                LogService.Instance.Log("Error", "MainWindow Creation", "App", ex.ToString());
-            }
-        }, Avalonia.Threading.DispatcherPriority.Background);
+            // 锁屏状态恢复与定时检查改由后台初始化完成后执行（见 InitializeBackgroundServicesAsync），
+            // 确保数据验证恢复完成后再恢复锁屏状态。
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DEBUG] Error creating MainWindow: {ex}");
+            LogService.Instance.Log("Error", "MainWindow Creation", "App", ex.ToString());
+        }
     }
 
     private MainWindow CreateMainWindow()
@@ -776,10 +795,12 @@ public partial class App : Application
     {
         if (isMinimized)
         {
-            mainWindow.Opacity = 0;
+            // 注意：不能使用 Opacity=0 配合 Show/Hide 的抖动来"无闪启动"。
+            // Opacity=0 会让 Win32 层把窗口创建为 WS_EX_LAYERED 透明窗口，
+            // DWM 会残留透明合成状态，之后从托盘恢复时标题栏/非客户区渲染为
+            // 透明（按钮仍可点击），必须点击窗口内部才会重新合成。
             mainWindow.Show();
             mainWindow.Hide();
-            mainWindow.Opacity = 1;
             LogService.Instance.Log("Info", "MainWindow", "App", "主窗口已隐藏（最小化模式）");
             Console.WriteLine("[DEBUG] MainWindow hidden (minimized mode)");
         }
@@ -1119,7 +1140,17 @@ public partial class App : Application
             return false;
 
         var verifyVm = new SecurityCenterViewModel();
-        var verifyWindow = CreateVerifyWindow(verifyVm);
+        var verifyContent = new VerifyWindow { DataContext = verifyVm };
+
+        // ContentDialog：与删除确认对话框同款遮罩/弹出动画/阴影
+        var dialog = new ContentDialog
+        {
+            Title = LocalizationService.Instance.GetString("Verify_Title"),
+            Content = verifyContent,
+            PrimaryButtonText = LocalizationService.Instance.GetString("Verify_VerifyAndExit"),
+            CloseButtonText = LocalizationService.Instance.GetString("UsbKeyLogin_Cancel"),
+            DefaultButton = ContentDialogButton.Primary
+        };
 
         bool verified = false;
         verifyVm.PropertyChanged += (s, args) =>
@@ -1127,11 +1158,21 @@ public partial class App : Application
             if (args.PropertyName == nameof(SecurityCenterViewModel.IsAuthenticated) && verifyVm.IsAuthenticated)
             {
                 verified = true;
-                verifyWindow.Close();
+                dialog.Hide();
             }
         };
 
-        await ShowVerifyWindowAsync(verifyWindow, desktop);
+        // 主按钮：先执行登录，验证通过（IsAuthenticated）才由上面的事件关闭对话框
+        dialog.PrimaryButtonClick += async (s, e) =>
+        {
+            e.Cancel = true;
+            await verifyVm.LoginCommand.ExecuteAsync(null);
+        };
+
+        if (desktop.MainWindow != null && desktop.MainWindow.IsVisible)
+            await dialog.ShowAsync(desktop.MainWindow);
+        else
+            await dialog.ShowAsync();
 
         if (!verified)
         {
@@ -1140,33 +1181,6 @@ public partial class App : Application
         }
 
         return CheckInitialPermission(required);
-    }
-
-    private VerifyWindow CreateVerifyWindow(SecurityCenterViewModel verifyVm)
-    {
-        var verifyWindow = new VerifyWindow { DataContext = verifyVm };
-
-        if (SettingsService.General.DarkMode)
-        {
-            verifyWindow.Classes.Add("dark");
-        }
-
-        return verifyWindow;
-    }
-
-    private async Task ShowVerifyWindowAsync(VerifyWindow verifyWindow, IClassicDesktopStyleApplicationLifetime desktop)
-    {
-        if (desktop.MainWindow != null && desktop.MainWindow.IsVisible)
-        {
-            await verifyWindow.ShowDialog(desktop.MainWindow);
-        }
-        else
-        {
-            verifyWindow.Show();
-            var tcs = new TaskCompletionSource<bool>();
-            verifyWindow.Closed += (s, e) => tcs.TrySetResult(true);
-            await tcs.Task;
-        }
     }
 
     private void CleanupTrayResources()
@@ -1317,9 +1331,34 @@ public partial class App : Application
         {
             if (_watchdogMonitorTimer != null)
                 return;
-            
+
+            // 应用安全中心配置的监测时长挡位
+            ApplyWatchdogMonitorTier(SettingsService.General.WatchdogMonitorTier);
+
             _watchdogMonitorTimer = new System.Threading.Timer(CheckWatchdog, null, _watchdogNormalInterval, _watchdogNormalInterval);
-            LogService.Instance.Log("Info", "WatchdogMonitor", "App", $"看门狗监测已启动（动态间隔：正常375毫秒，异常125毫秒）");
+        }
+    }
+
+    /// <summary>
+    /// 应用看门狗监测时长挡位（安全中心设置）。正常间隔 100ms-5000ms，异常间隔联动。
+    /// 定时器运行中会即时生效。
+    /// </summary>
+    public static void ApplyWatchdogMonitorTier(int tier)
+    {
+        var cfg = Models.WatchdogTier.GetByTier(tier);
+        _watchdogNormalInterval = TimeSpan.FromMilliseconds(cfg.NormalMs);
+        _watchdogAbnormalInterval = TimeSpan.FromMilliseconds(cfg.AbnormalMs);
+
+        // 定时器运行中则立即切换为新的正常间隔
+        if (_appInstance?._watchdogMonitorTimer != null)
+        {
+            lock (_watchdogLock)
+            {
+                if (!_watchdogIsAbnormalState)
+                {
+                    _appInstance._watchdogMonitorTimer.Change(_watchdogNormalInterval, _watchdogNormalInterval);
+                }
+            }
         }
     }
     
@@ -1329,7 +1368,6 @@ public partial class App : Application
         {
             _watchdogMonitorTimer?.Dispose();
             _watchdogMonitorTimer = null;
-            LogService.Instance.Log("Info", "WatchdogMonitor", "App", "看门狗监测已停止");
         }
     }
     
@@ -1349,7 +1387,9 @@ public partial class App : Application
                         if (!process.HasExited)
                         {
                             process.Kill();
-                            process.WaitForExit(2000);
+                            // 不等待进程完全退出（Kill 是强制的，等待最长 300ms），
+                            // 避免多个看门狗串行等待拖慢退出/重启
+                            process.WaitForExit(300);
                         }
                     }
                     catch (Exception ex)
@@ -1392,7 +1432,16 @@ public partial class App : Application
             hasException = true;
             LogService.Instance.Log("Error", "WatchdogMonitor", "App", $"检查看门狗失败: {ex.Message}");
         }
-        
+
+        // 周期性兜底检查 Windows 看门狗服务状态（每 30 次监测）：
+        // 服务进程被强制结束且 SCM 三次恢复机会耗尽时，在此快速拉起，
+        // 避免服务长时间停止导致 SYSTEM 级保护缺失。
+        if (++_watchdogServiceCheckCounter >= WATCHDOG_SERVICE_CHECK_INTERVAL)
+        {
+            _watchdogServiceCheckCounter = 0;
+            WindowsServiceManager.EnsureWatchdogServiceRunning();
+        }
+
         UpdateWatchdogCheckInterval(hasException);
     }
     
@@ -1401,37 +1450,28 @@ public partial class App : Application
         lock (_watchdogStateLock)
         {
             TimeSpan newInterval;
-            
+
             if (hasException)
             {
                 _watchdogIsAbnormalState = true;
-                _watchdogConsecutiveExceptions++;
                 _watchdogConsecutiveNormal = 0;
                 newInterval = _watchdogAbnormalInterval;
-                
-                if (_watchdogConsecutiveExceptions == 1)
-                {
-                    LogService.Instance.Log("Warning", "WatchdogMonitor", "App", $"异常状态检测！切换到125毫秒检查间隔。连续异常次数: {_watchdogConsecutiveExceptions}");
-                }
             }
             else
             {
                 if (_watchdogIsAbnormalState)
                 {
                     _watchdogConsecutiveNormal++;
-                    
+
                     if (_watchdogConsecutiveNormal >= WATCHDOG_REQUIRED_NORMAL_COUNT)
                     {
-                        _watchdogConsecutiveExceptions = 0;
                         _watchdogConsecutiveNormal = 0;
                         _watchdogIsAbnormalState = false;
                         newInterval = _watchdogNormalInterval;
-                        LogService.Instance.Log("Info", "WatchdogMonitor", "App", $"连续{_watchdogConsecutiveNormal}次正常检查后恢复正常状态。切换到375毫秒检查间隔。");
                     }
                     else
                     {
                         newInterval = _watchdogAbnormalInterval;
-                        LogService.Instance.Log("Debug", "WatchdogMonitor", "App", $"正常检查 {_watchdogConsecutiveNormal}/{WATCHDOG_REQUIRED_NORMAL_COUNT}。保持125毫秒间隔。");
                     }
                 }
                 else
@@ -1439,7 +1479,7 @@ public partial class App : Application
                     newInterval = _watchdogNormalInterval;
                 }
             }
-            
+
             _watchdogMonitorTimer?.Change(newInterval, newInterval);
         }
     }
@@ -1448,9 +1488,18 @@ public partial class App : Application
     {
         try
         {
+            // 先写退出标志：看门狗服务检测到有效退出标志后不会重启主程序/看门狗，
+            // 也不会在占坑实例退出后 1 秒内重新拉起它（见 WatchdogService.ResidentCallback）
+            Program.CreateExitFlag();
+
             StopWatchdogMonitor();
             
             TerminateWatchdogProcesses();
+
+            // 停止 SYSTEM 级看门狗服务，使其随主程序一起退出（不卸载，保留下次开机自启）。
+            // 时序保证：退出标志已写入 + 用户模式看门狗进程已终止 + 监测定时器已停止，
+            // 服务停止后不会被三方兜底逻辑重新拉起。
+            WindowsServiceManager.StopServiceForShutdown();
             
             // 禁用应用防护，确保重启后不会自动启用
             SettingsService.UpdateBlockage(s =>
@@ -1479,11 +1528,18 @@ public partial class App : Application
             // 停止应用阻止服务
             AppBlockingService.Instance.Stop();
 
+            // 通知 IFEO 重定向程序常驻占坑实例随主程序一起退出，
+            // 避免主程序退出后 CSL.IfeoRedirector.exe 仍驻留占用资源
+            RedirectorGuard.Shutdown();
+
             // 停止自动化服务
             AutomationService.Instance.Stop();
 
             // 停止互相守护服务
             MutualProtectionService.Instance.Stop();
+
+            // 停止USB密钥认证服务
+            UsbKeyAuthService.Instance.Stop();
 
             // 清理网络拦截规则（恢复 Hosts 和防火墙）
             NetworkBlockingService.Instance.Cleanup();
@@ -1498,6 +1554,12 @@ public partial class App : Application
             if (NotificationService.Instance is IDisposable notificationService)
             {
                 notificationService.Dispose();
+            }
+
+            // 释放日志服务（确保缓冲日志刷盘）
+            if (LogService.Instance is IDisposable logServiceDisposable)
+            {
+                logServiceDisposable.Dispose();
             }
 
             // 发送设备离线通知（后台执行，不阻塞退出）
@@ -1546,31 +1608,6 @@ public partial class App : Application
         catch (Exception ex)
         {
             System.Console.WriteLine($"应用语言设置失败: {ex.Message}");
-        }
-    }
-
-    private void ApplySavedFontSettings()
-    {
-        try
-        {
-            var settings = SettingsService.General;
-            var fontFamily = FontHelper.BuildGlobalFontFamily(settings.FontFamily);
-            var fontWeight = FontHelper.BuildGlobalFontWeight(settings.FontFamily);
-
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                Resources.Remove("GlobalFontFamily");
-                Resources.Add("GlobalFontFamily", fontFamily);
-                Resources["GlobalFontFamily"] = fontFamily;
-
-                Resources.Remove("GlobalFontWeight");
-                Resources.Add("GlobalFontWeight", fontWeight);
-                Resources["GlobalFontWeight"] = fontWeight;
-            });
-        }
-        catch (Exception ex)
-        {
-            System.Console.WriteLine($"应用字体设置失败: {ex.Message}");
         }
     }
 

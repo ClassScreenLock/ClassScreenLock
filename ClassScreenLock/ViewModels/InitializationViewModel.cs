@@ -74,19 +74,13 @@ public partial class InitializationViewModel : ViewModelBase
     private bool _darkMode;
 
     [ObservableProperty]
-    private string _accentColor = "#0078D4";
+    private string _accentColor = "#0067C0";
 
     [ObservableProperty]
     private string _language = "zh-CN";
 
     [ObservableProperty]
     private bool _useSystemAccentColor;
-
-    [ObservableProperty]
-    private double _fontSize;
-
-    [ObservableProperty]
-    private string _fontFamily = "Microsoft YaHei UI";
 
     [ObservableProperty]
     private bool _showNotifications;
@@ -100,8 +94,11 @@ public partial class InitializationViewModel : ViewModelBase
     [ObservableProperty]
     private bool _basicProtectionEnabled;
 
-    [ObservableProperty]
-    private string _blockedRulesText = string.Empty;
+    /// <summary>
+    /// 基础防护的可勾选子项集合。初始化引导中直接呈现与"应用管理"一致的规则项，
+    /// 取代原先"逗号分隔文字录入拦截规则"的粗糙方式。
+    /// </summary>
+    public ObservableCollection<ProtectionRule> ProtectionRules { get; } = new();
 
     [ObservableProperty]
     private bool _isAdminStepCompleted;
@@ -160,7 +157,7 @@ public partial class InitializationViewModel : ViewModelBase
     public List<string> LanguageOptions { get; } = new() { "zh-CN", "en-US" };
     public List<string> AccentColorOptions { get; } = new()
     {
-        "#0078D4", "#2B88D8", "#005A9E", "#D83B01", "#E81123",
+        "#0067C0", "#2B88D8", "#005A9E", "#D83B01", "#E81123",
         "#107C10", "#00B7C3", "#5C2D91", "#A4262C", "#FFB900"
     };
 
@@ -183,16 +180,7 @@ public partial class InitializationViewModel : ViewModelBase
     {
         _mainWindowViewModel = mainWindowViewModel;
         LoadInitialState();
-        _ = ShowWelcomeAnimationAsync();
-    }
-
-    private async Task ShowWelcomeAnimationAsync()
-    {
-        // 欢迎动画展示时间
-        await Task.Delay(2500);
-        WelcomeOpacity = 0;
-        await Task.Delay(500); // 等待淡出动画完成
-        IsWelcomeVisible = false;
+        // 欢迎动画生命周期由 InitializationView.axaml.cs 控制（滑入 → 停留 → 淡出）
     }
 
     partial void OnStepIndexChanged(int value)
@@ -219,12 +207,10 @@ public partial class InitializationViewModel : ViewModelBase
 
         var general = SettingsService.General;
         DarkMode = general.DarkMode;
-        AccentColor = string.IsNullOrWhiteSpace(general.AccentColor) ? "#0078D4" : general.AccentColor;
+        AccentColor = string.IsNullOrWhiteSpace(general.AccentColor) ? "#0067C0" : general.AccentColor;
         Language = string.IsNullOrWhiteSpace(general.Language) ? "zh-CN" : general.Language;
         UseSystemAccentColor = general.UseSystemAccentColor;
 
-        FontSize = general.FontSize;
-        FontFamily = general.FontFamily;
         ShowNotifications = general.ShowNotifications;
 
         var screenshot = SettingsService.Screenshot;
@@ -254,8 +240,16 @@ public partial class InitializationViewModel : ViewModelBase
         AppBlockingEnabled = blockage.IsAppBlockingEnabled;
         BasicProtectionEnabled = blockage.IsBasicProtectionEnabled;
         NetworkLockEnabled = blockage.IsNetworkLockEnabled;
-        // 显示时合并强类型规则：UI 仍以"逗号分隔的字符串"录入，向后兼容。
-        BlockedRulesText = string.Join(",", blockage.GetEffectiveBlockedRules()?.Select(r => r.Value) ?? new System.Collections.Generic.List<string>());
+        // 加载基础防护子项：以强类型规则填充可勾选列表，取代旧的逗号分隔文本录入。
+        // 初始化引导中子项默认全部关闭，由用户逐项勾选开启（每次勾选开启会弹风险确认），
+        // 避免"开启总开关就连带开启全部项且不弹确认"的问题。
+        ProtectionRules.Clear();
+        foreach (var rule in blockage.ProtectionRules ?? new System.Collections.Generic.List<ProtectionRule>())
+        {
+            rule.IsEnabled = false;
+            rule.HasConfirmedRiskWarning = false;
+            ProtectionRules.Add(rule);
+        }
         var rules = NetworkRuleService.LoadRules();
         NetworkDomainsText = string.Join(",", rules?.Where(r => r.IsEnabled && r.Type == "Domain").Select(r => r.Domain) ?? Enumerable.Empty<string>());
 
@@ -350,17 +344,6 @@ public partial class InitializationViewModel : ViewModelBase
         }
     }
 
-    partial void OnFontSizeChanged(double value)
-    {
-        SettingsService.UpdateGeneral(s => s.FontSize = value);
-        ApplyFontSizeChange(value);
-    }
-
-    partial void OnFontFamilyChanged(string value)
-    {
-        SettingsService.UpdateGeneral(s => s.FontFamily = value);
-    }
-
     partial void OnShowNotificationsChanged(bool value)
     {
         SettingsService.UpdateGeneral(s => s.ShowNotifications = value);
@@ -437,8 +420,6 @@ public partial class InitializationViewModel : ViewModelBase
                 }
                 SettingsService.UpdateGeneral(s =>
                 {
-                    s.FontSize = FontSize;
-                    s.FontFamily = FontFamily;
                     s.ShowNotifications = ShowNotifications;
                 });
                 InitializationService.Instance.MarkStepComplete(InitStep.UserPreferences);
@@ -549,6 +530,11 @@ public partial class InitializationViewModel : ViewModelBase
                 
                 NotificationService.Instance.ShowSuccess("初始化完成");
                 _mainWindowViewModel.IsInitialized = true;
+                
+                // 诊断日志
+                var diagLog = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ClassScreenLock_startup.log");
+                System.IO.File.AppendAllText(diagLog, $"[{DateTime.Now:HH:mm:ss}] 初始化完成，IsInitialized=true，即将NavigateToHome\n");
+                
                 // 初始化完成后再启动应用拦截服务，以免在引导阶段误拦截
                 AppBlockingService.Instance.Start();
                 ScreenshotService.Instance.Start();
@@ -600,16 +586,6 @@ public partial class InitializationViewModel : ViewModelBase
 
     private bool ValidateUserPreferences()
     {
-        if (FontSize < 10 || FontSize > 32)
-        {
-            NotificationService.Instance.ShowWarning("字体大小需在 10-32 之间");
-            return false;
-        }
-        if (string.IsNullOrWhiteSpace(FontFamily))
-        {
-            NotificationService.Instance.ShowWarning("请选择字体");
-            return false;
-        }
         return true;
     }
 
@@ -750,20 +726,49 @@ public partial class InitializationViewModel : ViewModelBase
 
     private void ApplyAppBlocking()
     {
-        var blocked = (BlockedRulesText ?? string.Empty)
-            .Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim())
-            .Where(s => s.Length > 0)
-            .ToList();
         SettingsService.UpdateBlockage(b =>
         {
             b.IsAppBlockingEnabled = AppBlockingEnabled;
             b.IsBasicProtectionEnabled = BasicProtectionEnabled;
-            // 关键修复 C：初始化的"逗号分隔"是粗糙录入，UI 只能产出进程名。
-            // 写入时仅生成 Name 类型规则；Path 类型通过应用管理界面添加。
-            // 旧的 BlockedRules 字段会保留到这里供 AppManagementViewModel 一次性迁移。
-            b.BlockedRules = blocked;
+            // 基础防护子项在引导页由用户逐项勾选，勾选开启时已弹过风险确认。
+            // 直接写回各规则的启用与已确认状态，保持与引导页一致。
+            b.ProtectionRules = ProtectionRules.ToList();
         });
+    }
+
+    /// <summary>
+    /// 初始化引导中勾选/取消某个基础防护子项。
+    /// 手动首次开启某项时弹风险确认（与主界面、危险操作二次确认同款 ContentDialog）：
+    /// 取消则回滚开关，确认则记录已确认标志；手动关闭时复位标志，之后再开启会重新弹。
+    /// </summary>
+    [RelayCommand]
+    private async Task ToggleProtectionRule(ProtectionRule rule)
+    {
+        if (rule == null) return;
+
+        if (rule.IsEnabled && !rule.HasConfirmedRiskWarning)
+        {
+            var ruleName = string.IsNullOrWhiteSpace(rule.Name) ? "该防护项" : rule.Name;
+            var confirmed = await NotificationService.Instance.ShowConfirmWithActionAsync(
+                $"警告：开启「{ruleName}」属于高风险操作。它会通过映像劫持与实时进程拦截禁用对应的系统管理工具，" +
+                "配置不当可能导致这些工具无法正常使用，甚至影响系统维护与恢复。\n\n" +
+                "开启会修改系统注册表，建议先点「导出注册表备份」备份后再继续。\n\n" +
+                $"确定要开启「{ruleName}」吗？",
+                "危险操作确认",
+                "导出注册表备份",
+                () => ClassScreenLock.Helpers.RegistryBackupHelper.ExportAsync());
+            if (!confirmed)
+            {
+                rule.IsEnabled = false;
+                return;
+            }
+            rule.HasConfirmedRiskWarning = true;
+        }
+        else if (!rule.IsEnabled)
+        {
+            // 手动关闭该项时复位已确认标志，下次再开启会重新弹风险确认。
+            rule.HasConfirmedRiskWarning = false;
+        }
     }
 
     private async Task ApplyNetworkBlockingAsync()
@@ -790,18 +795,6 @@ public partial class InitializationViewModel : ViewModelBase
         await NetworkBlockingService.Instance.ApplyRulesAsync("InitializationComplete");
     }
 
-    private void ApplyFontSizeChange(double fontSize)
-    {
-        if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            var mainWindow = desktop.MainWindow;
-            if (mainWindow != null)
-            {
-                mainWindow.FontSize = fontSize;
-            }
-        }
-    }
-
     private string GetSystemAccentColor()
     {
         try
@@ -816,7 +809,7 @@ public partial class InitializationViewModel : ViewModelBase
         catch
         {
         }
-        return "#0078D4";
+        return "#0067C0";
     }
 
     private void ApplyLanguageChange(string language)

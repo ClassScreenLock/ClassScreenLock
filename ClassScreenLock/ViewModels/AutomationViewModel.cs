@@ -116,6 +116,9 @@ public partial class AutomationViewModel : ViewModelBase
     [ObservableProperty]
     private string _processFilterText = string.Empty;
 
+    [ObservableProperty]
+    private string _searchText = string.Empty;
+
     public class ProcessSuggestion
     {
         public string Name { get; set; } = string.Empty;
@@ -264,7 +267,11 @@ public partial class AutomationViewModel : ViewModelBase
             {
                 // 先临时切回旧方案名以便 SaveSettings 能找到正确的路径
                 SettingsService.UpdateGeneral(g => g.CurrentAutomationScheme = _oldScheme);
-                SaveSettings();
+                // 临时解除抑制：否则 SaveSettings 会因 _suppressUpdate=true 直接返回，
+                // 旧方案的工作流修改永远不落盘（SaveSettings 内部会自行抑制重入）
+                _suppressUpdate = false;
+                try { SaveSettings(); }
+                finally { _suppressUpdate = true; }
             }
 
             // 2. 正式切换到新方案
@@ -297,7 +304,30 @@ public partial class AutomationViewModel : ViewModelBase
     private void UpdateVisibleWorkflows()
     {
         var scheme = CurrentAutomationScheme ?? "Default";
-        VisibleWorkflows = new ObservableCollection<AutomationWorkflow>(Workflows.Where(w => string.Equals(w.Scheme ?? "Default", scheme, StringComparison.OrdinalIgnoreCase)));
+        var search = (SearchText ?? string.Empty).Trim();
+        var filtered = Workflows.Where(w => string.Equals(w.Scheme ?? "Default", scheme, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            filtered = filtered.Where(w => (w.Name ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+        var sorted = filtered.OrderByDescending(w => w.IsEnabled).ThenBy(w => w.Name).ToList();
+
+        // 在原集合上增删，而不是替换整个集合引用。
+        // 替换引用会导致 ComboBox 重置 SelectedItem 为 null，引发选中项丢失竞态。
+        var prevSelected = SelectedWorkflow;
+        VisibleWorkflows.Clear();
+        foreach (var w in sorted)
+            VisibleWorkflows.Add(w);
+
+        // 恢复选中项：若之前的选中项仍在新列表中则保持，否则保持当前 SelectedWorkflow 值
+        if (prevSelected != null && !VisibleWorkflows.Contains(prevSelected))
+        {
+            // 之前的选中项已不在可见列表中，不做额外处理（调用方负责设置新选中项）
+        }
+        else if (prevSelected != null && VisibleWorkflows.Contains(prevSelected) && SelectedWorkflow != prevSelected)
+        {
+            SelectedWorkflow = prevSelected;
+        }
     }
 
     partial void OnEnableAutoShutdownChanged(bool value) => SaveSettings();
@@ -420,59 +450,72 @@ public partial class AutomationViewModel : ViewModelBase
     {
         if (_suppressUpdate) return;
 
-        SettingsService.UpdateGeneral(g =>
+        // 关键修复：保存全程抑制 GeneralChanged 触发的 LoadSettings 重载。
+        // 原顺序为先 UpdateGeneral（同步触发 GeneralChanged → OnGeneralChanged →
+        // LoadSettings）再 UpdateAutomation；重载发生在新值落盘之前，会把刚切换的
+        // IsAutomationEnabled 等属性覆盖回磁盘旧值，导致"关闭自动化"开关永远弹回开启。
+        var wasSuppressing = _suppressUpdate;
+        _suppressUpdate = true;
+        try
         {
-            g.AutomationSchemes = AvailableSchemes.ToList();
-            g.CurrentAutomationScheme = CurrentAutomationScheme ?? "Default";
-        });
+            SettingsService.UpdateGeneral(g =>
+            {
+                g.AutomationSchemes = AvailableSchemes.ToList();
+                g.CurrentAutomationScheme = CurrentAutomationScheme ?? "Default";
+            });
 
-        SettingsService.UpdateAutomation(s =>
+            SettingsService.UpdateAutomation(s =>
+            {
+                s.IsAutomationEnabled = IsAutomationEnabled;
+                s.Workflows = Workflows.ToList();
+                s.EnableAutoShutdown = EnableAutoShutdown;
+                if (AutoShutdownTime.HasValue)
+                {
+                    s.AutoShutdownTime = AutoShutdownTime.Value;
+                }
+                s.EnableAutoRestart = EnableAutoRestart;
+                if (AutoRestartTime.HasValue)
+                {
+                    s.AutoRestartTime = AutoRestartTime.Value;
+                }
+                s.EnableAutoLock = EnableAutoLock;
+                if (AutoLockTime.HasValue)
+                {
+                    s.AutoLockTime = AutoLockTime.Value;
+                }
+                s.EnableAutoNetworkLockOn = EnableAutoNetworkLockOn;
+                if (AutoNetworkLockOnTime.HasValue)
+                {
+                    s.AutoNetworkLockOnTime = AutoNetworkLockOnTime.Value;
+                }
+                s.EnableAutoNetworkLockOff = EnableAutoNetworkLockOff;
+                if (AutoNetworkLockOffTime.HasValue)
+                {
+                    s.AutoNetworkLockOffTime = AutoNetworkLockOffTime.Value;
+                }
+                s.EnableAutoAppBlockOn = EnableAutoAppBlockOn;
+                if (AutoAppBlockOnTime.HasValue)
+                {
+                    s.AutoAppBlockOnTime = AutoAppBlockOnTime.Value;
+                }
+                s.EnableAutoAppBlockOff = EnableAutoAppBlockOff;
+                if (AutoAppBlockOffTime.HasValue)
+                {
+                    s.AutoAppBlockOffTime = AutoAppBlockOffTime.Value;
+                }
+                s.EnableAutoWebcamCapture = EnableAutoWebcamCapture;
+                if (AutoWebcamCaptureTime.HasValue)
+                {
+                    s.AutoWebcamCaptureTime = AutoWebcamCaptureTime.Value;
+                }
+                s.Schemes = AvailableSchemes.ToList();
+                s.CurrentScheme = CurrentAutomationScheme ?? "Default";
+            });
+        }
+        finally
         {
-            s.IsAutomationEnabled = IsAutomationEnabled;
-            s.Workflows = Workflows.ToList();
-            s.EnableAutoShutdown = EnableAutoShutdown;
-            if (AutoShutdownTime.HasValue)
-            {
-                s.AutoShutdownTime = AutoShutdownTime.Value;
-            }
-            s.EnableAutoRestart = EnableAutoRestart;
-            if (AutoRestartTime.HasValue)
-            {
-                s.AutoRestartTime = AutoRestartTime.Value;
-            }
-            s.EnableAutoLock = EnableAutoLock;
-            if (AutoLockTime.HasValue)
-            {
-                s.AutoLockTime = AutoLockTime.Value;
-            }
-            s.EnableAutoNetworkLockOn = EnableAutoNetworkLockOn;
-            if (AutoNetworkLockOnTime.HasValue)
-            {
-                s.AutoNetworkLockOnTime = AutoNetworkLockOnTime.Value;
-            }
-            s.EnableAutoNetworkLockOff = EnableAutoNetworkLockOff;
-            if (AutoNetworkLockOffTime.HasValue)
-            {
-                s.AutoNetworkLockOffTime = AutoNetworkLockOffTime.Value;
-            }
-            s.EnableAutoAppBlockOn = EnableAutoAppBlockOn;
-            if (AutoAppBlockOnTime.HasValue)
-            {
-                s.AutoAppBlockOnTime = AutoAppBlockOnTime.Value;
-            }
-            s.EnableAutoAppBlockOff = EnableAutoAppBlockOff;
-            if (AutoAppBlockOffTime.HasValue)
-            {
-                s.AutoAppBlockOffTime = AutoAppBlockOffTime.Value;
-            }
-            s.EnableAutoWebcamCapture = EnableAutoWebcamCapture;
-            if (AutoWebcamCaptureTime.HasValue)
-            {
-                s.AutoWebcamCaptureTime = AutoWebcamCaptureTime.Value;
-            }
-            s.Schemes = AvailableSchemes.ToList();
-            s.CurrentScheme = CurrentAutomationScheme ?? "Default";
-        });
+            _suppressUpdate = wasSuppressing;
+        }
     }
 
     [RelayCommand]
@@ -674,6 +717,8 @@ public partial class AutomationViewModel : ViewModelBase
     {
         ApplyProcessFilter();
     }
+
+    partial void OnSearchTextChanged(string value) => UpdateVisibleWorkflows();
 
     [RelayCommand]
     private void RefreshProcesses()
@@ -1167,6 +1212,39 @@ public partial class AutomationViewModel : ViewModelBase
         Workflows.Add(copy);
         UpdateVisibleWorkflows();
         SelectedWorkflow = copy;
+        SaveSettings();
+    }
+
+    [RelayCommand]
+    private void CreateFromTemplate(string templateName)
+    {
+        var wf = new AutomationWorkflow { Scheme = CurrentAutomationScheme };
+        switch (templateName)
+        {
+            case "ClassStart":
+                wf.Name = "上课锁屏";
+                wf.Triggers.Add(new AutomationTrigger { Type = "DailyTime", Time = new TimeSpan(8, 0, 0) });
+                wf.Actions.Add(new AutomationAction { Type = "LockFull" });
+                break;
+            case "ScheduledShutdown":
+                wf.Name = "定时关机";
+                wf.Triggers.Add(new AutomationTrigger { Type = "DailyTime", Time = new TimeSpan(17, 30, 0) });
+                wf.Actions.Add(new AutomationAction { Type = "Shutdown" });
+                break;
+            case "ProcessGuard":
+                wf.Name = "进程守护";
+                wf.Triggers.Add(new AutomationTrigger { Type = "ProcessNotRunning", ProcessName = "classisland" });
+                wf.Actions.Add(new AutomationAction { Type = "LockFull" });
+                break;
+            case "NetworkShot":
+                wf.Name = "断网截图";
+                wf.Triggers.Add(new AutomationTrigger { Type = "NetworkUnavailable" });
+                wf.Actions.Add(new AutomationAction { Type = "ScreenShot" });
+                break;
+        }
+        Workflows.Add(wf);
+        UpdateVisibleWorkflows();
+        SelectedWorkflow = wf;
         SaveSettings();
     }
 

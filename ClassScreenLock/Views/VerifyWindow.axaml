@@ -1,73 +1,61 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
-        xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
-        xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
-        mc:Ignorable="d" Width="480" Height="550"
-        x:Class="ClassScreenLock.Views.VerifyWindow"
-        x:DataType="vm:SecurityCenterViewModel"
-        Title="身份验证"
-        WindowStartupLocation="CenterScreen"
-        CanResize="False"
-        Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ClassScreenLock.ViewModels"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             xmlns:Converters="clr-namespace:ClassScreenLock.Converters"
+             mc:Ignorable="d"
+             x:Class="ClassScreenLock.Views.VerifyWindow"
+             x:DataType="vm:SecurityCenterViewModel">
 
-    <Border Padding="30">
-        <StackPanel Spacing="20">
-            <StackPanel Spacing="10" HorizontalAlignment="Center">
-                <fluent:SymbolIcon Symbol="ShieldPerson" Width="48" Height="48" Foreground="{DynamicResource SystemAccentColor}"/>
-                <TextBlock Text="身份验证" FontSize="26" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                <TextBlock Text="此操作需要管理员权限" Opacity="0.6" HorizontalAlignment="Center"/>
+    <!-- ContentDialog 内容：UAC 风格验证表单（居中图标 + 左对齐字段）。
+         遮罩、弹出动画、阴影由 ContentDialog 提供；操作按钮由 ContentDialog 的 Primary/Close 承担。 -->
+    <StackPanel Spacing="16" Width="400">
+        <StackPanel Spacing="10" HorizontalAlignment="Center">
+            <Border Width="56" Height="56" CornerRadius="8"
+                    Background="{DynamicResource SystemAccentColorLightBrush}"
+                    HorizontalAlignment="Center">
+                <fluent:SymbolIcon Symbol="ShieldPerson" Width="28" Height="28"
+                                   Foreground="{DynamicResource SystemAccentColor}"/>
+            </Border>
+            <TextBlock Text="{DynamicResource Verify_RequireAdminDesc}"
+                       Classes="caption" Opacity="0.7" HorizontalAlignment="Center" TextAlignment="Center"/>
+        </StackPanel>
+
+        <StackPanel Spacing="14">
+            <StackPanel Spacing="6">
+                <TextBlock Text="{DynamicResource SecurityCenter_Username}" Classes="caption" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Username}" Watermark="{DynamicResource SecurityCenter_EnterUsername}"/>
             </StackPanel>
 
-            <StackPanel Spacing="15">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="用户名" FontWeight="SemiBold" Opacity="0.9"/>
-                    <TextBox Text="{Binding Username}" Watermark="输入用户名" Height="40"/>
-                </StackPanel>
-
-                <StackPanel Spacing="8" IsVisible="{Binding IsLoginPasswordVisible}">
-                    <TextBlock Text="密码" FontWeight="SemiBold" Opacity="0.9"/>
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBox Text="{Binding LoginPassword}" 
-                                 PasswordChar="{Binding PasswordChar}" 
-                                 Watermark="输入密码" 
-                                 Height="40"/>
-                        <Button Grid.Column="1" Command="{Binding TogglePasswordVisibilityCommand}"
-                                Background="Transparent" BorderThickness="0" Width="36" Height="36">
-                            <fluent:SymbolIcon Symbol="{Binding PasswordIcon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}" Width="20" Height="20" Opacity="0.5"/>
-                        </Button>
-                    </Grid>
-                </StackPanel>
-
-                <StackPanel Spacing="8" IsVisible="{Binding IsLoginTwoFactorVisible}">
-                    <TextBlock Text="双重验证码" FontWeight="SemiBold" Opacity="0.9"/>
-                    <TextBox Text="{Binding LoginTwoFactorCode}" Watermark="输入 6 位验证码" Height="40" MaxLength="6"/>
-                </StackPanel>
+            <StackPanel Spacing="6" IsVisible="{Binding IsLoginPasswordVisible}">
+                <TextBlock Text="{DynamicResource SecurityCenter_Password}" Classes="caption" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Text="{Binding LoginPassword}" 
+                             PasswordChar="{Binding PasswordChar}" 
+                             Watermark="{DynamicResource SecurityCenter_EnterPassword}" 
+                             Padding="10,0,35,0"/>
+                    <Button Grid.Column="1" Command="{Binding TogglePasswordVisibilityCommand}"
+                            Background="Transparent" BorderThickness="0" Width="32" Height="32"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,2,0">
+                        <fluent:SymbolIcon Symbol="{Binding PasswordIcon, Converter={x:Static Converters:FontAwesomeToFluentIconConverter.Instance}}" 
+                                            Width="14" Height="14" 
+                                            Foreground="{DynamicResource F2TextSecondaryBrush}" Opacity="0.6"/>
+                    </Button>
+                </Grid>
             </StackPanel>
 
-            <TextBlock Text="{Binding LoginMessage}" Foreground="Red" TextWrapping="Wrap" HorizontalAlignment="Center" Margin="0,8,0,0"/>
-
-            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" Margin="0,16,0,0">
-                <Button Content="验证并退出" 
-                        Command="{Binding LoginCommand}" 
-                        Classes="accent" 
-                        Width="160"
-                        Height="45"
-                        VerticalContentAlignment="Center"
-                        HorizontalContentAlignment="Center"/>
-                
-                <Button Content="取消" 
-                        Click="CancelButton_OnClick"
-                        Width="120"
-                        Height="45"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                        VerticalContentAlignment="Center"
-                        HorizontalContentAlignment="Center"/>
+            <StackPanel Spacing="6" IsVisible="{Binding IsLoginTwoFactorVisible}">
+                <TextBlock Text="{DynamicResource SecurityCenter_TwoFactorCode}" Classes="caption" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding LoginTwoFactorCode}" 
+                         Watermark="{DynamicResource SecurityCenter_EnterTwoFactorCode}" 
+                         MaxLength="6"/>
             </StackPanel>
         </StackPanel>
-    </Border>
-</Window>
+
+        <TextBlock Text="{Binding LoginMessage}" Foreground="{DynamicResource F2SystemCriticalBrush}" 
+                   TextWrapping="Wrap" HorizontalAlignment="Center" Classes="caption"
+                   IsVisible="{Binding LoginMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+    </StackPanel>
+</UserControl>

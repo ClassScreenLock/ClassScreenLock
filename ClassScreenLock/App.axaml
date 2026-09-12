@@ -15,39 +15,33 @@
     </Application.DataTemplates>
   
     <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Fluent 2 语义 token（来自 Windows UI Kit），随主题自动切换 -->
+                <ResourceInclude Source="avares://ClassScreenLock/Styles/Fluent2Tokens.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
         <converters:BooleanToStatusTextConverter x:Key="BooleanToStatusTextConverter"/>
         <converters:BooleanToStatusBrushConverter x:Key="BooleanToStatusBrushConverter"/>
         <converters:ServiceStatusBrushConverter x:Key="ServiceStatusBrushConverter"/>
         <converters:SuccessStatusBrushConverter x:Key="SuccessStatusBrushConverter"/>
         <converters:AccountTypeToStringConverter x:Key="AccountTypeToStringConverter"/>
         <converters:StringEqualsConverter x:Key="StringEqualsConverter"/>
+        <converters:IntEqualsConverter x:Key="IntEqualsConverter"/>
         <converters:IsNullConverter x:Key="IsNullConverter"/>
         <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
+        <converters:BoolToInverseBoolConverter x:Key="BoolToInverseBoolConverter"/>
         <converters:FontAwesomeToFluentIconConverter x:Key="FontAwesomeToFluentIconConverter"/>
-        <!-- 鸿蒙字体定义 -->
-        <FontFamily x:Key="HarmonyOSFont">avares://ClassScreenLock/Assets/Fonts#HarmonyOS Sans SC</FontFamily>
-        
-        <!-- 全局字体族资源，初始值 -->
-        <FontFamily x:Key="GlobalFontFamily">Microsoft YaHei UI, Microsoft YaHei, Segoe UI, SimSun, sans-serif</FontFamily>
+        <converters:StringFormatConverter x:Key="StringFormatConverter"/>
+        <!-- 全局字体族资源：优先使用随程序打包的 HarmonyOS Sans SC（Assets/Fonts），
+             中英文统一由该字体渲染，缺字时回退到 Fluent 官方字体链与系统中文字体。 -->
+        <FontFamily x:Key="GlobalFontFamily">avares://ClassScreenLock/Assets/Fonts#HarmonyOS Sans SC, Segoe UI Variable, Segoe UI, Microsoft YaHei UI, Microsoft YaHei</FontFamily>
+
+        <!-- 细体字体族资源：HarmonyOS Sans SC Light，用于需要更轻字重的大标题等场景 -->
+        <FontFamily x:Key="GlobalFontFamilyLight">avares://ClassScreenLock/Assets/Fonts#HarmonyOS Sans SC Light, Segoe UI Variable, Segoe UI, Microsoft YaHei UI Light, Microsoft YaHei</FontFamily>
 
         <FontWeight x:Key="GlobalFontWeight">Normal</FontWeight>
-
-        <!-- ========== 快速操作编辑器主题色（深浅色） ========== -->
-        <!-- 浅色资源（默认） -->
-        <SolidColorBrush x:Key="QAE_TitleForegroundBrush" Color="#1A1A1A"/>
-        <SolidColorBrush x:Key="QAE_SubtitleForegroundBrush" Color="#505050"/>
-        <SolidColorBrush x:Key="QAE_ShellBorderBrush" Color="#22000000"/>
-        <SolidColorBrush x:Key="QAE_DividerBrush" Color="#15000000"/>
-        <SolidColorBrush x:Key="QAE_AccentBrush" Color="#0078D4"/>
-        <SolidColorBrush x:Key="QAE_DangerBrush" Color="#E81123"/>
-
-        <!-- ========== 系统托盘菜单主题色 ========== -->
-        <SolidColorBrush x:Key="QAE_MenuShellBrush" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="QAE_MenuShellBorderBrush" Color="#35000000"/>
-        <SolidColorBrush x:Key="QAE_MenuTextBrush" Color="#1A1A1A"/>
-        <SolidColorBrush x:Key="QAE_MenuHoverBrush" Color="#15000000"/>
-        <SolidColorBrush x:Key="QAE_MenuPressedBrush" Color="#25000000"/>
-        <SolidColorBrush x:Key="QAE_MenuDividerBrush" Color="#15000000"/>
+        </ResourceDictionary>
     </Application.Resources>
 
     <Application.Styles>
@@ -143,26 +137,6 @@
         </Style>
         <Style Selector="Window.dark NumericUpDown">
             <Setter Property="Foreground" Value="#FFFFFF"/>
-        </Style>
-
-        <!-- ========== 快速操作编辑器：深色资源覆盖 ========== -->
-        <Style Selector="Window.dark">
-            <Style.Resources>
-                <SolidColorBrush x:Key="QAE_TitleForegroundBrush" Color="#FFFFFF"/>
-                <SolidColorBrush x:Key="QAE_SubtitleForegroundBrush" Color="#B0B0B0"/>
-                <SolidColorBrush x:Key="QAE_ShellBorderBrush" Color="#35FFFFFF"/>
-                <SolidColorBrush x:Key="QAE_DividerBrush" Color="#25FFFFFF"/>
-                <SolidColorBrush x:Key="QAE_AccentBrush" Color="#4DA6FF"/>
-                <SolidColorBrush x:Key="QAE_DangerBrush" Color="#FF6B68"/>
-
-                <!-- 系统托盘菜单深色主题 -->
-                <SolidColorBrush x:Key="QAE_MenuShellBrush" Color="#2D2D30"/>
-                <SolidColorBrush x:Key="QAE_MenuShellBorderBrush" Color="#50FFFFFF"/>
-                <SolidColorBrush x:Key="QAE_MenuTextBrush" Color="#FFFFFF"/>
-                <SolidColorBrush x:Key="QAE_MenuHoverBrush" Color="#25FFFFFF"/>
-                <SolidColorBrush x:Key="QAE_MenuPressedBrush" Color="#40FFFFFF"/>
-                <SolidColorBrush x:Key="QAE_MenuDividerBrush" Color="#25FFFFFF"/>
-            </Style.Resources>
         </Style>
     </Application.Styles>
 </Application>

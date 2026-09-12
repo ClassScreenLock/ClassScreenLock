@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:ClassScreenLock.Views"
+             xmlns:fluent="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             mc:Ignorable="d"
+             x:Class="ClassScreenLock.Views.UsbKeyLoginDialog">
+
+    <UserControl.Styles>
+        <!-- 设备列表项：Fluent 2 卡片 + hover 交互（Dialog body 选择项） -->
+        <Style Selector="Border.usb-drive-item">
+            <Setter Property="Background" Value="{DynamicResource F2CardBackgroundDefaultBrush}"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource F2RadiusCard}"/>
+            <Setter Property="Padding" Value="14,12"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.usb-drive-item:pointerover">
+            <Setter Property="Background" Value="{DynamicResource F2SubtleSecondaryBrush}"/>
+        </Style>
+        <Style Selector="Border.usb-drive-item:pointerover fluent|SymbolIcon">
+            <Setter Property="Foreground" Value="{DynamicResource F2AccentTextPrimaryBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <!-- ContentDialog 内容：UAC 风格（居中图标 + 确认问题 + 左对齐设备列表）。
+         遮罩、弹出动画、阴影全部由 ContentDialog 提供，与删除确认对话框完全一致。 -->
+    <StackPanel Spacing="16" Width="400">
+        <StackPanel Spacing="10" HorizontalAlignment="Center">
+            <Border Width="56" Height="56" CornerRadius="8"
+                    Background="{DynamicResource SystemAccentColorLightBrush}"
+                    HorizontalAlignment="Center">
+                <fluent:SymbolIcon Symbol="UsbPlug" Width="28" Height="28"
+                                   Foreground="{DynamicResource SystemAccentColor}"/>
+            </Border>
+            <TextBlock Text="{DynamicResource UsbKeyLogin_ConfirmTitle}"
+                       FontSize="{DynamicResource F2FontSizeSubtitle}" FontWeight="SemiBold"
+                       HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+            <TextBlock Text="{DynamicResource UsbKeyLogin_SelectDriveDesc}"
+                       Classes="caption" Opacity="0.7" HorizontalAlignment="Center" TextAlignment="Center"/>
+        </StackPanel>
+
+        <ScrollViewer MaxHeight="200">
+            <ItemsControl x:Name="UsbDriveList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="views:UsbDriveItem">
+                        <Border Classes="usb-drive-item"
+                                PointerPressed="OnDriveSelected">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <fluent:SymbolIcon Symbol="UsbPlug" Width="20" Height="20"
+                                                   Foreground="{DynamicResource SystemAccentColor}"
+                                                   VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Margin="12,0" VerticalAlignment="Center"
+                                           Text="{Binding Display}" FontSize="{DynamicResource F2FontSizeBody}"/>
+                                <fluent:SymbolIcon Grid.Column="2" Symbol="ChevronRight"
+                                                   Width="16" Height="16" Opacity="0.3"
+                                                   VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock x:Name="MessageText" Foreground="{DynamicResource F2SystemCriticalBrush}"
+                   TextWrapping="Wrap" HorizontalAlignment="Center" Classes="caption"
+                   IsVisible="False"/>
+    </StackPanel>
+</UserControl>

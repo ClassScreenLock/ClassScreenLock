@@ -8,7 +8,9 @@ using ClassScreenLock.ViewModels;
 using ClassScreenLock.Services;
 using ClassScreenLock.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace ClassScreenLock.ViewModels;
 
@@ -86,6 +88,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isMaximized;
     
     private Window? _mainWindow;
+
+    // View 缓存：避免每次切页重新 new View（XAML 解析+可视化树构建+布局），
+    // ViewModel 已是单例，View 同理缓存复用，切页只替换 ContentControl 内容，不做重建。
+    private readonly Dictionary<Type, UserControl> _viewCache = new();
     
     public MainWindowViewModel()
     {
@@ -112,11 +118,37 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // 检查初始化状态
         CheckInitialization();
+
+        // 预构建常用页面 View 实例（Home/Schedule/Settings 高频页）。
+        // 与主窗口构建在同一启动阶段完成，splash 关闭后所有高频页点击即用。
+        PrewarmViews();
+    }
+
+    /// <summary>
+    /// 预构建高频页面 View 实例，避免切页时首次 XAML 解析+布局的卡顿。
+    /// 其余页面保持首次点击时构建（点击即缓存）。
+    /// </summary>
+    private void PrewarmViews()
+    {
+        try
+        {
+            GetOrCreateView(() => new HomeView(), HomeViewModel);
+            GetOrCreateView(() => new ScheduleView(), ScheduleViewModel);
+            GetOrCreateView(() => new SettingsView(), SettingsViewModel);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"预构建页面失败: {ex.Message}");
+        }
     }
 
     private void CheckInitialization()
     {
         var required = InitializationService.Instance.RequiresInitialization;
+        // 诊断日志
+        var diagLog = Path.Combine(Path.GetTempPath(), "ClassScreenLock_startup.log");
+        File.AppendAllText(diagLog, $"[{DateTime.Now:HH:mm:ss}] CheckInitialization: RequiresInit={required}, IsInitialized={!required}\n");
+        
         IsInitialized = !required;
         if (required)
         {
@@ -126,6 +158,21 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             NavigateToHome();
         }
+    }
+
+    private TView GetOrCreateView<TView>(Func<TView> factory, object? viewModel = null)
+        where TView : UserControl
+    {
+        var type = typeof(TView);
+        if (_viewCache.TryGetValue(type, out var cached))
+        {
+            if (viewModel != null) cached.DataContext = viewModel;
+            return (TView)cached;
+        }
+        var view = factory();
+        if (viewModel != null) view.DataContext = viewModel;
+        _viewCache[type] = view;
+        return view;
     }
 
     public void NavigateToInitialization()
@@ -141,7 +188,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnViewChanging();
         HomeViewModel.RefreshStatus();
-        CurrentView = new HomeView { DataContext = HomeViewModel };
+        CurrentView = GetOrCreateView(() => new HomeView(), HomeViewModel);
         Status = "主界面";
         IsOnboarding = false;
     }
@@ -173,24 +220,47 @@ public partial class MainWindowViewModel : ViewModelBase
         Status = CurrentTheme == ThemeVariant.Light ? "已切换到浅色主题" : "已切换到深色主题";
     }
 
+    // 标记应用管理页是否为当前活动视图。窗口"关闭即隐藏"再显示时，
+    // 据此判断是否需要恢复应用管理页的后台刷新定时器。
+    private bool _isAppManagementActive;
+
     private void OnViewChanging()
     {
         // 停止所有具有后台刷新任务的视图模型的定时器
         AppManagementViewModel?.StopRefreshTimer();
+        _isAppManagementActive = false;
         // 如果有其他视图模型也需要停止，可以在这里添加
+    }
+
+    /// <summary>
+    /// 窗口显示/隐藏时调用。由于关闭按钮走的是"隐藏而非关闭"路径、不经过导航流程，
+    /// 需在此显式暂停后台刷新定时器，避免窗口隐藏后应用管理页仍持续全量枚举进程占用资源；
+    /// 窗口重新显示且仍停留在应用管理页时再恢复刷新。
+    /// </summary>
+    public void OnWindowVisibilityChanged(bool isVisible)
+    {
+        if (!isVisible)
+        {
+            AppManagementViewModel?.StopRefreshTimer();
+        }
+        else if (_isAppManagementActive)
+        {
+            AppManagementViewModel?.RefreshAppsCommand.Execute(null);
+            AppManagementViewModel?.StartRefreshTimer();
+        }
     }
 
     public void NavigateToAbout()
     {
         OnViewChanging();
-        CurrentView = new About();
+        CurrentView = GetOrCreateView(() => new About());
         Status = "关于页面";
     }
 
     public void NavigateToSchedule()
     {
         OnViewChanging();
-        CurrentView = new ScheduleView { DataContext = ScheduleViewModel };
+        CurrentView = GetOrCreateView(() => new ScheduleView(), ScheduleViewModel);
         Status = "时间计划";
         IsOnboarding = false;
     }
@@ -200,7 +270,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public void NavigateToSettings()
     {
         OnViewChanging();
-        CurrentView = new SettingsView { DataContext = SettingsViewModel };
+        CurrentView = GetOrCreateView(() => new SettingsView(), SettingsViewModel);
         Status = "系统设置";
         IsOnboarding = false;
     }
@@ -209,9 +279,10 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         LogService.Instance.Log("Navigation", "AppManagement", "MainWindowViewModel", "正在跳转到应用管理页面");
         OnViewChanging();
+        _isAppManagementActive = true;
         AppManagementViewModel.RefreshAppsCommand.Execute(null);
         AppManagementViewModel.StartRefreshTimer();
-        CurrentView = new AppManagementView { DataContext = AppManagementViewModel };
+        CurrentView = GetOrCreateView(() => new AppManagementView(), AppManagementViewModel);
         Status = "应用管理";
         IsOnboarding = false;
     }
@@ -219,7 +290,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public void NavigateToNetworkInterception()
     {
         OnViewChanging();
-        CurrentView = new NetworkManagementView { DataContext = NetworkManagementViewModel };
+        CurrentView = GetOrCreateView(() => new NetworkManagementView(), NetworkManagementViewModel);
         Status = "网络拦截";
         IsOnboarding = false;
     }
@@ -227,7 +298,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public void NavigateToSecurityLogs()
     {
         OnViewChanging();
-        CurrentView = new LogManagementView { DataContext = LogManagementViewModel };
+        CurrentView = GetOrCreateView(() => new LogManagementView(), LogManagementViewModel);
         LogManagementViewModel.RefreshLogsCommand.Execute(null);
         Status = "安全日志";
         IsOnboarding = false;
@@ -236,7 +307,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public void NavigateToSecurityCenter()
     {
         OnViewChanging();
-        CurrentView = new SecurityCenterView { DataContext = SecurityCenterViewModel };
+        CurrentView = GetOrCreateView(() => new SecurityCenterView(), SecurityCenterViewModel);
         Status = "安全中心";
         IsOnboarding = false;
     }
@@ -245,7 +316,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnViewChanging();
         ScreenshotHistoryViewModel.LoadScreenshotsCommand.Execute(null);
-        CurrentView = new ScreenshotHistoryView { DataContext = ScreenshotHistoryViewModel };
+        CurrentView = GetOrCreateView(() => new ScreenshotHistoryView(), ScreenshotHistoryViewModel);
         Status = "屏幕记录";
         IsOnboarding = false;
     }
@@ -254,7 +325,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnViewChanging();
         WebcamHistoryViewModel.LoadScreenshotsCommand.Execute(null);
-        CurrentView = new WebcamHistoryView { DataContext = WebcamHistoryViewModel };
+        CurrentView = GetOrCreateView(() => new WebcamHistoryView(), WebcamHistoryViewModel);
         Status = "摄像头记录";
         IsOnboarding = false;
     }
@@ -262,7 +333,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public void NavigateToAutomation()
     {
         OnViewChanging();
-        CurrentView = new AutomationView { DataContext = AutomationViewModel };
+        CurrentView = GetOrCreateView(() => new AutomationView(), AutomationViewModel);
         Status = "自动化扩展";
         IsOnboarding = false;
     }
@@ -270,8 +341,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public void NavigateToOrganization()
     {
         OnViewChanging();
-        // 使用已初始化的 OrganizationViewModel 实例，避免状态丢失
-        CurrentView = new OrganizationView { DataContext = OrganizationViewModel };
+        CurrentView = GetOrCreateView(() => new OrganizationView(), OrganizationViewModel);
         Status = "组织管理";
         IsOnboarding = false;
     }
@@ -373,7 +443,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+            var path = Path.Combine(Helpers.AppPathHelper.AppDirectory, "Data");
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = path,
@@ -531,7 +601,8 @@ public partial class MainWindowViewModel : ViewModelBase
             
             _disposed = true;
         }
-        
+
+        _viewCache.Clear();
         base.Dispose(disposing);
     }
 }
