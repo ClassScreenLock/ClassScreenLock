@@ -36,7 +36,7 @@ public class QuickActionDefinition
     /// <summary>
     /// 强调色
     /// </summary>
-    public string AccentColor { get; init; } = "#0078D4";
+    public string AccentColor { get; init; } = "#0067C0";
 
     /// <summary>
     /// 是否为可执行命令（true）还是导航（false）

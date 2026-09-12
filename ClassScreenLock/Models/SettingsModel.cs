@@ -5,20 +5,20 @@ namespace ClassScreenLock.Models;
 
 public class SettingsModel
 {
-    [JsonPropertyName("fontSize")]
-    public double FontSize { get; set; } = 14;
-    
-    [JsonPropertyName("fontFamily")]
-    public string FontFamily { get; set; } = "Microsoft YaHei UI";
-    
     [JsonPropertyName("darkMode")]
     public bool DarkMode { get; set; } = false;
     
     [JsonPropertyName("accentColor")]
-    public string AccentColor { get; set; } = "#0078D4";
+    public string AccentColor { get; set; } = "#0067C0";
     
     [JsonPropertyName("showNotifications")]
     public bool ShowNotifications { get; set; } = true;
+    
+    [JsonPropertyName("notificationDurationMs")]
+    public int NotificationDurationMs { get; set; } = 3000;
+
+    [JsonPropertyName("notificationSound")]
+    public bool NotificationSound { get; set; } = true;
     
     [JsonPropertyName("language")]
     public string Language { get; set; } = "zh-CN";
@@ -28,6 +28,9 @@ public class SettingsModel
 
     [JsonPropertyName("notificationPosition")]
     public NotificationPosition NotificationPosition { get; set; } = NotificationPosition.Center;
+
+    [JsonPropertyName("watchdogMonitorTier")]
+    public int WatchdogMonitorTier { get; set; } = 4;
 
     [JsonPropertyName("weeklyCycleCount")]
     public int WeeklyCycleCount { get; set; } = 1;

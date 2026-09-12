@@ -3,9 +3,31 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Avalonia.Styling;
 using ClassScreenLock.Services;
 
 namespace ClassScreenLock.Converters;
+
+/// <summary>
+/// 从当前主题资源解析语义色，失败时回退到 Fluent 规范色。
+/// 确保状态色随深浅主题自动切换（F2System* 语义 token）。
+/// </summary>
+internal static class ThemeBrushResolver
+{
+    public static IBrush Resolve(string brushKey, string fallbackHex)
+    {
+        var app = Application.Current;
+        if (app is not null)
+        {
+            var theme = app.ActualThemeVariant;
+            if (app.Resources.TryGetResource(brushKey, theme, out var res) && res is IBrush brush)
+            {
+                return brush;
+            }
+        }
+        return new SolidColorBrush(Color.Parse(fallbackHex));
+    }
+}
 
 public class BooleanToStatusTextConverter : IValueConverter
 {
@@ -13,8 +35,8 @@ public class BooleanToStatusTextConverter : IValueConverter
     {
         if (value is bool isLocked)
         {
-            return isLocked 
-                ? LocalizationService.Instance.GetString("Account_Status_Locked") 
+            return isLocked
+                ? LocalizationService.Instance.GetString("Account_Status_Locked")
                 : LocalizationService.Instance.GetString("Account_Status_LoggedIn");
         }
         return string.Empty;
@@ -32,9 +54,9 @@ public class ServiceStatusBrushConverter : IValueConverter
     {
         if (value is bool isRunning)
         {
-            return isRunning 
-                ? new SolidColorBrush(Color.Parse("#107C10")) // Running: Green
-                : new SolidColorBrush(Color.Parse("#E81123")); // Stopped: Red
+            return isRunning
+                ? ThemeBrushResolver.Resolve("F2SystemSuccessBrush", "#0F7B0F")   // Running
+                : ThemeBrushResolver.Resolve("F2SystemCriticalBrush", "#C42B1C"); // Stopped
         }
         return Brushes.Gray;
     }
@@ -51,16 +73,9 @@ public class BooleanToStatusBrushConverter : IValueConverter
     {
         if (value is bool isLocked)
         {
-            try
-            {
-                return isLocked 
-                    ? new SolidColorBrush(Color.Parse("#E81123")) // Fluent Red
-                    : new SolidColorBrush(Color.Parse("#107C10")); // Fluent Green
-            }
-            catch
-            {
-                return isLocked ? Brushes.Red : Brushes.Green;
-            }
+            return isLocked
+                ? ThemeBrushResolver.Resolve("F2SystemCriticalBrush", "#C42B1C") // 锁定：Critical
+                : ThemeBrushResolver.Resolve("F2SystemSuccessBrush", "#0F7B0F");  // 在线：Success
         }
         return Brushes.Transparent;
     }
@@ -77,16 +92,9 @@ public class SuccessStatusBrushConverter : IValueConverter
     {
         if (value is bool isSuccess)
         {
-            try
-            {
-                return isSuccess 
-                    ? new SolidColorBrush(Color.Parse("#107C10")) // Success: Green
-                    : new SolidColorBrush(Color.Parse("#E81123")); // Failed: Red
-            }
-            catch
-            {
-                return isSuccess ? Brushes.Green : Brushes.Red;
-            }
+            return isSuccess
+                ? ThemeBrushResolver.Resolve("F2SystemSuccessBrush", "#0F7B0F")   // Success
+                : ThemeBrushResolver.Resolve("F2SystemCriticalBrush", "#C42B1C"); // Failed
         }
         return Brushes.Gray;
     }

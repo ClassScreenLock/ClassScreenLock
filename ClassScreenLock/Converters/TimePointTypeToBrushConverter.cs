@@ -17,7 +17,7 @@ public class TimePointTypeToBrushConverter : IValueConverter
             {
                 return type switch
                 {
-                    TimePointType.Class => Brush.Parse("#0078D4"), // Fluent Blue
+                    TimePointType.Class => Brush.Parse("#0067C0"), // Fluent Blue
                     TimePointType.Break => Brush.Parse("#107C10"), // Fluent Green
                     TimePointType.Divider => Brush.Parse("#A19F9D"), // Fluent Gray
                     TimePointType.Action => Brush.Parse("#D83B01"), // Fluent Orange/Red

@@ -17,12 +17,6 @@ public class LockSettingsModel
     [JsonPropertyName("autoUnlockBeforeClassMinutes")]
     public int AutoUnlockBeforeClassMinutes { get; set; } = 3;
 
-    [JsonPropertyName("allowedTopmostApps")]
-    public List<string> AllowedTopmostApps { get; set; } = new();
-
-    [JsonPropertyName("forcedTopmostApps")]
-    public List<string> ForcedTopmostApps { get; set; } = new();
-
     [JsonPropertyName("showFloatingLockWidget")]
     public bool ShowFloatingLockWidget { get; set; } = true;
 

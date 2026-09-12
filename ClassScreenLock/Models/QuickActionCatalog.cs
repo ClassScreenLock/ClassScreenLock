@@ -25,11 +25,11 @@ public static class QuickActionCatalog
     public static readonly IReadOnlyList<QuickActionDefinition> All = new List<QuickActionDefinition>
     {
         // ========== 导航类（页面跳转）==========
-        new() { Id = "navigate.appManagement", LabelKey = "Home_QuickAppManagement", DescriptionKey = "QA_Desc_AppManagement", Category = "QA_Cat_Navigation", IconName = "Apps", AccentColor = "#0078D4", TargetId = "appManagement" },
-        new() { Id = "navigate.network", LabelKey = "Home_QuickNetwork", DescriptionKey = "QA_Desc_Network", Category = "QA_Cat_Navigation", IconName = "Globe", AccentColor = "#0078D4", TargetId = "network" },
+        new() { Id = "navigate.appManagement", LabelKey = "Home_QuickAppManagement", DescriptionKey = "QA_Desc_AppManagement", Category = "QA_Cat_Navigation", IconName = "Apps", AccentColor = "#0067C0", TargetId = "appManagement" },
+        new() { Id = "navigate.network", LabelKey = "Home_QuickNetwork", DescriptionKey = "QA_Desc_Network", Category = "QA_Cat_Navigation", IconName = "Globe", AccentColor = "#0067C0", TargetId = "network" },
         new() { Id = "navigate.securityCenter", LabelKey = "Home_QuickSecurityCenter", DescriptionKey = "QA_Desc_SecurityCenter", Category = "QA_Cat_Navigation", IconName = "Shield", AccentColor = "#107C10", TargetId = "securityCenter" },
         new() { Id = "navigate.settings", LabelKey = "Home_QuickSettings", DescriptionKey = "QA_Desc_Settings", Category = "QA_Cat_Navigation", IconName = "Settings", AccentColor = "#5C5C5C", TargetId = "settings" },
-        new() { Id = "navigate.schedule", LabelKey = "Home_QuickSchedule", DescriptionKey = "QA_Desc_Schedule", Category = "QA_Cat_Navigation", IconName = "Calendar", AccentColor = "#0078D4", TargetId = "schedule" },
+        new() { Id = "navigate.schedule", LabelKey = "Home_QuickSchedule", DescriptionKey = "QA_Desc_Schedule", Category = "QA_Cat_Navigation", IconName = "Calendar", AccentColor = "#0067C0", TargetId = "schedule" },
         new() { Id = "navigate.securityLogs", LabelKey = "Home_QuickSecurityLogs", DescriptionKey = "QA_Desc_SecurityLogs", Category = "QA_Cat_Navigation", IconName = "History", AccentColor = "#5C5C5C", TargetId = "securityLogs" },
         new() { Id = "navigate.automation", LabelKey = "Home_QuickAutomation", DescriptionKey = "QA_Desc_Automation", Category = "QA_Cat_Navigation", IconName = "Flash", AccentColor = "#FF8C00", TargetId = "automation" },
         new() { Id = "navigate.organization", LabelKey = "Home_QuickOrganization", DescriptionKey = "QA_Desc_Organization", Category = "QA_Cat_Navigation", IconName = "People", AccentColor = "#5C5C5C", TargetId = "organization" },
@@ -49,7 +49,7 @@ public static class QuickActionCatalog
         new() { Id = "command.toggleSidebar", LabelKey = "Home_QuickToggleSidebar", DescriptionKey = "QA_Desc_ToggleSidebar", Category = "QA_Cat_Appearance", IconName = "Navigation", AccentColor = "#5C5C5C", IsCommand = true, TargetId = "toggleSidebar" },
 
         // ========== 应用与拦截管理类 ==========
-        new() { Id = "command.refreshAppList", LabelKey = "Home_QuickRefreshApps", DescriptionKey = "QA_Desc_RefreshApps", Category = "QA_Cat_Management", IconName = "ArrowSync", AccentColor = "#0078D4", IsCommand = true, TargetId = "refreshAppList" },
+        new() { Id = "command.refreshAppList", LabelKey = "Home_QuickRefreshApps", DescriptionKey = "QA_Desc_RefreshApps", Category = "QA_Cat_Management", IconName = "ArrowSync", AccentColor = "#0067C0", IsCommand = true, TargetId = "refreshAppList" },
         new() { Id = "command.openLockSettings", LabelKey = "Home_QuickLockSettings", DescriptionKey = "QA_Desc_LockSettings", Category = "QA_Cat_Management", IconName = "LockClosed", AccentColor = "#E81123", IsCommand = true, TargetId = "openLockSettings" },
         new() { Id = "command.openBreakSettings", LabelKey = "Home_QuickBreakSettings", DescriptionKey = "QA_Desc_BreakSettings", Category = "QA_Cat_Management", IconName = "DrinkToGo", AccentColor = "#FF8C00", IsCommand = true, TargetId = "openBreakSettings" },
 
@@ -67,10 +67,10 @@ public static class QuickActionCatalog
         new() { Id = "command.importSchedules", LabelKey = "Home_QuickImportSchedules", DescriptionKey = "QA_Desc_ImportSchedules", Category = "QA_Cat_Backup", IconName = "ArrowImport", AccentColor = "#5C5C5C", IsCommand = true, TargetId = "importSchedules" },
 
         // ========== 系统工具类 ==========
-        new() { Id = "command.openSystemInfo", LabelKey = "Home_QuickSystemInfo", DescriptionKey = "QA_Desc_SystemInfo", Category = "QA_Cat_System", IconName = "Info", AccentColor = "#0078D4", IsCommand = true, TargetId = "openSystemInfo" },
+        new() { Id = "command.openSystemInfo", LabelKey = "Home_QuickSystemInfo", DescriptionKey = "QA_Desc_SystemInfo", Category = "QA_Cat_System", IconName = "Info", AccentColor = "#0067C0", IsCommand = true, TargetId = "openSystemInfo" },
         new() { Id = "command.openServices", LabelKey = "Home_QuickServices", DescriptionKey = "QA_Desc_Services", Category = "QA_Cat_System", IconName = "Server", AccentColor = "#5C5C5C", IsCommand = true, TargetId = "openServices" },
         new() { Id = "command.checkUpdate", LabelKey = "Home_QuickCheckUpdate", DescriptionKey = "QA_Desc_CheckUpdate", Category = "QA_Cat_System", IconName = "ArrowSync", AccentColor = "#107C10", IsCommand = true, TargetId = "checkUpdate" },
-        new() { Id = "command.openHelp", LabelKey = "Home_QuickHelp", DescriptionKey = "QA_Desc_Help", Category = "QA_Cat_System", IconName = "QuestionCircle", AccentColor = "#0078D4", IsCommand = true, TargetId = "openHelp" }
+        new() { Id = "command.openHelp", LabelKey = "Home_QuickHelp", DescriptionKey = "QA_Desc_Help", Category = "QA_Cat_System", IconName = "QuestionCircle", AccentColor = "#0067C0", IsCommand = true, TargetId = "openHelp" }
     };
 
     public static QuickActionDefinition? FindById(string id)

@@ -20,54 +20,69 @@ public partial class TimePoint : ObservableObject
     private TimePointType _type;
     private TimeSpan _startTime;
 
-    public int StartHour
+    public int? StartHour
     {
         get => StartTime.Hours;
         set
         {
-            StartTime = new TimeSpan(value, StartTime.Minutes, 0);
+            if (value.HasValue)
+            {
+                StartTime = new TimeSpan(value.Value, StartTime.Minutes, 0);
+            }
             OnPropertyChanged(nameof(StartHour));
         }
     }
 
-    public int StartMinute
+    public int? StartMinute
     {
         get => StartTime.Minutes;
         set
         {
-            StartTime = new TimeSpan(StartTime.Hours, value, 0);
+            if (value.HasValue)
+            {
+                StartTime = new TimeSpan(StartTime.Hours, value.Value, 0);
+            }
             OnPropertyChanged(nameof(StartMinute));
         }
     }
 
     private TimeSpan _endTime;
 
-    public int EndHour
+    public int? EndHour
     {
         get => EndTime.Hours;
         set
         {
-            EndTime = new TimeSpan(value, EndTime.Minutes, 0);
+            if (value.HasValue)
+            {
+                EndTime = new TimeSpan(value.Value, EndTime.Minutes, 0);
+            }
             OnPropertyChanged(nameof(EndHour));
         }
     }
 
-    public int EndMinute
+    public int? EndMinute
     {
         get => EndTime.Minutes;
         set
         {
-            EndTime = new TimeSpan(EndTime.Hours, value, 0);
+            if (value.HasValue)
+            {
+                EndTime = new TimeSpan(EndTime.Hours, value.Value, 0);
+            }
             OnPropertyChanged(nameof(EndMinute));
         }
     }
 
-    public int Duration
+    public int? Duration
     {
         get => (int)(EndTime - StartTime).TotalMinutes;
         set
         {
-            EndTime = StartTime.Add(TimeSpan.FromMinutes(value));
+            if (value.HasValue)
+            {
+                EndTime = StartTime.Add(TimeSpan.FromMinutes(value.Value));
+            }
             OnPropertyChanged(nameof(Duration));
         }
     }

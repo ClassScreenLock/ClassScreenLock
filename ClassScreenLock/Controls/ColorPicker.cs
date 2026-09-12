@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Controls.Primitives;
@@ -36,7 +36,7 @@ namespace ClassScreenLock.Controls
             AvaloniaProperty.Register<ColorPicker, Color>(nameof(SelectedColor), Colors.DodgerBlue, defaultBindingMode: BindingMode.TwoWay);
 
         public static readonly StyledProperty<string> SelectedColorHexProperty = 
-            AvaloniaProperty.Register<ColorPicker, string>(nameof(SelectedColorHex), "#0078D4", defaultBindingMode: BindingMode.TwoWay);
+            AvaloniaProperty.Register<ColorPicker, string>(nameof(SelectedColorHex), "#0067C0", defaultBindingMode: BindingMode.TwoWay);
 
         public Color SelectedColor
         {
