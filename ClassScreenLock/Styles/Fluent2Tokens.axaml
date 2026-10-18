@@ -148,13 +148,16 @@
             <SolidColorBrush x:Key="QAE_AccentBrush" Color="{DynamicResource F2AccentDefaultColor}"/>
             <SolidColorBrush x:Key="QAE_DangerBrush" Color="{DynamicResource F2SystemCriticalColor}"/>
 
-            <!-- 系统托盘菜单 -->
+            <!-- 系统托盘菜单（Fluent 2 Flyout 语义） -->
             <SolidColorBrush x:Key="QAE_MenuShellBrush" Color="#FFFFFF"/>
-            <SolidColorBrush x:Key="QAE_MenuShellBorderBrush" Color="#35000000"/>
+            <SolidColorBrush x:Key="QAE_MenuShellBorderBrush" Color="#0F000000"/>
             <SolidColorBrush x:Key="QAE_MenuTextBrush" Color="{DynamicResource F2TextPrimaryColor}"/>
             <SolidColorBrush x:Key="QAE_MenuHoverBrush" Color="{DynamicResource F2SubtleSecondaryColor}"/>
             <SolidColorBrush x:Key="QAE_MenuPressedBrush" Color="{DynamicResource F2SubtleTertiaryColor}"/>
             <SolidColorBrush x:Key="QAE_MenuDividerBrush" Color="{DynamicResource F2DividerStrokeColor}"/>
+            <SolidColorBrush x:Key="QAE_MenuDangerTextBrush" Color="{DynamicResource F2SystemCriticalColor}"/>
+            <SolidColorBrush x:Key="QAE_MenuDangerHoverBrush" Color="#14C42B1C"/>
+            <BoxShadows x:Key="QAE_MenuShadow">0 8 16 0 #24000000, 0 1 2 0 #14000000</BoxShadows>
 
             <!-- 阴影（Kit 实测值） -->
             <BoxShadows x:Key="F2ShadowCardRest">0 2 4 0 #0A000000</BoxShadows>
@@ -276,13 +279,16 @@
             <SolidColorBrush x:Key="QAE_AccentBrush" Color="{DynamicResource F2AccentDefaultColor}"/>
             <SolidColorBrush x:Key="QAE_DangerBrush" Color="{DynamicResource F2SystemCriticalColor}"/>
 
-            <!-- 系统托盘菜单（深色：Kit Solid Base 衍生） -->
-            <SolidColorBrush x:Key="QAE_MenuShellBrush" Color="#2D2D30"/>
-            <SolidColorBrush x:Key="QAE_MenuShellBorderBrush" Color="#50FFFFFF"/>
+            <!-- 系统托盘菜单（深色：Fluent 2 Flyout 表面） -->
+            <SolidColorBrush x:Key="QAE_MenuShellBrush" Color="#2C2C2C"/>
+            <SolidColorBrush x:Key="QAE_MenuShellBorderBrush" Color="#14FFFFFF"/>
             <SolidColorBrush x:Key="QAE_MenuTextBrush" Color="{DynamicResource F2TextPrimaryColor}"/>
             <SolidColorBrush x:Key="QAE_MenuHoverBrush" Color="{DynamicResource F2SubtleSecondaryColor}"/>
             <SolidColorBrush x:Key="QAE_MenuPressedBrush" Color="{DynamicResource F2SubtleTertiaryColor}"/>
             <SolidColorBrush x:Key="QAE_MenuDividerBrush" Color="{DynamicResource F2DividerStrokeColor}"/>
+            <SolidColorBrush x:Key="QAE_MenuDangerTextBrush" Color="#FF99A4"/>
+            <SolidColorBrush x:Key="QAE_MenuDangerHoverBrush" Color="#26FF99A4"/>
+            <BoxShadows x:Key="QAE_MenuShadow">0 4 14 0 #42000000, 0 1 2 0 #1A000000</BoxShadows>
 
             <!-- 阴影（Kit 实测值） -->
             <BoxShadows x:Key="F2ShadowCardRest">0 2 4 0 #21000000</BoxShadows>

@@ -1,21 +1,37 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 
 namespace ClassScreenLock.Views;
 
 public partial class TrayMenuView : UserControl
 {
+    private ScrollViewer? _menuScroll;
+
     public TrayMenuView()
     {
         InitializeComponent();
+        _menuScroll = this.FindControl<ScrollViewer>("MenuScroll");
     }
 
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);
+    }
+
+    /// <summary>
+    /// 设置菜单内容的最大高度（DIP）。超出时菜单内部滚动，
+    /// 由 TrayPopupWindow 按当前屏幕可用工作区动态计算，避免任何分辨率下被截断。
+    /// </summary>
+    public void SetMaxContentHeight(double maxHeight)
+    {
+        if (_menuScroll == null)
+        {
+            return;
+        }
+
+        _menuScroll.MaxHeight = Math.Max(0, maxHeight);
     }
 
     public event EventHandler? ShowClicked;
