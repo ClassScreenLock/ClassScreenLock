@@ -1,0 +1,10 @@
+<Project>
+  <!--
+    禁用 Avalonia 构建遥测，避免沙箱环境下对
+    %LOCALAPPDATA%\AvaloniaUI\BuildServices\buildtasks.log
+    的写入被拒绝，导致 "AvaloniaStatsTask" 任务失败。
+  -->
+  <PropertyGroup>
+    <AvaloniaTelemetryOptOut>true</AvaloniaTelemetryOptOut>
+  </PropertyGroup>
+</Project>
