@@ -86,6 +86,11 @@
             <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
             <Private>false</Private>
         </ProjectReference>
+        <ProjectReference Include="..\ClassScreenLock.Uninstaller\ClassScreenLock.Uninstaller.csproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+            <Private>false</Private>
+        </ProjectReference>
     </ItemGroup>
 
 </Project>
