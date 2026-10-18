@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="ClassScreenLock.Uninstaller"/>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!-- 卸载程序必须以管理员身份运行，因为需要：
+             1. 停止并删除看门狗服务（HKLM\SYSTEM\CurrentControlSet\Services）
+             2. 清理 IFEO 注册表项（HKLM\SOFTWARE\Microsoft\Windows NT\...\IFEO）
+             3. 清理组策略注册表项（HKLM\SOFTWARE\Policies\Microsoft\Windows\System）
+             4. 终止 SYSTEM 权限运行的看门狗进程
+             5. 删除 %ProgramData%\ClassScreenLock 目录下的文件 -->
+        <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+      <!-- Windows 11 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+    </application>
+  </compatibility>
+</assembly>

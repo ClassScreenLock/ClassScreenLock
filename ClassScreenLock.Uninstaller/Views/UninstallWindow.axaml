@@ -1,0 +1,136 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:ClassScreenLock.Uninstaller.ViewModels"
+        xmlns:conv="clr-namespace:ClassScreenLock.Uninstaller.Converters"
+        x:Class="ClassScreenLock.Uninstaller.Views.UninstallWindow"
+        x:DataType="vm:UninstallViewModel"
+        Title="卸载 ClassScreenLock"
+        Width="540"
+        MinHeight="380"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen">
+
+    <Design.DataContext>
+        <vm:UninstallViewModel />
+    </Design.DataContext>
+
+    <Border Background="{DynamicResource F2SolidBackgroundBaseBrush}">
+        <Grid RowDefinitions="Auto,*,Auto">
+            <!-- ========== 标题区 ========== -->
+            <Border Grid.Row="0" Padding="28,24,28,8">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="卸载 ClassScreenLock"
+                               FontSize="{DynamicResource F2FontSizeSubtitle}" FontWeight="SemiBold"/>
+                    <TextBlock Text="从你的设备中移除此应用及其相关信息"
+                               FontSize="13" Foreground="{DynamicResource F2TextSecondaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 内容区 ========== -->
+            <Grid Grid.Row="1">
+                <!-- 确认页 -->
+                <StackPanel IsVisible="{Binding IsConfirmPage}" Margin="28,8,28,16" Spacing="16">
+                    <TextBlock Text="此应用及其相关信息将从你的设备中移除。"
+                               FontSize="14" TextWrapping="Wrap"
+                               Foreground="{DynamicResource F2TextSecondaryBrush}"/>
+
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="以下内容将被删除" FontSize="13" FontWeight="SemiBold"/>
+                        <TextBlock Text="程序文件与组件" FontSize="13"
+                                   Foreground="{DynamicResource F2TextSecondaryBrush}"/>
+                        <TextBlock Text="看门狗服务与自启动项" FontSize="13"
+                                   Foreground="{DynamicResource F2TextSecondaryBrush}"/>
+                        <TextBlock Text="安全防护规则（IFEO、组策略、进程拦截）" FontSize="13"
+                                   Foreground="{DynamicResource F2TextSecondaryBrush}"/>
+                        <TextBlock Text="注册表项与用户配置数据" FontSize="13"
+                                   Foreground="{DynamicResource F2TextSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="此操作无法撤销。"
+                               FontSize="13"
+                               Foreground="{DynamicResource F2SystemCautionBrush}"/>
+                </StackPanel>
+
+                <!-- 进度页 -->
+                <StackPanel IsVisible="{Binding IsProgressPage}" Margin="28,24,28,24" Spacing="24"
+                            VerticalAlignment="Center">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding CurrentStepText}"
+                                   FontSize="{DynamicResource F2FontSizeSubtitle}" FontWeight="SemiBold"/>
+                        <TextBlock Text="卸载正在进行中，请稍候..."
+                                   Classes="caption" Foreground="{DynamicResource F2TextSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+                        <ProgressBar Value="{Binding Progress}" Minimum="0" Maximum="1" Height="4"/>
+                        <TextBlock Grid.Row="1" Text="{Binding Progress, StringFormat={}{0:P0} 完成}"
+                                   Classes="caption" Foreground="{DynamicResource F2TextSecondaryBrush}"/>
+                    </Grid>
+
+                    <TextBlock Text="卸载过程中请勿关闭窗口，否则可能导致系统状态不一致。"
+                               Classes="caption" Foreground="{DynamicResource F2TextSecondaryBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <!-- 结果页 -->
+                <StackPanel IsVisible="{Binding IsResultPage}" Margin="28,12,28,12" Spacing="16">
+                    <TextBlock Text="{Binding ResultTitle}"
+                               FontSize="{DynamicResource F2FontSizeSubtitle}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ResultMessage}" FontSize="14"
+                               Foreground="{DynamicResource F2TextSecondaryBrush}"
+                               TextWrapping="Wrap"/>
+
+                    <!-- 警告列表 -->
+                    <Border IsVisible="{Binding Warnings.Count, Converter={x:Static conv:IntConverters.GreaterThanZero}}"
+                            Background="{DynamicResource F2SystemCautionBackgroundBrush}"
+                            CornerRadius="{DynamicResource F2RadiusCard}"
+                            Padding="12,10">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="部分项目未能完全清理" FontWeight="SemiBold" FontSize="13"
+                                       Foreground="{DynamicResource F2SystemCautionBrush}"/>
+                            <ScrollViewer MaxHeight="140">
+                                <ItemsControl ItemsSource="{Binding Warnings}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" Margin="0,3,0,3"
+                                                       Classes="caption" TextWrapping="Wrap"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- ========== 按钮栏（WinUI 3：居中，标准按钮 + 强调按钮） ========== -->
+            <Border Grid.Row="2" Padding="28,20,28,28"
+                    Background="{DynamicResource F2SolidBackgroundBaseBrush}">
+                <Grid>
+                    <!-- 确认页 -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8"
+                                IsVisible="{Binding IsConfirmPage}">
+                        <Button Content="取消" Command="{Binding CancelConfirmCommand}"
+                                Classes="standard"/>
+                        <Button Content="卸载" Command="{Binding StartUninstallCommand}"
+                                Classes="accent"/>
+                    </StackPanel>
+
+                    <!-- 进度页 -->
+                    <TextBlock Text="卸载进行中，请勿关闭此窗口"
+                               Classes="caption" Foreground="{DynamicResource F2TextSecondaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               IsVisible="{Binding IsProgressPage}"/>
+
+                    <!-- 结果页 -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                IsVisible="{Binding IsResultPage}">
+                        <Button Content="关闭" Command="{Binding FinishCommand}"
+                                Classes="accent"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>
