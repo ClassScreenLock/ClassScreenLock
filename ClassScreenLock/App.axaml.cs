@@ -50,10 +50,6 @@ public partial class App : Application
     private const int LR_DEFAULTSIZE = 0x00000040;
     
     [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetCursorPos(out POINT lpPoint);
-    
-    [DllImport("user32.dll")]
     private static extern int GetSystemMetrics(int nIndex);
     
     [DllImport("user32.dll")]
@@ -850,64 +846,9 @@ public partial class App : Application
         var mainWindow = desktop.MainWindow;
         if (mainWindow == null) return;
 
-        // 使用菜单窗口实际尺寸进行精确位置计算，确保退出键始终可见
-        // 如果 Bounds 还未初始化（首次显示），使用 UserControl 的 Width/Height 兜底
-        var menuWidth = _trayPopup != null && _trayPopup.Bounds.Width > 0
-            ? (int)_trayPopup.Bounds.Width
-            : 260;  // TrayMenuView 中定义的 Width
-        var menuHeight = _trayPopup != null && _trayPopup.Bounds.Height > 0
-            ? (int)_trayPopup.Bounds.Height
-            : 380;  // 设计高度
-
-        // 优先使用鼠标所在的屏幕（解决多屏环境下位置错乱问题）
-        Screen? targetScreen = null;
-        POINT cursorPos = default;
-        if (GetCursorPos(out cursorPos))
-        {
-            // 尝试找到包含鼠标位置的屏幕
-            var pixelCursor = new PixelPoint(cursorPos.X, cursorPos.Y);
-            targetScreen = FindScreenAtPoint(mainWindow, pixelCursor);
-
-            // 兜底：使用主窗口所在屏幕 / 主屏幕
-            targetScreen ??= mainWindow.Screens.Primary ?? mainWindow.Screens.All.FirstOrDefault();
-            if (targetScreen == null) return;
-
-            var position = CalculatePopupPosition(pixelCursor, targetScreen, menuWidth, menuHeight);
-            _trayPopup!.ShowAtPosition(position);
-            return;
-        }
-
-        // GetCursorPos 失败时使用默认位置（基于任务栏位置）
-        targetScreen = mainWindow.Screens.Primary ?? mainWindow.Screens.All.FirstOrDefault();
-        if (targetScreen == null) return;
-
-        var defaultPos = GetDefaultPosition(targetScreen, menuWidth, menuHeight, 8);
-        _trayPopup!.ShowAtPosition(defaultPos);
-    }
-
-    /// <summary>
-    /// 在所有屏幕中查找包含指定绝对坐标的屏幕（解决多屏坐标混乱问题）
-    /// </summary>
-    private Screen? FindScreenAtPoint(Window mainWindow, PixelPoint point)
-    {
-        foreach (var screen in mainWindow.Screens.All)
-        {
-            var bounds = screen.Bounds;
-            if (point.X >= bounds.X && point.X < bounds.X + bounds.Width &&
-                point.Y >= bounds.Y && point.Y < bounds.Y + bounds.Height)
-            {
-                return screen;
-            }
-        }
-        return null;
-    }
-
-    private PixelPoint CalculatePopupPosition(PixelPoint cursorPos, Screen screen, int menuWidth, int menuHeight)
-    {
-        const int margin = 8;
-
-        // 1. 优先基于光标位置计算（即使坐标是 (0,0)，只要 GetCursorPos 成功就算有效）
-        return CalculatePositionFromCursor(cursorPos, screen, menuWidth, menuHeight, margin);
+        // 尺寸测量、DPI 换算与屏幕安全区钳制全部收敛到 TrayPopupWindow 内部完成，
+        // 这里只负责触发显示，避免外层与窗口各自维护一套坐标逻辑。
+        _trayPopup?.ShowNearCursor();
     }
 
     private void EnsureTrayPopupInitialized()
@@ -924,109 +865,6 @@ public partial class App : Application
         _trayPopup.LockSettingsClicked += MenuOpenLockSettings_OnClick;
         _trayPopup.ScheduleClicked += MenuOpenSchedule_OnClick;
         _trayPopup.ExitClicked += MenuExit_OnClick;
-    }
-
-    private PixelPoint CalculatePositionFromCursor(PixelPoint cursorPos, Screen screen, int menuWidth, int menuHeight, int margin)
-    {
-        var workArea = screen.WorkingArea;
-        var workLeft = workArea.X;
-        var workTop = workArea.Y;
-        var workRight = workArea.X + workArea.Width;
-        var workBottom = workArea.Y + workArea.Height;
-
-        // 1. 优先让菜单出现在托盘图标上方，留出 margin 间距
-        double y = cursorPos.Y - menuHeight - margin;
-
-        // 2. 如果上方空间不足，则放到光标下方；同样保留 margin
-        if (y < workTop)
-        {
-            y = cursorPos.Y + margin;
-        }
-
-        // 3. 再次校验：若放下方后菜单底部仍然超出屏幕工作区，则贴底对齐，确保退出键始终可见
-        if (y + menuHeight > workBottom)
-        {
-            y = workBottom - menuHeight;
-        }
-
-        // 4. 极小屏幕（菜单比工作区还高）：贴顶显示
-        if (y < workTop)
-        {
-            y = workTop;
-        }
-
-        // 5. 水平方向：默认与光标右侧对齐，并保证完全可见
-        double x = cursorPos.X;
-        if (x + menuWidth > workRight)
-        {
-            x = workRight - menuWidth;
-        }
-        if (x < workLeft)
-        {
-            x = workLeft;
-        }
-
-        return new PixelPoint((int)x, (int)y);
-    }
-
-    private PixelPoint GetDefaultPosition(Screen screen, int menuWidth, int menuHeight, int margin)
-    {
-        var taskbarPosition = GetTaskbarPosition(screen);
-        var (x, y) = GetPositionByTaskbarPosition(taskbarPosition, screen, menuWidth, menuHeight, margin);
-        return new PixelPoint((int)x, (int)y);
-    }
-
-    private (double x, double y) GetPositionByTaskbarPosition(TaskbarPosition position, Screen screen, int menuWidth, int menuHeight, int margin)
-    {
-        var workArea = screen.WorkingArea;
-        double x, y;
-
-        switch (position)
-        {
-            case TaskbarPosition.Top:
-                x = workArea.X + workArea.Width - menuWidth - margin;
-                y = workArea.Y + margin;
-                break;
-            case TaskbarPosition.Left:
-                x = workArea.X + margin;
-                y = workArea.Y + workArea.Height - menuHeight - margin;
-                break;
-            case TaskbarPosition.Right:
-            case TaskbarPosition.Bottom:
-            default:
-                x = workArea.X + workArea.Width - menuWidth - margin;
-                y = workArea.Y + workArea.Height - menuHeight - margin;
-                break;
-        }
-
-        return (x, y);
-    }
-
-    private TaskbarPosition GetTaskbarPosition(Screen screen)
-    {
-        if (screen == null) return TaskbarPosition.Bottom;
-
-        var bounds = screen.Bounds;
-        var workingArea = screen.WorkingArea;
-
-        if (workingArea.Y > bounds.Y)
-            return TaskbarPosition.Top;
-        if (workingArea.Height < bounds.Height)
-            return TaskbarPosition.Bottom;
-        if (workingArea.X > bounds.X)
-            return TaskbarPosition.Left;
-        if (workingArea.Width < bounds.Width)
-            return TaskbarPosition.Right;
-
-        return TaskbarPosition.Bottom;
-    }
-
-    private enum TaskbarPosition
-    {
-        Top,
-        Bottom,
-        Left,
-        Right
     }
 
     private void MenuShow_OnClick(object? sender, EventArgs e)
